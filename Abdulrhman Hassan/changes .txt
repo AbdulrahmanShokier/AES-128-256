@@ -1,1 +1,7 @@
 write down every thing added to your code every time you push data to the repo
+
+
+10/10/2025
+{
+    added 5 files of the encryption process but i didn't try them working all togther
+}
