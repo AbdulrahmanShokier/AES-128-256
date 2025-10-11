@@ -6,8 +6,17 @@
 
 اللهم علمنا ما ينفعنا وأنفعنا بما علمتنا
 
-Graduation project for 2025-2026
+## Graduation project for 2025-2026
 
-On progress:
+
+# what is done :
+
+AES encrtypting except for the key generation
+
+
+-----------------------------------------------
+
+
+# On progress:
 
 studying AES encryption/decryption block and key genenator and write the modules
