@@ -1,0 +1,42 @@
+module inverse_shift_row
+(
+    input  [127:0] inverse_mixed_state_array,
+    output [127:0] inverse_shifted_state_array
+);
+
+    // State bytes in column-major order
+    wire [7:0] s [0:15];
+
+    assign {s[0], s[5], s[10], s[15],
+            s[4], s[9], s[14], s[3],
+            s[8], s[13], s[2], s[7],
+            s[12], s[1], s[6], s[11]} = inverse_mixed_state_array;
+
+    // Perform AES ShiftRows
+    assign inverse_shifted_state_array = {
+        // Column 0
+        s[0],  s[1],  s[2], s[3],  
+        // Column 1
+        s[4],  s[5],  s[6], s[7],
+        // Column 2
+        s[8],  s[9], s[10],  s[11],
+        // Column 3
+        s[12], s[13],  s[14],  s[15]
+    };
+
+endmodule
+
+
+/*
+
+The standard FIPS-197 uses column-major, meaning:
+
+State =
+| b0   b4   b8   b12 |
+| b1   b5   b9   b13 |
+| b2   b6   b10  b14 |
+| b3   b7   b11  b15 |
+*/
+
+// column major (اول 4 بايت بيكونو بالطول مش ب العرض) 
+// انا هنا استقبلت البيتس زي ما كانت مبعوتة ورجعت رجعتها شكلها الطبيعي
