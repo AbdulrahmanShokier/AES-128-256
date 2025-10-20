@@ -15,4 +15,6 @@ write down every thing added to your code every time you push data to the repo
 20/10/2025
 {
     added key generation for 128 bit key
+
+    made test benches for modules and it all working but the whole encryption process does not work    
 }

@@ -28,7 +28,9 @@ Add_Round_Key xor_with_k1 (.plain_text(resultant_state_array_k1), .key(k1), .res
 
 endmodule
 
-
+//              /
+//  working    /
+//           \/
 
 /*
 this module os for the first round only because we do the addition of the key twice but in every other step 

@@ -11,10 +11,10 @@ wire [7:0] v2;
 wire [7:0] v3;
 
 
-AES_Sbox v3_out (.in_byte(word_3[7 : 0]) , .out_byte(V3));
-AES_Sbox v2_out (.in_byte(word_3[15: 8]) , .out_byte(V2));
-AES_Sbox v1_out (.in_byte(word_3[23:16]) , .out_byte(V1));
-AES_Sbox v0_out (.in_byte(word_3[31:24]) , .out_byte(V0));
+AES_Sbox v3_out (.in_byte(word_3[7 : 0]) , .out_byte(v3));
+AES_Sbox v2_out (.in_byte(word_3[15: 8]) , .out_byte(v2));
+AES_Sbox v1_out (.in_byte(word_3[23:16]) , .out_byte(v1));
+AES_Sbox v0_out (.in_byte(word_3[31:24]) , .out_byte(v0));
 
 assign word_3_substituted = {v1 ^ round_number,v2,v3,v0} ;
 

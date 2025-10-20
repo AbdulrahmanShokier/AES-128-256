@@ -19,7 +19,7 @@ shift_row rows_shifted (.substituted_state_array(substituted_state_array), .shif
 mix_columns columns_mixed(.shifted_state_array(shifted_state_array), .mixed_state_array(mixed_state_array)); // 3rd step
 
 
-Add_Round_Key xor_with_k1 (.plain_text(mixed_state_array), .key(kn_minus_1), .resultant_state_array(ct_after_nth_round)); // 4th step
+Add_Round_Key xor_with_kn_minus_1 (.plain_text(mixed_state_array), .key(kn_minus_1), .resultant_state_array(ct_after_nth_round)); // 4th step
 
 endmodule
 

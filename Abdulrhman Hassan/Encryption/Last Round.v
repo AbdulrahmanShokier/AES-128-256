@@ -15,7 +15,7 @@ sub_bytes byte_substitution (.resultant_state_array(pt), .substituted_state_arra
 shift_row rows_shifted (.substituted_state_array(substituted_state_array), .shifted_state_array(shifted_state_array)); // 2nd step
 
 
-Add_Round_Key xor_with_k1 (.plain_text(shifted_state_array), .key(kn), .resultant_state_array(ct)); // 3rd step
+Add_Round_Key xor_with_kn (.plain_text(shifted_state_array), .key(kn), .resultant_state_array(ct)); // 3rd step
 
 endmodule
 
