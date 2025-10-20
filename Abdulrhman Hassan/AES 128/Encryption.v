@@ -1,8 +1,8 @@
 module encryption_128
 (
-    input [127:0] plain_text,
-    input [127:0] key0,
-    input [127:0] cipher_text
+    input  [127:0] plain_text,
+    input  [127:0] key0,
+    output [127:0] cipher_text
 );
 
 wire [127:0] round_key1,round_key2,round_key3,round_key4,round_key5,
@@ -68,7 +68,7 @@ mid_rounds r9(.pt(ct_round8) , .kn_minus_1(round_key9) , .ct_after_nth_round(ct_
 
 //////////////////////round 10////////////////////////
 
-key_generator r_k_9(.key(round_key9) , .round_number(8'h36) , .round_key(round_key10));
+key_generator r_k_10(.key(round_key9) , .round_number(8'h36) , .round_key(round_key10));
 
 last_round r10 (.pt(ct_round9) , .kn(round_key10), .ct(cipher_text));
 
