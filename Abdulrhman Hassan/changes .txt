@@ -11,3 +11,8 @@ write down every thing added to your code every time you push data to the repo
 {
     added folder for encryption and folder for decryption and made the inverse modules for decryption
 }
+
+20/10/2025
+{
+    added key generation for 128 bit key
+}
