@@ -11,7 +11,7 @@
 
 # what is done :
 
-AES encrtypting except for the key generation
+AES encrtypting / decrypting + key generation for 128 bit keys
 
 
 -----------------------------------------------
@@ -19,4 +19,4 @@ AES encrtypting except for the key generation
 
 # On progress:
 
-studying AES encryption/decryption block and key genenator and write the modules
+make the 128/256 key generation 
