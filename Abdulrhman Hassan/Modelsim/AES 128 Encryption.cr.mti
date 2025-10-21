@@ -26,6 +26,13 @@ Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  
 Top level modules:
 	last_round
 
+} {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/TB/Key Generation TB.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/TB/Key Generation TB.v}
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module key_generator_tb
+
+Top level modules:
+	key_generator_tb
+
 } {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Encryption/Sub-Bytes.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Encryption/Sub-Bytes.v}
 Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
 -- Compiling module sub_bytes
@@ -40,13 +47,6 @@ Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  
 Top level modules:
 	encryption_128_tb
 
-} {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/TB/First round TB.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/TB/First round TB.v}
-Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
--- Compiling module first_round_tb
-
-Top level modules:
-	first_round_tb
-
 } {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Encryption/Shift Rows.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Encryption/Shift Rows.v}
 Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
 -- Compiling module shift_row
@@ -54,12 +54,26 @@ Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  
 Top level modules:
 	shift_row
 
+} {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/TB/First round TB.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/TB/First round TB.v}
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module first_round_tb
+
+Top level modules:
+	first_round_tb
+
 } {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Key Generation/Key generator.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Key Generation/Key generator.v}
 Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
 -- Compiling module key_generator
 
 Top level modules:
 	key_generator
+
+} {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Encryption/Mix Column.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Encryption/Mix Column.v}
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module mix_columns
+
+Top level modules:
+	mix_columns
 
 } {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/AES 128/Encryption.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/AES 128/Encryption.v}
 Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
@@ -75,19 +89,19 @@ Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  
 Top level modules:
 	g_function
 
-} {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Encryption/Mix Column.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Encryption/Mix Column.v}
-Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
--- Compiling module mix_columns
-
-Top level modules:
-	mix_columns
-
 } {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Encryption/Mid Rounds.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/Encryption/Mid Rounds.v}
 Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
 -- Compiling module mid_rounds
 
 Top level modules:
 	mid_rounds
+
+} {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/TB/All rounds TB.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/TB/All rounds TB.v}
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module aes_all_rounds_keys_ready_tb
+
+Top level modules:
+	aes_all_rounds_keys_ready_tb
 
 } {} {}} {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/TB/Mix Column TB.v} {1 {vlog -work work -stats=none {D:/Graduation Project/Graduation Project/Abdulrhman Hassan/TB/Mix Column TB.v}
 Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
