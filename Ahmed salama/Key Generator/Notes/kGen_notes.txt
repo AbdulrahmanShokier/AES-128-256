@@ -1,0 +1,38 @@
+
+
+for s-box: 
+- which is less area? memory LUT OR mux with all inputs 
+  بم إني عمر الهاردوير (الأوبيرينش يعني) ما هيغير في القيم دي
+  فأعملها fixed connections as inputs to mux 
+
+
+for kGen: 
+-" if(!RST)
+    subKey_curr <= M_KEY; " 
+دا طبعا هراعيه في ال first round 
+اللي هعملها كود خاص بيها
+
+- g-func: more clock cycle now 
+-- now, I make instance of s-box inside kGen module 
+--- كدا محتاج الأوتبوت بتاع ال g function
+    يكون جاهز قبل ما أفعل ال en of kGen 
+    عشان يشتغل على داتا صح، فا دا كدا محتاج كلوك سايكل أولا
+    as g-func has shift inside (clock cycle needed) 
+-- also need counter for RC(round counter) :) 
+-- I think it has the same enable (En) 
+-- RC Round constant (not counter) 
+
+
+- note: permutations and reorder bits or bytes can be easily 
+  combinational. 
+
+
+
+RTL notes
+- when you take an output of an instance through some signal x, 
+  x should be wire not reg. 
+
+
+
+
+

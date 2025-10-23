@@ -1,0 +1,5 @@
+Implement key Generator with only one stage, 
+generating all subkesy one after another using feed-back from 
+k_i into k_i+1
+
+that optimizes the hardware. 
