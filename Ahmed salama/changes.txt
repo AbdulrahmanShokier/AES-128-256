@@ -1,5 +1,17 @@
-Implement key Generator with only one stage, 
-generating all subkesy one after another using feed-back from 
-k_i into k_i+1
+first click (left CTRL with right SHIFT) from kboard, and 
+maximize the notbad window to see well 
 
-that optimizes the hardware. 
+
+there are 2 draws for blocks for iterative AES encryption, 
+we need to do the following: 
+
+
+عاوزين بقى دلوقتي
+1- واحد يكمل على ال AES_Encryption اللي هرفعه، ويظبط ال counter وال selectors اللي بتعتمد عليه (عددهم 3)، ومنهم ال Valid signal.. ويimplement الكاونتر.. ويخلصه وي simulate ويتأكد إن الدنيا شغالة.. ويستخدم الأول Keys جاهزة في ال TB، وبعد كدا يـ integrate ال KeyGen ويجربهم مع بعض.. ووهو شغال يعتمد على الصورتين اللي بعتهم فوق(وهرفقهم هنا) لشكل ال blocks، ولو فيه حاجة مش عارفها يقولي نتناقش فيها.
+(وطبعا بما في ذلك ال MUX_2x1_128).
+
+2- واحد يعمل ال decryption باستخدام برضو نفس ال modules اللي هنرفعها وهكذا، لكن يرسم الأول زي رسمة الEncryption، وبعد كدا يشتغل الكود زي ما عملنا في ال decryption، ويجرب برضو الدنيا شغالة ولا لا ب keys جاهزة، لخد ما ال keyGen for decryptتجهز 
+
+3- حد يعمل بقى ال keyGen for decryption، ويستخدم ال module اللي أنا رافعه بتاع ال KeyGen بتاريخ 23\10 
+
+4- حد يintegrate السيستم كاملا، ويكتب له automated test bench
