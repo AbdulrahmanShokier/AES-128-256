@@ -1,20 +1,18 @@
 module sub_bytes (
-    input  [127:0] resultant_state_array,
-    output [127:0] substituted_state_array
+    input  [127:0] IN,
+    output [127:0] OUT
 );
 
-    // نفك البايتات بترتيب column-major الصحيح
     wire [7:0] s0, s1, s2, s3,
                s4, s5, s6, s7,
                s8, s9, s10, s11,
                s12, s13, s14, s15;
 
-    assign {s0, s4, s8, s12,
-            s1, s5, s9, s13,
-            s2, s6, s10, s14,
-            s3, s7, s11, s15} = resultant_state_array;
+    assign {s0, s1, s2, s3,
+            s4, s5, s6, s7,
+            s8, s9, s10, s11,
+            s12, s13, s14, s15} = IN;
 
-    // بعد الـ SubBytes
     wire [7:0] sb0, sb1, sb2, sb3,
                sb4, sb5, sb6, sb7,
                sb8, sb9, sb10, sb11,
@@ -37,22 +35,14 @@ module sub_bytes (
     AES_Sbox sbox14(.in_byte(s14), .out_byte(sb14));
     AES_Sbox sbox15(.in_byte(s15), .out_byte(sb15));
 
-    // نرجعها بنفس الترتيب column-major
-    assign substituted_state_array = {
-        sb0, sb4, sb8, sb12,
-        sb1, sb5, sb9, sb13,
-        sb2, sb6, sb10, sb14,
-        sb3, sb7, sb11, sb15
+	
+    assign OUT = {
+        sb0, sb1, sb2, sb3,
+        sb4, sb5, sb6, sb7,
+        sb8, sb9, sb10, sb11,
+        sb12, sb13, sb14, sb15;
     };
 
 endmodule
 
-
-//              /
-//  working    /
-//           \/
-
-
-// i couldn't think in a way to make the s box and the module in th same file
-//(عشان في الفريلوج متعرفش تعمل اراي فيها قيم ثابتة الكلام ده في السيستم فريلوج بس)
 
