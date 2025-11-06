@@ -38,3 +38,20 @@ parameter [7:0] Rcon [0:10] = '{
 };
 
 `endif
+
+
+// notes (abdulrahman hassan)
+//this code have some parts working only with SystemVerilog 
+/*
+
+
+        Feature	             SystemVerilog	Verilog-2001
+'{' ... '} array literal	      ✅	            ❌
+
+parameter array	                  ✅	            ❌
+
+$error	                          ✅	            ❌
+
+$display, $stop	                  ✅	            ✅
+
+*/

@@ -1,1 +1,4 @@
-write down every thing added to your code every time you push data to the repo
+at first we tried to create a combination key expansion.
+
+
+With the second commit of files, I added a key scedular that is iterative and sequential.
