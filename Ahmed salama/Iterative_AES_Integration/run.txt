@@ -1,9 +1,0 @@
-vlib work 
-vlog -f source_file.txt
-vsim -voptargs=+accs work.AES_ENC_TB
-add wave *
-add wave -position insertpoint  \
-sim:/AES_ENC_TB/DUT/U_AES_ENC/Round_Count
-add wave -position insertpoint  \
-sim:/AES_ENC_TB/DUT/U_AES_ENC/Cycles_Count
-run -all 
