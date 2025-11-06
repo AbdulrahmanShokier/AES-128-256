@@ -19,23 +19,22 @@ module mix_columns #(parameter BLOCK_LENGTH = 128)
         s[12], s[12], s[14], s[15]
     } = IN;
 
-	
+
     // GF(2^8) multiplication functions
-    function [7:0] xtime(input [7:0] x);
+    function [7:0] xMul(input [7:0] bn);
         begin
-            xtime = (x[7]) ? ((x << 1) ^ 8'h1b) : (x << 1);
+            xMul = (bn << 1) ^ {0, 0, 0, bn[7], bn[7], 0, bn[7], bn[7]}; // 2 * b = (b * X) ^ (b7 * X^8 = b4 * (x^4+x^3+x+1))
         end
     endfunction
 
 	
-    function [7:0] mul2(input [7:0] x);
-        mul2 = xtime(x);
+    function [7:0] mul2(input [7:0] bn);
+        mul2 = xMul(bn);
     endfunction
 
-    function [7:0] mul3(input [7:0] x);
-        mul3 = xtime(x) ^ x;
+    function [7:0] mul3(input [7:0] bn);
+        mul3 = xMul(bn) ^ bn;
     endfunction
-
 
     // Column 1 
     assign m[0]  = mul2(s[0]) ^ mul3(s[1]) ^ s[2] ^ s[3];
