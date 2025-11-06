@@ -6,13 +6,11 @@ module S_box
 
 always @(*) begin
     case (in_byte)
-		/* first row in AES S-BOX table*/ 
         8'h00: out_byte = 8'h63;  8'h01: out_byte = 8'h7c;  8'h02: out_byte = 8'h77;  8'h03: out_byte = 8'h7b;
         8'h04: out_byte = 8'hf2;  8'h05: out_byte = 8'h6b;  8'h06: out_byte = 8'h6f;  8'h07: out_byte = 8'hc5;
         8'h08: out_byte = 8'h30;  8'h09: out_byte = 8'h01;  8'h0a: out_byte = 8'h67;  8'h0b: out_byte = 8'h2b;
         8'h0c: out_byte = 8'hfe;  8'h0d: out_byte = 8'hd7;  8'h0e: out_byte = 8'hab;  8'h0f: out_byte = 8'h76;
 
-		/* second row.. until 16th row */ 
         8'h10: out_byte = 8'hca;  8'h11: out_byte = 8'h82;  8'h12: out_byte = 8'hc9;  8'h13: out_byte = 8'h7d;
         8'h14: out_byte = 8'hfa;  8'h15: out_byte = 8'h59;  8'h16: out_byte = 8'h47;  8'h17: out_byte = 8'hf0;
         8'h18: out_byte = 8'had;  8'h19: out_byte = 8'hd4;  8'h1a: out_byte = 8'ha2;  8'h1b: out_byte = 8'haf;

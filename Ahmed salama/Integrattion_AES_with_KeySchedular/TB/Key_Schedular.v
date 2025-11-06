@@ -1,5 +1,5 @@
 
-module Key_Gen
+module Key_Schedular
 #(parameter KEY_LENGTH = 128, 
 		    KEY_WORD_LENGTH = 32,		// 128/4 (4 key words)
 		    QUART_KW_LENGTH = 8 )		// 32/4 (Quarter of KW)
@@ -8,7 +8,8 @@ module Key_Gen
 input wire 						RST, 
 input wire 						CLK, 
 input wire [KEY_LENGTH-1:0] 	M_KEY, 				// Main key
-input wire 						En, 				// enable for key Generator 
+input wire 						AES_En, 			// the global Enable (to let M_KEY get in)
+input wire 						K_En, 				// enable to generate round subkey (local Enable)
 output reg [KEY_LENGTH-1:0] 	subKey_curr 		// subkey output 
 ); 
 
@@ -19,18 +20,21 @@ reg [KEY_LENGTH-1:0] subKey_next;
 reg  [KEY_WORD_LENGTH-1:0] W3_perm;			// W3 permutated through g-function 
 wire [KEY_WORD_LENGTH-1:0] W3_S;	 		// W3 S_boxes output th. g-function 
 wire [KEY_WORD_LENGTH-1:0] W3_g;			// the output of g-func of input: W3
-reg  [3:0] 				   Round_Count; 	
+reg  [4:0] 				   Round_Count; 	// extend it to 4 bits for other key spaces -> other number of rounds 
 reg  [QUART_KW_LENGTH-1:0] Round_Const; 	// it's made 8 to be as long as key_W/4 as inside the g-func 
-
-wire [KEY_WORD_LENGTH-1:0] test1,test2,test3,test4; 
-
+		
+		
+	/* current subkey logic */ 
 always@(posedge CLK, negedge RST)
 begin
  if(!RST)
-	subKey_curr <= M_KEY; 			// k0 
- else if(En) 
-	subKey_curr <= subKey_next; 	// other round key
+	subKey_curr <= 128'b0; 			
+ else if(AES_En && Round_Count == 'd1) 
+	subKey_curr <= M_KEY; 			// K0
+ else if(K_En)
+	subKey_curr <= subKey_next; 
 end 
+
 
 			/* Next subkey logic */ 
 always@(*)
@@ -56,6 +60,9 @@ begin
 	W3_perm[7:0]   = subKey_curr[31:24]; 
 end 
 
+// OR :
+// assign W3_perm = {subKey_curr << 8, subKey_curr[31:24]}; 
+
 S_box S1( .in_byte(W3_perm[7:0]),   .out_byte(W3_S[7:0])   );
 S_box S2( .in_byte(W3_perm[15:8]),  .out_byte(W3_S[15:8])  );
 S_box S3( .in_byte(W3_perm[23:16]), .out_byte(W3_S[23:16]) );
@@ -69,8 +76,8 @@ always@(posedge CLK or negedge RST)
 begin 
  if(!RST)
 	Round_Count <= 4'd1; 
- else if (En)
-	Round_Count <= Round_Count + 4'd1; 
+ else if (K_En)
+	Round_Count <= Round_Count + 4'd1; 	// next round 
 end 
 
 /* Then generate Round Constant */ 
@@ -87,6 +94,7 @@ begin
  4'd8:  Round_Const = 8'h80; 
  4'd9:  Round_Const = 8'h1B; 
  4'd10: Round_Const = 8'h36; 
+ default: Round_Const = 8'h0; 
 
  endcase
 end 

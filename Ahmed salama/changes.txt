@@ -1,17 +1,19 @@
-first click (left CTRL with right SHIFT) from kboard, and 
-maximize the notbad window to see well 
 
 
-there are 2 draws for blocks for iterative AES encryption, 
-we need to do the following: 
+I have completed both the Encryption alogrithm & Key shcrdular 
+using the round blocks that Hassan provided us. 
 
+Then, integrated them both under one TOP level: 'AES_ENC_TOP.v' 
+also have tested the whole design using a Key & PT and 
+check CT_i and Final CT through the excel sheet 
 
-عاوزين بقى دلوقتي
-1- واحد يكمل على ال AES_Encryption اللي هرفعه، ويظبط ال counter وال selectors اللي بتعتمد عليه (عددهم 3)، ومنهم ال Valid signal.. ويimplement الكاونتر.. ويخلصه وي simulate ويتأكد إن الدنيا شغالة.. ويستخدم الأول Keys جاهزة في ال TB، وبعد كدا يـ integrate ال KeyGen ويجربهم مع بعض.. ووهو شغال يعتمد على الصورتين اللي بعتهم فوق(وهرفقهم هنا) لشكل ال blocks، ولو فيه حاجة مش عارفها يقولي نتناقش فيها.
-(وطبعا بما في ذلك ال MUX_2x1_128).
+and got successful results. 
 
-2- واحد يعمل ال decryption باستخدام برضو نفس ال modules اللي هنرفعها وهكذا، لكن يرسم الأول زي رسمة الEncryption، وبعد كدا يشتغل الكود زي ما عملنا في ال decryption، ويجرب برضو الدنيا شغالة ولا لا ب keys جاهزة، لخد ما ال keyGen for decryptتجهز 
-
-3- حد يعمل بقى ال keyGen for decryption، ويستخدم ال module اللي أنا رافعه بتاع ال KeyGen بتاريخ 23\10 
-
-4- حد يintegrate السيستم كاملا، ويكتب له automated test bench
+---
+ 
+This desing is not the final desing for iterative encryption, 
+soon ISA I will ptimize the RTL: 
+- Adding FSM in separate file to solve the current complexity in
+  'AES_Encryption.v' 
+- make it suitable for a better no. of sequential stages per round, 
+  we will ask Dr.Hatem about that. 
