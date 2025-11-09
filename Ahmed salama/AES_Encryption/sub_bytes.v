@@ -46,7 +46,7 @@ module sub_bytes #(parameter BLOCK_LENGTH = 128)
         sb0, sb1, sb2, sb3,
         sb4, sb5, sb6, sb7,
         sb8, sb9, sb10, sb11,
-        sb12, sb13, sb14, sb15;
+        sb12, sb13, sb14, sb15
     };
 
 endmodule

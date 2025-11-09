@@ -25,15 +25,15 @@ reg  [4:0] Round_Count; 	// #log2(no. of Rounds) -- may be add 2 parameters
 assign SEL_PT = Round_Count != 4'd1; 	// sure? 
 assign SEL_KAdd = Round_Count != 4'd10; // sure? 
 
-MUX2x1_128 MUX_PT_U0(.IN1(PT), .IN2(CT_i), SEL(SEL_PT), .OUT(PT_i)); 
+MUX2x1_128 MUX_PT_U0(.IN1(PT), .IN2(CT_i), .SEL(SEL_PT), .OUT(PT_i)); 
 
 sub_bytes SB_U0(.IN(PT_i), .OUT(subByteOut_i));
 
-shift_rows SR_U0(.IN(subByteOut_i), OUT(shiftRowOut_i));
+shift_rows SR_U0(.IN(subByteOut_i), .OUT(shiftRowOut_i));
 
 mix_columns MX_U0(.IN(shiftRowOut_i), .OUT(mixColOut_i)); 
  
-MUX2x1_128 MUX_KAdd (.IN1(shiftRowOut_i), .IN2(mixColOut_i), SEL(SEL_KAdd), .OUT(KAddIn_i));
+MUX2x1_128 MUX_KAdd (.IN1(shiftRowOut_i), .IN2(mixColOut_i), .SEL(SEL_KAdd), .OUT(KAddIn_i));
 
 key_add KA_U0(.IN(KAddIn_i), .KEY(K_i), .OUT(KAddOut_i));
 
