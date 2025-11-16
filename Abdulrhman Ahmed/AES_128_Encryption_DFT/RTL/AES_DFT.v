@@ -1,22 +1,22 @@
 module AES_DFT (
-    input wire clk,       // 100MHz clock from board
-    input wire rst_n,     // Reset button (active-low)
+    input wire clk,       // clock from board
+    input wire rst_n,     // Reset (active-low)
     input wire [2:0] sw,  // 3 switches to select test vector
     
     output reg led_success, // LED<0>
     output reg led_fail     // LED<7>
 );
-    // --- Internal Registers and Wires ---
+    // Internal Registers and Wires
     reg [127:0] selected_pt;
     reg [127:0] selected_key;
     reg [127:0] expected_ct;
     wire [127:0] actual_ct_from_aes;
    
-  	 wire          aes_done;
+  	wire         aes_done;
     reg          aes_start;
     reg          core_rst; // Internal reset for the AES core
 
-    // --- State machine ---
+    // State machine
     reg [2:0] state;
     localparam STATE_IDLE       = 3'b000; // Waiting for reset to be pressed/released
     localparam STATE_START_AES  = 3'b001; // Start the core
@@ -120,7 +120,7 @@ module AES_DFT (
                 end
                 
                 STATE_START_AES: begin
-                    aes_start <= 1'b1;  // <-- PULSE En_top
+                    aes_start <= 1'b1;  
                     state <= STATE_WAIT_AES;
                 end
                 
