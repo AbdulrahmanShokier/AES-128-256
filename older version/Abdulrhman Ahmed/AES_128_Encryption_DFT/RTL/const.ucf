@@ -1,0 +1,11 @@
+NET "clk" LOC = "L15"; # 100MHz main clock
+
+NET "rst_n" LOC = "T15";
+
+NET "sw<0>" LOC = "A10"; # Sch name = SW0
+NET "sw<1>" LOC = "D14"; # Sch name = SW1
+NET "sw<2>" LOC = "C14"; # Sch name = SW2
+
+
+NET "led_success" LOC = "U18"; # Sch name = LD0 (Success LED)
+NET "led_fail"    LOC = "M13"; # Sch name = LD7 (Fail LED)

@@ -1,0 +1,11 @@
+vlib work 
+vlog -f source_file.txt
+vsim -voptargs=+accs work.AES_TB
+add wave *
+add wave -position insertpoint  \
+sim:/AES_ENC_TB/DUT/SEL_PT \
+sim:/AES_ENC_TB/DUT/SEL_KAdd \
+sim:/AES_ENC_TB/DUT/SEL_LastRound \
+sim:/AES_ENC_TB/DUT/Op_Flag \
+sim:/AES_ENC_TB/DUT/Round_Count
+run -all 

@@ -1,0 +1,3 @@
+optimizations: 
+- Round_Constant equ 
+- one counter for both (فاكس)

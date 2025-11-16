@@ -1,0 +1,9 @@
+
+* modif. sequences: 
+- CT_i now is not reigisterd >> PT_i is registered instead
+wire [BLOCK_LENGTH-1:0] KAddOut_i;
+wire [BLOCK_LENGTH-1:0] CT_i; 
+(they are both one now >> CT_i is أبقي عليه )
+
+* counter: 
+- init = 0
