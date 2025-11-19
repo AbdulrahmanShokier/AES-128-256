@@ -11,6 +11,8 @@ module AES_key_schedular
     wire [127:0] out_KeyExp_forward;
     wire [127:0] out_KeyExp_reverse;
     reg  [127:0] MUX_OUT;
+    wire [31:0] word_from_ReverseKeyExp_to_g_func;
+    wire [31:0] word_to_ReverseKeyExp_from_g_func;
 
     always @(*)begin
         case(control_signal)
@@ -34,6 +36,9 @@ module AES_key_schedular
         .word_in_2(round_key_out[63:32]),
         .word_in_3(round_key_out[31:0]),
         .round_number(round_number),
+        .control_signal(control_signal),
+        .word_from_ReverseKeyExp_to_g_func(word_from_ReverseKeyExp_to_g_func),
+        .word_to_ReverseKeyExp_from_g_func(word_to_ReverseKeyExp_from_g_func),
         .next_round_word_0(out_KeyExp_forward[127:96]),
         .next_round_word_1(out_KeyExp_forward[95:64]),
         .next_round_word_2(out_KeyExp_forward[63:32]),
@@ -45,7 +50,9 @@ module AES_key_schedular
         .word_in_1(round_key_out[95:64]),
         .word_in_2(round_key_out[63:32]),
         .word_in_3(round_key_out[31:0]),
-        .round_number(round_number),
+        //.round_number(round_number),
+        .word_from_g_func(word_to_ReverseKeyExp_from_g_func),
+        .word_to_g_func(word_from_ReverseKeyExp_to_g_func),
         .previous_round_word_0(out_KeyExp_reverse[127:96]),
         .previous_round_word_1(out_KeyExp_reverse[95:64]),
         .previous_round_word_2(out_KeyExp_reverse[63:32]),
