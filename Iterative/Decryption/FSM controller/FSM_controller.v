@@ -79,7 +79,6 @@ module FSM_controller (
             end 
             else begin
                 ChiperKey_buffer <= ChiperKey_buffer;
-                key10_dec_buffer <= key10_dec_buffer;
             end
         end
     end
