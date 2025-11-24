@@ -76,7 +76,6 @@ AES_Top AESDEC_U (
     .RoundKey_i(roundkey_from_keyexp),    // Iterative round key from Key Scheduler
     .Round_Number(round_number),     // Round number from FSM
     .Plain_Text(plain_text),         // Output plaintext
-    .Valid(valid_out)      // Output valid signal
 );
                   
 

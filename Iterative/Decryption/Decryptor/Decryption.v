@@ -79,17 +79,10 @@
         end
 
         // -----------------------------
-        // Output PT & Valid
+        // Output PT 
         // -----------------------------
         assign PT = CT_reg;                 // PT always shows current CT_reg
 
-        always @(posedge CLK or negedge RST) begin
-            if (!RST)
-                Valid <= 1'b0;
-            else if (SEL_LastRound)
-                Valid <= 1'b1;
-            else
-                Valid <= 1'b0;
-        end
+        
 
     endmodule
