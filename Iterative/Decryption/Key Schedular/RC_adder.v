@@ -30,4 +30,4 @@ module RC_adder (
     assign byte_out = byte_in ^ round_counter_polynomial;
 
 
-endmodule; //RC_adder
+endmodule //RC_adder
