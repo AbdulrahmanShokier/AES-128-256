@@ -16,7 +16,7 @@ module AES_Top #(parameter BLOCK_LENGTH = 128) (
         .CT(Cipher_Text),
         .K_i(RoundKey_i),
         .Round_Number(Round_Number),
-        .PT(Plain_Text),
+        .PT(Plain_Text)
     );
 
 endmodule
