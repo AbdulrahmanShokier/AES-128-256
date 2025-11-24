@@ -62,19 +62,20 @@ module FSM_controller (
 
 
 
-    // --- Key Buffer Logic ---
+     // --- Key Buffer Logic -------
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             ChiperKey_buffer <= 128'b0;
             key10_dec_buffer <= 128'b0;
         end else begin
+            if (current_state == DECRYPT && round_counter== 4'd10) begin
+                key10_dec_buffer <= KeyExp_RoundKey;
+            end else begin
+                key10_dec_buffer <= key10_dec_buffer;
+            end
+
             if (vaild_in) begin
-                ChiperKey_buffer <= key_in;
-                if (current_state == DECRYPT && round_counter== 4'd10) begin
-                    key10_dec_buffer <= KeyExp_RoundKey;
-                end else begin
-                    key10_dec_buffer <= key10_dec_buffer;
-                end
+                ChiperKey_buffer <= key_in; 
             end 
             else begin
                 ChiperKey_buffer <= ChiperKey_buffer;
