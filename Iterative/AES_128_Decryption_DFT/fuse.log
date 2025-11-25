@@ -1,0 +1,51 @@
+Running: C:\Xilinx\14.7\ISE_DS\ISE\bin\nt64\unwrapped\fuse.exe -intstyle ise -incremental -lib unisims_ver -lib unimacro_ver -lib xilinxcorelib_ver -lib secureip -o E:/AES/ISE/AES_128_Decryption_Iterative/tb_AES_DFT_Decrypt_Reset_Method_isim_beh.exe -prj E:/AES/ISE/AES_128_Decryption_Iterative/tb_AES_DFT_Decrypt_Reset_Method_beh.prj work.tb_AES_DFT_Decrypt_Reset_Method work.glbl 
+ISim P.20131013 (signature 0x7708f090)
+Number of CPUs detected in this system: 4
+Turning on mult-threading, number of parallel sub-compilation jobs: 8 
+Determining compilation order of HDL files
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Key Schedular/S-BOX.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Key Schedular/RC_adder.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Decryptor/S box.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Key Schedular/g_function.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Decryptor/inv sub bytes.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Decryptor/Inv shift Rows.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Decryptor/Inv mix col.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Decryptor/Add Key.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Key Schedular/AES_KeyExpansion_Reverse_calc.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Key Schedular/AES_KeyExpansion_Forward_calc.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Decryptor/Decryption.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Key Schedular/AES_key_schedular.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/FSM controller/FSM_controller.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Decryptor/Top.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Top module/Top_module.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/AES_128_Decryption_DFT.v" into library work
+Analyzing Verilog file "E:/AES/ISE/AES_128_Decryption_Iterative/Testbench_decrypt.v" into library work
+Analyzing Verilog file "C:/Xilinx/14.7/ISE_DS/ISE//verilog/src/glbl.v" into library work
+Starting static elaboration
+WARNING:HDLCompiler:1016 - "E:/AES/ISE/AES_128_Decryption_Iterative/AES_128_Decryption_DFT.v" Line 118: Port keyexp_roundkey_test is not connected to this instance
+WARNING:HDLCompiler:1016 - "E:/AES/ISE/AES_128_Decryption_Iterative/../../AES-128-256/Iterative/Decryption/Decryptor/Top.v" Line 12: Port Valid is not connected to this instance
+Completed static elaboration
+Compiling module FSM_controller
+Compiling module AES_Sbox
+Compiling module RC_adder
+Compiling module g_function
+Compiling module AES_KeyExpansion_Forward_calc
+Compiling module AES_KeyExpansion_Reverse_calc
+Compiling module AES_key_schedular
+Compiling module key_add
+Compiling module InvMixColumns
+Compiling module InvShiftRows
+Compiling module AES_InvSbox
+Compiling module InvSubBytes
+Compiling module AES_Decryption(BLOCK_LENGTH=128)
+Compiling module AES_Top
+Compiling module Top_Module
+Compiling module AES_DFT_Decrypt
+Compiling module tb_AES_DFT_Decrypt_Reset_Method
+Compiling module glbl
+Time Resolution for simulation is 1ps.
+Waiting for 11 sub-compilation(s) to finish...
+Compiled 18 Verilog Units
+Built simulation executable E:/AES/ISE/AES_128_Decryption_Iterative/tb_AES_DFT_Decrypt_Reset_Method_isim_beh.exe
+Fuse Memory Usage: 31260 KB
+Fuse CPU Usage: 390 ms

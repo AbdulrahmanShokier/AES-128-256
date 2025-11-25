@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -lib "unisims_ver" -lib "unimacro_ver" -lib "xilinxcorelib_ver" -lib "secureip" -o "E:/AES/ISE/AES_128_Decryption_Iterative/tb_AES_DFT_Decrypt_Reset_Method_isim_beh.exe" -prj "E:/AES/ISE/AES_128_Decryption_Iterative/tb_AES_DFT_Decrypt_Reset_Method_beh.prj" "work.tb_AES_DFT_Decrypt_Reset_Method" "work.glbl" 

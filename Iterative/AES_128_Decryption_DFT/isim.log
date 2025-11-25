@@ -1,0 +1,53 @@
+ISim log file
+Running: E:\AES\ISE\AES_128_Decryption_Iterative\tb_AES_DFT_Decrypt_Reset_Method_isim_beh.exe -intstyle ise -gui -tclbatch isim.cmd -wdb E:/AES/ISE/AES_128_Decryption_Iterative/tb_AES_DFT_Decrypt_Reset_Method_isim_beh.wdb 
+ISim P.20131013 (signature 0x7708f090)
+This is a Full version of ISim.
+Time resolution is 1 ps
+# onerror resume
+# wave add /
+# run 1000 ns
+Simulator is doing circuit initialization process.
+SIMULATION START: Testing all 8 switch combinations for DECRYPTION.
+Finished circuit initialization process.
+--- Setting switches for DECRYPTION TEST CASE           0 ---
+Pulsing reset to start decryption test...
+# run 1.00us
+# run 1.00us
+Test Case           0 PASSED.
+--- Setting switches for DECRYPTION TEST CASE           1 ---
+Pulsing reset to start decryption test...
+# run 1.00us
+# run 1.00us
+Test Case           1 PASSED.
+--- Setting switches for DECRYPTION TEST CASE           2 ---
+Pulsing reset to start decryption test...
+# run 1.00us
+# run 1.00us
+Test Case           2 PASSED.
+# run 1.00us
+--- Setting switches for DECRYPTION TEST CASE           3 ---
+Pulsing reset to start decryption test...
+# run 1.00us
+# run 1.00us
+Test Case           3 PASSED.
+--- Setting switches for DECRYPTION TEST CASE           4 ---
+Pulsing reset to start decryption test...
+# run 1.00us
+# run 1.00us
+>>> TEST CASE           4 FAILED! 'led_fail' is high.
+--- Setting switches for DECRYPTION TEST CASE           5 ---
+Pulsing reset to start decryption test...
+# run 1.00us
+# run 1.00us
+# run 1.00us
+>>> TEST CASE           5 FAILED! 'led_fail' is high.
+--- Setting switches for DECRYPTION TEST CASE           6 ---
+Pulsing reset to start decryption test...
+# run 1.00us
+# run 1.00us
+Test Case           6 PASSED.
+--- Setting switches for DECRYPTION TEST CASE           7 ---
+Pulsing reset to start decryption test...
+# run 1.00us
+# run 1.00us
+Test Case           7 PASSED.

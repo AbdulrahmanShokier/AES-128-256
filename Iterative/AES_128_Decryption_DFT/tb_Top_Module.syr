@@ -1,0 +1,157 @@
+Release 14.7 - xst P.20131013 (nt64)
+Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+--> Parameter TMPDIR set to xst/projnav.tmp
+
+
+Total REAL time to Xst completion: 0.00 secs
+Total CPU time to Xst completion: 0.12 secs
+ 
+--> Parameter xsthdpdir set to xst
+
+
+Total REAL time to Xst completion: 0.00 secs
+Total CPU time to Xst completion: 0.13 secs
+ 
+--> Reading design: tb_Top_Module.prj
+
+TABLE OF CONTENTS
+  1) Synthesis Options Summary
+  2) HDL Parsing
+  3) HDL Elaboration
+  4) HDL Synthesis
+       4.1) HDL Synthesis Report
+  5) Advanced HDL Synthesis
+       5.1) Advanced HDL Synthesis Report
+  6) Low Level Synthesis
+  7) Partition Report
+  8) Design Summary
+       8.1) Primitive and Black Box Usage
+       8.2) Device utilization summary
+       8.3) Partition Resource Summary
+       8.4) Timing Report
+            8.4.1) Clock Information
+            8.4.2) Asynchronous Control Signals Information
+            8.4.3) Timing Summary
+            8.4.4) Timing Details
+            8.4.5) Cross Clock Domains Report
+
+
+=========================================================================
+*                      Synthesis Options Summary                        *
+=========================================================================
+---- Source Parameters
+Input File Name                    : "tb_Top_Module.prj"
+Ignore Synthesis Constraint File   : NO
+
+---- Target Parameters
+Output File Name                   : "tb_Top_Module"
+Output Format                      : NGC
+Target Device                      : xc6slx45-3-csg324
+
+---- Source Options
+Top Module Name                    : tb_Top_Module
+Automatic FSM Extraction           : YES
+FSM Encoding Algorithm             : Auto
+Safe Implementation                : No
+FSM Style                          : LUT
+RAM Extraction                     : Yes
+RAM Style                          : Auto
+ROM Extraction                     : Yes
+Shift Register Extraction          : YES
+ROM Style                          : Auto
+Resource Sharing                   : YES
+Asynchronous To Synchronous        : NO
+Shift Register Minimum Size        : 2
+Use DSP Block                      : Auto
+Automatic Register Balancing       : No
+
+---- Target Options
+LUT Combining                      : Auto
+Reduce Control Sets                : Auto
+Add IO Buffers                     : YES
+Global Maximum Fanout              : 100000
+Add Generic Clock Buffer(BUFG)     : 16
+Register Duplication               : YES
+Optimize Instantiated Primitives   : NO
+Use Clock Enable                   : Auto
+Use Synchronous Set                : Auto
+Use Synchronous Reset              : Auto
+Pack IO Registers into IOBs        : Auto
+Equivalent register Removal        : YES
+
+---- General Options
+Optimization Goal                  : Speed
+Optimization Effort                : 1
+Power Reduction                    : NO
+Keep Hierarchy                     : No
+Netlist Hierarchy                  : As_Optimized
+RTL Output                         : Yes
+Global Optimization                : AllClockNets
+Read Cores                         : YES
+Write Timing Constraints           : NO
+Cross Clock Analysis               : NO
+Hierarchy Separator                : /
+Bus Delimiter                      : <>
+Case Specifier                     : Maintain
+Slice Utilization Ratio            : 100
+BRAM Utilization Ratio             : 100
+DSP48 Utilization Ratio            : 100
+Auto BRAM Packing                  : NO
+Slice Utilization Ratio Delta      : 5
+
+=========================================================================
+
+
+=========================================================================
+*                          HDL Parsing                                  *
+=========================================================================
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\S-BOX.v" into library work
+Parsing module <AES_Sbox>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\RC_adder.v" into library work
+Parsing module <RC_adder>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\S box.v" into library work
+Parsing module <AES_InvSbox>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\g_function.v" into library work
+Parsing module <g_function>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\inv sub bytes.v" into library work
+Parsing module <InvSubBytes>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Inv shift Rows.v" into library work
+Parsing module <InvShiftRows>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Inv mix col.v" into library work
+Parsing module <InvMixColumns>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Add Key.v" into library work
+Parsing module <key_add>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\AES_KeyExpansion_Reverse_calc.v" into library work
+Parsing module <AES_KeyExpansion_Reverse_calc>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\AES_KeyExpansion_Forward_calc.v" into library work
+Parsing module <AES_KeyExpansion_Forward_calc>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Decryption.v" into library work
+Parsing module <AES_Decryption>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\AES_key_schedular.v" into library work
+Parsing module <AES_key_schedular>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\FSM controller\FSM_controller.v" into library work
+Parsing module <FSM_controller>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Top.v" into library work
+Parsing module <AES_Top>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Top module\Top_module.v" into library work
+Parsing module <Top_Module>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Test Benches\TB_top_module.v" into library work
+Parsing module <tb_Top_Module>.
+
+=========================================================================
+*                            HDL Elaboration                            *
+=========================================================================
+
+Elaborating module <tb_Top_Module>.
+ERROR:HDLCompiler:1440 - "E:\AES\AES-128-256\Iterative\Decryption\Test Benches\TB_top_module.v" Line 40: Non-constant loop condition not supported for forever
+WARNING:HDLCompiler:872 - "E:\AES\AES-128-256\Iterative\Decryption\Test Benches\TB_top_module.v" Line 38: Using initial value of clk since it is never assigned
+Module tb_Top_Module remains a blackbox, due to errors in its contents
+WARNING:HDLCompiler:1499 - "E:\AES\AES-128-256\Iterative\Decryption\Test Benches\TB_top_module.v" Line 3: Empty module <tb_Top_Module> remains a black box.
+--> 
+
+Total memory usage is 4449532 kilobytes
+
+Number of errors   :    1 (   0 filtered)
+Number of warnings :    2 (   0 filtered)
+Number of infos    :    0 (   0 filtered)
+

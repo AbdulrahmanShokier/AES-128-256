@@ -1,0 +1,737 @@
+Release 14.7 - xst P.20131013 (nt64)
+Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+--> Parameter TMPDIR set to xst/projnav.tmp
+
+
+Total REAL time to Xst completion: 0.00 secs
+Total CPU time to Xst completion: 0.11 secs
+ 
+--> Parameter xsthdpdir set to xst
+
+
+Total REAL time to Xst completion: 0.00 secs
+Total CPU time to Xst completion: 0.11 secs
+ 
+--> Reading design: Top_Module.prj
+
+TABLE OF CONTENTS
+  1) Synthesis Options Summary
+  2) HDL Parsing
+  3) HDL Elaboration
+  4) HDL Synthesis
+       4.1) HDL Synthesis Report
+  5) Advanced HDL Synthesis
+       5.1) Advanced HDL Synthesis Report
+  6) Low Level Synthesis
+  7) Partition Report
+  8) Design Summary
+       8.1) Primitive and Black Box Usage
+       8.2) Device utilization summary
+       8.3) Partition Resource Summary
+       8.4) Timing Report
+            8.4.1) Clock Information
+            8.4.2) Asynchronous Control Signals Information
+            8.4.3) Timing Summary
+            8.4.4) Timing Details
+            8.4.5) Cross Clock Domains Report
+
+
+=========================================================================
+*                      Synthesis Options Summary                        *
+=========================================================================
+---- Source Parameters
+Input File Name                    : "Top_Module.prj"
+Ignore Synthesis Constraint File   : NO
+
+---- Target Parameters
+Output File Name                   : "Top_Module"
+Output Format                      : NGC
+Target Device                      : xc6slx45-3-csg324
+
+---- Source Options
+Top Module Name                    : Top_Module
+Automatic FSM Extraction           : YES
+FSM Encoding Algorithm             : Auto
+Safe Implementation                : No
+FSM Style                          : LUT
+RAM Extraction                     : Yes
+RAM Style                          : Auto
+ROM Extraction                     : Yes
+Shift Register Extraction          : YES
+ROM Style                          : Auto
+Resource Sharing                   : YES
+Asynchronous To Synchronous        : NO
+Shift Register Minimum Size        : 2
+Use DSP Block                      : Auto
+Automatic Register Balancing       : No
+
+---- Target Options
+LUT Combining                      : Auto
+Reduce Control Sets                : Auto
+Add IO Buffers                     : YES
+Global Maximum Fanout              : 100000
+Add Generic Clock Buffer(BUFG)     : 16
+Register Duplication               : YES
+Optimize Instantiated Primitives   : NO
+Use Clock Enable                   : Auto
+Use Synchronous Set                : Auto
+Use Synchronous Reset              : Auto
+Pack IO Registers into IOBs        : Auto
+Equivalent register Removal        : YES
+
+---- General Options
+Optimization Goal                  : Speed
+Optimization Effort                : 1
+Power Reduction                    : NO
+Keep Hierarchy                     : No
+Netlist Hierarchy                  : As_Optimized
+RTL Output                         : Yes
+Global Optimization                : AllClockNets
+Read Cores                         : YES
+Write Timing Constraints           : NO
+Cross Clock Analysis               : NO
+Hierarchy Separator                : /
+Bus Delimiter                      : <>
+Case Specifier                     : Maintain
+Slice Utilization Ratio            : 100
+BRAM Utilization Ratio             : 100
+DSP48 Utilization Ratio            : 100
+Auto BRAM Packing                  : NO
+Slice Utilization Ratio Delta      : 5
+
+=========================================================================
+
+
+=========================================================================
+*                          HDL Parsing                                  *
+=========================================================================
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\S-BOX.v" into library work
+Parsing module <AES_Sbox>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\RC_adder.v" into library work
+Parsing module <RC_adder>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\S box.v" into library work
+Parsing module <AES_InvSbox>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\g_function.v" into library work
+Parsing module <g_function>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\inv sub bytes.v" into library work
+Parsing module <InvSubBytes>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Inv shift Rows.v" into library work
+Parsing module <InvShiftRows>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Inv mix col.v" into library work
+Parsing module <InvMixColumns>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Add Key.v" into library work
+Parsing module <key_add>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\AES_KeyExpansion_Reverse_calc.v" into library work
+Parsing module <AES_KeyExpansion_Reverse_calc>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\AES_KeyExpansion_Forward_calc.v" into library work
+Parsing module <AES_KeyExpansion_Forward_calc>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Decryption.v" into library work
+Parsing module <AES_Decryption>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\AES_key_schedular.v" into library work
+Parsing module <AES_key_schedular>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\FSM controller\FSM_controller.v" into library work
+Parsing module <FSM_controller>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Top.v" into library work
+Parsing module <AES_Top>.
+Analyzing Verilog file "E:\AES\AES-128-256\Iterative\Decryption\Top module\Top_module.v" into library work
+Parsing module <Top_Module>.
+
+=========================================================================
+*                            HDL Elaboration                            *
+=========================================================================
+
+Elaborating module <Top_Module>.
+
+Elaborating module <FSM_controller>.
+WARNING:HDLCompiler:1127 - "E:\AES\AES-128-256\Iterative\Decryption\FSM controller\FSM_controller.v" Line 162: Assignment to round_count_diplay ignored, since the identifier is never used
+
+Elaborating module <AES_key_schedular>.
+
+Elaborating module <AES_KeyExpansion_Forward_calc>.
+
+Elaborating module <g_function>.
+
+Elaborating module <AES_Sbox>.
+
+Elaborating module <RC_adder>.
+
+Elaborating module <AES_KeyExpansion_Reverse_calc>.
+WARNING:HDLCompiler:1127 - "E:\AES\AES-128-256\Iterative\Decryption\Top module\Top_module.v" Line 64: Assignment to round_plaintext_test ignored, since the identifier is never used
+WARNING:HDLCompiler:1016 - "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Top.v" Line 12: Port Valid is not connected to this instance
+
+Elaborating module <AES_Top>.
+
+Elaborating module <AES_Decryption(BLOCK_LENGTH=128)>.
+
+Elaborating module <key_add>.
+
+Elaborating module <InvMixColumns>.
+
+Elaborating module <InvShiftRows>.
+
+Elaborating module <InvSubBytes>.
+
+Elaborating module <AES_InvSbox>.
+
+=========================================================================
+*                           HDL Synthesis                               *
+=========================================================================
+
+Synthesizing Unit <Top_Module>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Top module\Top_module.v".
+    Summary:
+	no macro.
+Unit <Top_Module> synthesized.
+
+Synthesizing Unit <FSM_controller>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\FSM controller\FSM_controller.v".
+    Found 128-bit register for signal <ChiperKey_buffer>.
+    Found 128-bit register for signal <key10_dec_buffer>.
+    Found 2-bit register for signal <current_state>.
+    Found 4-bit register for signal <round_counter>.
+    Found 1-bit register for signal <vaild_outFlag_ff>.
+    Found finite state machine <FSM_0> for signal <current_state>.
+    -----------------------------------------------------------------------
+    | States             | 3                                              |
+    | Transitions        | 7                                              |
+    | Inputs             | 4                                              |
+    | Outputs            | 5                                              |
+    | Clock              | clk (rising_edge)                              |
+    | Reset              | rst_n (negative)                               |
+    | Reset type         | asynchronous                                   |
+    | Reset State        | 00                                             |
+    | Encoding           | auto                                           |
+    | Implementation     | LUT                                            |
+    -----------------------------------------------------------------------
+    Found 4-bit subtractor for signal <round_counter[3]_GND_2_o_sub_19_OUT> created at line 109.
+    Found 4-bit adder for signal <round_counter[3]_GND_2_o_add_16_OUT> created at line 108.
+    Found 128-bit comparator equal for signal <if_key_same> created at line 38
+    Summary:
+	inferred   1 Adder/Subtractor(s).
+	inferred 261 D-type flip-flop(s).
+	inferred   1 Comparator(s).
+	inferred   2 Multiplexer(s).
+	inferred   1 Finite State Machine(s).
+Unit <FSM_controller> synthesized.
+
+Synthesizing Unit <AES_key_schedular>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\AES_key_schedular.v".
+    Found 128-bit register for signal <round_key_out>.
+    Summary:
+	inferred 128 D-type flip-flop(s).
+	inferred   2 Multiplexer(s).
+Unit <AES_key_schedular> synthesized.
+
+Synthesizing Unit <AES_KeyExpansion_Forward_calc>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\AES_KeyExpansion_Forward_calc.v".
+    Summary:
+Unit <AES_KeyExpansion_Forward_calc> synthesized.
+
+Synthesizing Unit <g_function>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\g_function.v".
+    Summary:
+	no macro.
+Unit <g_function> synthesized.
+
+Synthesizing Unit <AES_Sbox>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\S-BOX.v".
+    Found 256x8-bit Read Only RAM for signal <out_byte>
+    Summary:
+	inferred   1 RAM(s).
+Unit <AES_Sbox> synthesized.
+
+Synthesizing Unit <RC_adder>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\RC_adder.v".
+    Summary:
+Unit <RC_adder> synthesized.
+
+Synthesizing Unit <AES_KeyExpansion_Reverse_calc>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Key Schedular\AES_KeyExpansion_Reverse_calc.v".
+    Summary:
+Unit <AES_KeyExpansion_Reverse_calc> synthesized.
+
+Synthesizing Unit <AES_Top>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Top.v".
+        BLOCK_LENGTH = 128
+INFO:Xst:3210 - "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Top.v" line 12: Output port <Valid> of the instance <AES_Dec_U> is unconnected or connected to loadless signal.
+    Summary:
+	no macro.
+Unit <AES_Top> synthesized.
+
+Synthesizing Unit <AES_Decryption>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Decryption.v".
+        BLOCK_LENGTH = 128
+WARNING:Xst:653 - Signal <Valid> is used but never assigned. This sourceless signal will be automatically connected to value GND.
+    Found 128-bit register for signal <CT_reg>.
+    Summary:
+	inferred 128 D-type flip-flop(s).
+	inferred   3 Multiplexer(s).
+Unit <AES_Decryption> synthesized.
+
+Synthesizing Unit <key_add>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Add Key.v".
+        BLOCK_LENGTH = 128
+    Summary:
+Unit <key_add> synthesized.
+
+Synthesizing Unit <InvMixColumns>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Inv mix col.v".
+        BLOCK_LENGTH = 128
+    Summary:
+Unit <InvMixColumns> synthesized.
+
+Synthesizing Unit <InvShiftRows>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Inv shift Rows.v".
+        BLOCK_LENGTH = 128
+    Summary:
+	no macro.
+Unit <InvShiftRows> synthesized.
+
+Synthesizing Unit <InvSubBytes>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\inv sub bytes.v".
+        BLOCK_LENGTH = 128
+    Summary:
+	no macro.
+Unit <InvSubBytes> synthesized.
+
+Synthesizing Unit <AES_InvSbox>.
+    Related source file is "E:\AES\AES-128-256\Iterative\Decryption\Decryptor\S box.v".
+    Found 256x8-bit Read Only RAM for signal <out_byte>
+    Summary:
+	inferred   1 RAM(s).
+Unit <AES_InvSbox> synthesized.
+
+=========================================================================
+HDL Synthesis Report
+
+Macro Statistics
+# RAMs                                                 : 24
+ 256x8-bit single-port Read Only RAM                   : 24
+# Adders/Subtractors                                   : 1
+ 4-bit addsub                                          : 1
+# Registers                                            : 6
+ 1-bit register                                        : 1
+ 128-bit register                                      : 4
+ 4-bit register                                        : 1
+# Comparators                                          : 1
+ 128-bit comparator equal                              : 1
+# Multiplexers                                         : 7
+ 128-bit 2-to-1 multiplexer                            : 6
+ 4-bit 2-to-1 multiplexer                              : 1
+# FSMs                                                 : 1
+# Xors                                                 : 91
+ 128-bit xor2                                          : 1
+ 32-bit xor2                                           : 8
+ 8-bit xor2                                            : 66
+ 8-bit xor9                                            : 16
+
+=========================================================================
+
+=========================================================================
+*                       Advanced HDL Synthesis                          *
+=========================================================================
+
+
+Synthesizing (advanced) Unit <AES_InvSbox>.
+INFO:Xst:3218 - HDL ADVISOR - The RAM <Mram_out_byte> will be implemented on LUTs either because you have described an asynchronous read or because of currently unsupported block RAM features. If you have described an asynchronous read, making it synchronous would allow you to take advantage of available block RAM resources, for optimized device usage and improved timings. Please refer to your documentation for coding guidelines.
+    -----------------------------------------------------------------------
+    | ram_type           | Distributed                         |          |
+    -----------------------------------------------------------------------
+    | Port A                                                              |
+    |     aspect ratio   | 256-word x 8-bit                    |          |
+    |     weA            | connected to signal <GND>           | high     |
+    |     addrA          | connected to signal <in_byte>       |          |
+    |     diA            | connected to signal <GND>           |          |
+    |     doA            | connected to signal <out_byte>      |          |
+    -----------------------------------------------------------------------
+Unit <AES_InvSbox> synthesized (advanced).
+
+Synthesizing (advanced) Unit <AES_key_schedular>.
+INFO:Xst:3226 - The RAM <forward_calc_instance/g_func_instance/sbox2/Mram_out_byte> will be implemented as a BLOCK RAM, absorbing the following register(s): <round_key_out>
+    -----------------------------------------------------------------------
+    | ram_type           | Block                               |          |
+    -----------------------------------------------------------------------
+    | Port A                                                              |
+    |     aspect ratio   | 256-word x 8-bit                    |          |
+    |     mode           | write-first                         |          |
+    |     clkA           | connected to signal <clk>           | rise     |
+    |     enA            | connected to internal node          | low      |
+    |     weA            | connected to signal <GND>           | high     |
+    |     addrA          | connected to signal <MUX_OUT<7:0>>  |          |
+    |     diA            | connected to signal <GND>           |          |
+    |     doA            | connected to signal <forward_calc_instance/g_function_out> |          |
+    -----------------------------------------------------------------------
+    | optimization       | speed                               |          |
+    -----------------------------------------------------------------------
+INFO:Xst:3226 - The RAM <forward_calc_instance/g_func_instance/sbox0/Mram_out_byte> will be implemented as a BLOCK RAM, absorbing the following register(s): <round_key_out>
+    -----------------------------------------------------------------------
+    | ram_type           | Block                               |          |
+    -----------------------------------------------------------------------
+    | Port A                                                              |
+    |     aspect ratio   | 256-word x 8-bit                    |          |
+    |     mode           | write-first                         |          |
+    |     clkA           | connected to signal <clk>           | rise     |
+    |     enA            | connected to internal node          | low      |
+    |     weA            | connected to signal <GND>           | high     |
+    |     addrA          | connected to signal <MUX_OUT<23:16>> |          |
+    |     diA            | connected to signal <GND>           |          |
+    |     doA            | connected to signal <forward_calc_instance/g_func_instance/s0> |          |
+    -----------------------------------------------------------------------
+    | optimization       | speed                               |          |
+    -----------------------------------------------------------------------
+INFO:Xst:3226 - The RAM <forward_calc_instance/g_func_instance/sbox1/Mram_out_byte> will be implemented as a BLOCK RAM, absorbing the following register(s): <round_key_out>
+    -----------------------------------------------------------------------
+    | ram_type           | Block                               |          |
+    -----------------------------------------------------------------------
+    | Port A                                                              |
+    |     aspect ratio   | 256-word x 8-bit                    |          |
+    |     mode           | write-first                         |          |
+    |     clkA           | connected to signal <clk>           | rise     |
+    |     enA            | connected to internal node          | low      |
+    |     weA            | connected to signal <GND>           | high     |
+    |     addrA          | connected to signal <MUX_OUT<15:8>> |          |
+    |     diA            | connected to signal <GND>           |          |
+    |     doA            | connected to signal <forward_calc_instance/g_function_out> |          |
+    -----------------------------------------------------------------------
+    | optimization       | speed                               |          |
+    -----------------------------------------------------------------------
+INFO:Xst:3226 - The RAM <forward_calc_instance/g_func_instance/sbox3/Mram_out_byte> will be implemented as a BLOCK RAM, absorbing the following register(s): <round_key_out>
+    -----------------------------------------------------------------------
+    | ram_type           | Block                               |          |
+    -----------------------------------------------------------------------
+    | Port A                                                              |
+    |     aspect ratio   | 256-word x 8-bit                    |          |
+    |     mode           | write-first                         |          |
+    |     clkA           | connected to signal <clk>           | rise     |
+    |     enA            | connected to internal node          | low      |
+    |     weA            | connected to signal <GND>           | high     |
+    |     addrA          | connected to signal <MUX_OUT<31:24>> |          |
+    |     diA            | connected to signal <GND>           |          |
+    |     doA            | connected to signal <forward_calc_instance/g_function_out> |          |
+    -----------------------------------------------------------------------
+    | optimization       | speed                               |          |
+    -----------------------------------------------------------------------
+Unit <AES_key_schedular> synthesized (advanced).
+
+Synthesizing (advanced) Unit <FSM_controller>.
+The following registers are absorbed into counter <round_counter>: 1 register on signal <round_counter>.
+Unit <FSM_controller> synthesized (advanced).
+
+=========================================================================
+Advanced HDL Synthesis Report
+
+Macro Statistics
+# RAMs                                                 : 24
+ 256x8-bit single-port block Read Only RAM             : 4
+ 256x8-bit single-port distributed Read Only RAM       : 20
+# Counters                                             : 1
+ 4-bit updown counter                                  : 1
+# Registers                                            : 513
+ Flip-Flops                                            : 513
+# Comparators                                          : 1
+ 128-bit comparator equal                              : 1
+# Multiplexers                                         : 6
+ 128-bit 2-to-1 multiplexer                            : 6
+# FSMs                                                 : 1
+# Xors                                                 : 91
+ 128-bit xor2                                          : 1
+ 32-bit xor2                                           : 8
+ 8-bit xor2                                            : 66
+ 8-bit xor9                                            : 16
+
+=========================================================================
+
+=========================================================================
+*                         Low Level Synthesis                           *
+=========================================================================
+Analyzing FSM <MFsm> for best encoding.
+Optimizing FSM <FSM_U/FSM_0> on signal <current_state[1:2]> with user encoding.
+-------------------
+ State | Encoding
+-------------------
+ 00    | 00
+ 01    | 01
+ 10    | 10
+-------------------
+INFO:Xst:2697 - Unit <MTP_> : the RAMs <forward_calc_instance/g_func_instance/sbox2/Mram_out_byte>, <forward_calc_instance/g_func_instance/sbox0/Mram_out_byte> are packed into the single block RAM <forward_calc_instance/g_func_instance/sbox2/Mram_out_byte1>
+INFO:Xst:2697 - Unit <MTP_> : the RAMs <forward_calc_instance/g_func_instance/sbox1/Mram_out_byte>, <forward_calc_instance/g_func_instance/sbox3/Mram_out_byte> are packed into the single block RAM <forward_calc_instance/g_func_instance/sbox1/Mram_out_byte1>
+
+Optimizing unit <Top_Module> ...
+
+Optimizing unit <AES_Decryption> ...
+
+Optimizing unit <AES_key_schedular> ...
+
+Optimizing unit <AES_KeyExpansion_Reverse_calc> ...
+
+Mapping all equations...
+Building and optimizing final netlist ...
+Found area constraint ratio of 100 (+ 5) on block Top_Module, actual ratio is 7.
+FlipFlop FSM_U/round_counter_0 has been replicated 1 time(s)
+FlipFlop FSM_U/round_counter_1 has been replicated 1 time(s)
+FlipFlop FSM_U/round_counter_2 has been replicated 1 time(s)
+FlipFlop FSM_U/round_counter_3 has been replicated 1 time(s)
+
+Final Macro Processing ...
+
+=========================================================================
+Final Register Report
+
+Macro Statistics
+# Registers                                            : 523
+ Flip-Flops                                            : 523
+
+=========================================================================
+
+=========================================================================
+*                           Partition Report                            *
+=========================================================================
+
+Partition Implementation Status
+-------------------------------
+
+  No Partitions were found in this design.
+
+-------------------------------
+
+=========================================================================
+*                            Design Summary                             *
+=========================================================================
+
+Top Level Output File Name         : Top_Module.ngc
+
+Primitive and Black Box Usage:
+------------------------------
+# BELS                             : 2367
+#      GND                         : 1
+#      INV                         : 2
+#      LUT2                        : 162
+#      LUT3                        : 67
+#      LUT4                        : 157
+#      LUT5                        : 46
+#      LUT6                        : 1391
+#      MUXCY                       : 45
+#      MUXF7                       : 335
+#      MUXF8                       : 160
+#      VCC                         : 1
+# FlipFlops/Latches                : 523
+#      FDC                         : 131
+#      FDCE                        : 262
+#      FDE                         : 128
+#      FDPE                        : 2
+# RAMS                             : 2
+#      RAMB8BWER                   : 2
+# Clock Buffers                    : 1
+#      BUFGP                       : 1
+# IO Buffers                       : 515
+#      IBUF                        : 258
+#      OBUF                        : 257
+
+Device utilization summary:
+---------------------------
+
+Selected Device : 6slx45csg324-3 
+
+
+Slice Logic Utilization: 
+ Number of Slice Registers:             523  out of  54576     0%  
+ Number of Slice LUTs:                 1825  out of  27288     6%  
+    Number used as Logic:              1825  out of  27288     6%  
+
+Slice Logic Distribution: 
+ Number of LUT Flip Flop pairs used:   2077
+   Number with an unused Flip Flop:    1554  out of   2077    74%  
+   Number with an unused LUT:           252  out of   2077    12%  
+   Number of fully used LUT-FF pairs:   271  out of   2077    13%  
+   Number of unique control sets:         5
+
+IO Utilization: 
+ Number of IOs:                         516
+ Number of bonded IOBs:                 516  out of    218   236% (*) 
+
+Specific Feature Utilization:
+ Number of Block RAM/FIFO:                1  out of    116     0%  
+    Number using Block RAM only:          1
+ Number of BUFG/BUFGCTRLs:                1  out of     16     6%  
+
+WARNING:Xst:1336 -  (*) More than 100% of Device resources are used
+
+---------------------------
+Partition Resource Summary:
+---------------------------
+
+  No Partitions were found in this design.
+
+---------------------------
+
+
+=========================================================================
+Timing Report
+
+NOTE: THESE TIMING NUMBERS ARE ONLY A SYNTHESIS ESTIMATE.
+      FOR ACCURATE TIMING INFORMATION PLEASE REFER TO THE TRACE REPORT
+      GENERATED AFTER PLACE-and-ROUTE.
+
+Clock Information:
+------------------
+-----------------------------------+------------------------+-------+
+Clock Signal                       | Clock buffer(FF name)  | Load  |
+-----------------------------------+------------------------+-------+
+clk                                | BUFGP                  | 525   |
+-----------------------------------+------------------------+-------+
+
+Asynchronous Control Signals Information:
+----------------------------------------
+No asynchronous control signals found in this design
+
+Timing Summary:
+---------------
+Speed Grade: -3
+
+   Minimum period: 6.799ns (Maximum Frequency: 147.081MHz)
+   Minimum input arrival time before clock: 6.648ns
+   Maximum output required time after clock: 4.067ns
+   Maximum combinational path delay: No path found
+
+Timing Details:
+---------------
+All values displayed in nanoseconds (ns)
+
+=========================================================================
+Timing constraint: Default period analysis for Clock 'clk'
+  Clock period: 6.799ns (frequency: 147.081MHz)
+  Total number of paths / destination ports: 165409 / 563
+-------------------------------------------------------------------------
+Delay:               6.799ns (Levels of Logic = 7)
+  Source:            KEYEXP_U/round_key_out_125 (FF)
+  Destination:       AESDEC_U/AES_Dec_U/CT_reg_127 (FF)
+  Source Clock:      clk rising
+  Destination Clock: clk rising
+
+  Data Path: KEYEXP_U/round_key_out_125 to AESDEC_U/AES_Dec_U/CT_reg_127
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     FDE:C->Q             17   0.447   1.028  KEYEXP_U/round_key_out_125 (KEYEXP_U/round_key_out_125)
+     LUT2:I1->O           11   0.205   1.111  AESDEC_U/AES_Dec_U/KA_U1/Mxor_OUT_125_xo<0>1 (AESDEC_U/AES_Dec_U/Inv_AddKey_Out<125>)
+     LUT6:I3->O            1   0.205   0.580  AESDEC_U/AES_Dec_U/Mmux_SEL_InvShiftRows_input241 (AESDEC_U/AES_Dec_U/Mmux_SEL_InvShiftRows_input24)
+     LUT6:I5->O           32   0.205   1.636  AESDEC_U/AES_Dec_U/Mmux_SEL_InvShiftRows_input243 (AESDEC_U/AES_Dec_U/SEL_InvShiftRows_input<120>)
+     LUT6:I1->O            1   0.203   0.000  AESDEC_U/AES_Dec_U/SB_U1_sbox0/Mram_out_byte10 (AESDEC_U/AES_Dec_U/SB_U1_sbox0/Mram_out_byte10)
+     MUXF7:I1->O           1   0.140   0.000  AESDEC_U/AES_Dec_U/SB_U1_sbox0/Mram_out_byte10_f7 (AESDEC_U/AES_Dec_U/SB_U1_sbox0/Mram_out_byte10_f7)
+     MUXF8:I1->O           1   0.152   0.580  AESDEC_U/AES_Dec_U/SB_U1_sbox0/Mram_out_byte10_f8 (AESDEC_U/AES_Dec_U/Inv_SubByte_Out<125>)
+     LUT6:I5->O            1   0.205   0.000  AESDEC_U/AES_Dec_U/Mmux_CT[127]_CT_next[127]_mux_4_OUT291 (AESDEC_U/AES_Dec_U/CT[127]_CT_next[127]_mux_4_OUT<125>)
+     FDC:D                     0.102          AESDEC_U/AES_Dec_U/CT_reg_125
+    ----------------------------------------
+    Total                      6.799ns (1.864ns logic, 4.935ns route)
+                                       (27.4% logic, 72.6% route)
+
+=========================================================================
+Timing constraint: Default OFFSET IN BEFORE for Clock 'clk'
+  Total number of paths / destination ports: 22455 / 947
+-------------------------------------------------------------------------
+Offset:              6.648ns (Levels of Logic = 46)
+  Source:            key_in<2> (PAD)
+  Destination:       KEYEXP_U_forward_calc_instance/g_func_instance/sbox1/Mram_out_byte1 (RAM)
+  Destination Clock: clk rising
+
+  Data Path: key_in<2> to KEYEXP_U_forward_calc_instance/g_func_instance/sbox1/Mram_out_byte1
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     IBUF:I->O             3   1.222   1.015  key_in_2_IBUF (key_in_2_IBUF)
+     LUT6:I0->O            1   0.203   0.000  FSM_U/Mcompar_if_key_same_lut<0> (FSM_U/Mcompar_if_key_same_lut<0>)
+     MUXCY:S->O            1   0.172   0.000  FSM_U/Mcompar_if_key_same_cy<0> (FSM_U/Mcompar_if_key_same_cy<0>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<1> (FSM_U/Mcompar_if_key_same_cy<1>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<2> (FSM_U/Mcompar_if_key_same_cy<2>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<3> (FSM_U/Mcompar_if_key_same_cy<3>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<4> (FSM_U/Mcompar_if_key_same_cy<4>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<5> (FSM_U/Mcompar_if_key_same_cy<5>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<6> (FSM_U/Mcompar_if_key_same_cy<6>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<7> (FSM_U/Mcompar_if_key_same_cy<7>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<8> (FSM_U/Mcompar_if_key_same_cy<8>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<9> (FSM_U/Mcompar_if_key_same_cy<9>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<10> (FSM_U/Mcompar_if_key_same_cy<10>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<11> (FSM_U/Mcompar_if_key_same_cy<11>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<12> (FSM_U/Mcompar_if_key_same_cy<12>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<13> (FSM_U/Mcompar_if_key_same_cy<13>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<14> (FSM_U/Mcompar_if_key_same_cy<14>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<15> (FSM_U/Mcompar_if_key_same_cy<15>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<16> (FSM_U/Mcompar_if_key_same_cy<16>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<17> (FSM_U/Mcompar_if_key_same_cy<17>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<18> (FSM_U/Mcompar_if_key_same_cy<18>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<19> (FSM_U/Mcompar_if_key_same_cy<19>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<20> (FSM_U/Mcompar_if_key_same_cy<20>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<21> (FSM_U/Mcompar_if_key_same_cy<21>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<22> (FSM_U/Mcompar_if_key_same_cy<22>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<23> (FSM_U/Mcompar_if_key_same_cy<23>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<24> (FSM_U/Mcompar_if_key_same_cy<24>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<25> (FSM_U/Mcompar_if_key_same_cy<25>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<26> (FSM_U/Mcompar_if_key_same_cy<26>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<27> (FSM_U/Mcompar_if_key_same_cy<27>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<28> (FSM_U/Mcompar_if_key_same_cy<28>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<29> (FSM_U/Mcompar_if_key_same_cy<29>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<30> (FSM_U/Mcompar_if_key_same_cy<30>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<31> (FSM_U/Mcompar_if_key_same_cy<31>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<32> (FSM_U/Mcompar_if_key_same_cy<32>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<33> (FSM_U/Mcompar_if_key_same_cy<33>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<34> (FSM_U/Mcompar_if_key_same_cy<34>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<35> (FSM_U/Mcompar_if_key_same_cy<35>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<36> (FSM_U/Mcompar_if_key_same_cy<36>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<37> (FSM_U/Mcompar_if_key_same_cy<37>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<38> (FSM_U/Mcompar_if_key_same_cy<38>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<39> (FSM_U/Mcompar_if_key_same_cy<39>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<40> (FSM_U/Mcompar_if_key_same_cy<40>)
+     MUXCY:CI->O           1   0.019   0.000  FSM_U/Mcompar_if_key_same_cy<41> (FSM_U/Mcompar_if_key_same_cy<41>)
+     MUXCY:CI->O         133   0.019   2.068  FSM_U/Mcompar_if_key_same_cy<42> (FSM_U/if_key_same)
+     LUT6:I4->O            2   0.203   0.616  KEYEXP_U/MUX_OUT<28>6 (KEYEXP_U/MUX_OUT<28>)
+     RAMB8BWER:ADDRBRDADDR7        0.350          KEYEXP_U_forward_calc_instance/g_func_instance/sbox1/Mram_out_byte1
+    ----------------------------------------
+    Total                      6.648ns (2.948ns logic, 3.700ns route)
+                                       (44.3% logic, 55.7% route)
+
+=========================================================================
+Timing constraint: Default OFFSET OUT AFTER for Clock 'clk'
+  Total number of paths / destination ports: 257 / 257
+-------------------------------------------------------------------------
+Offset:              4.067ns (Levels of Logic = 1)
+  Source:            KEYEXP_U/round_key_out_127 (FF)
+  Destination:       keyexp_roundkey_test<127> (PAD)
+  Source Clock:      clk rising
+
+  Data Path: KEYEXP_U/round_key_out_127 to keyexp_roundkey_test<127>
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     FDE:C->Q             18   0.447   1.049  KEYEXP_U/round_key_out_127 (KEYEXP_U/round_key_out_127)
+     OBUF:I->O                 2.571          keyexp_roundkey_test_127_OBUF (keyexp_roundkey_test<127>)
+    ----------------------------------------
+    Total                      4.067ns (3.018ns logic, 1.049ns route)
+                                       (74.2% logic, 25.8% route)
+
+=========================================================================
+
+Cross Clock Domains Report:
+--------------------------
+
+Clock to Setup on destination clock clk
+---------------+---------+---------+---------+---------+
+               | Src:Rise| Src:Fall| Src:Rise| Src:Fall|
+Source Clock   |Dest:Rise|Dest:Rise|Dest:Fall|Dest:Fall|
+---------------+---------+---------+---------+---------+
+clk            |    6.799|         |         |         |
+---------------+---------+---------+---------+---------+
+
+=========================================================================
+
+
+Total REAL time to Xst completion: 13.00 secs
+Total CPU time to Xst completion: 12.99 secs
+ 
+--> 
+
+Total memory usage is 4503812 kilobytes
+
+Number of errors   :    0 (   0 filtered)
+Number of warnings :    5 (   0 filtered)
+Number of infos    :    8 (   0 filtered)
+
