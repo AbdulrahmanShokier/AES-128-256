@@ -4,12 +4,13 @@ module AES_key_schedular
     input wire [1:0] control_signal,
     input wire [127:0] load_key_in,
     input wire [3:0] round_number,
-    output reg [127:0] round_key_out
+    output wire [127:0] round_key_out
 );
 
 
     wire [127:0] out_KeyExp_forward;
     wire [127:0] out_KeyExp_reverse;
+    reg [127:0] round_key_out_register;
     reg  [127:0] MUX_OUT;
 
     always @(*)begin
@@ -24,8 +25,9 @@ module AES_key_schedular
 
 
     always @(posedge clk) begin
-        round_key_out <= MUX_OUT;
+        round_key_out_register <= MUX_OUT;
     end
+    assign round_key_out = round_key_out_register;
 
 
     AES_KeyExpansion_Forward_calc forward_calc_instance(
