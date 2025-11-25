@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- IMPORTANT: This is an internal file that has been generated
+     by the Xilinx ISE software.  Any direct editing or
+     changes made to this file may result in unpredictable
+     behavior or data corruption.  It is strongly advised that
+     users do not edit the contents of this file. -->
+<messages>
+<msg type="warning" file="HDLCompiler" num="1127" delta="old" >"E:\AES\AES-128-256\Iterative\Decryption\FSM controller\FSM_controller.v" Line 162: Assignment to <arg fmt="%s" index="1">round_count_diplay</arg> ignored, since the identifier is never used
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="1127" delta="old" >"E:\AES\AES-128-256\Iterative\Decryption\Top module\Top_module.v" Line 64: Assignment to <arg fmt="%s" index="1">round_plaintext_test</arg> ignored, since the identifier is never used
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="1016" delta="old" >"E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Top.v" Line 12: Port <arg fmt="%s" index="1">Valid</arg> is not connected to this instance
+</msg>
+
+<msg type="info" file="Xst" num="3210" delta="old" >&quot;<arg fmt="%s" index="1">E:\AES\AES-128-256\Iterative\Decryption\Decryptor\Top.v</arg>&quot; line <arg fmt="%s" index="2">12</arg>: Output port &lt;<arg fmt="%s" index="3">Valid</arg>&gt; of the instance &lt;<arg fmt="%s" index="4">AES_Dec_U</arg>&gt; is unconnected or connected to loadless signal.
+</msg>
+
+<msg type="warning" file="Xst" num="653" delta="old" >Signal &lt;<arg fmt="%s" index="1">Valid</arg>&gt; is used but never assigned. This sourceless signal will be automatically connected to value <arg fmt="%s" index="2">GND</arg>.
+</msg>
+
+<msg type="info" file="Xst" num="3218" delta="old" >HDL ADVISOR - The RAM &lt;<arg fmt="%s" index="1">Mram_out_byte</arg>&gt; will be implemented on LUTs either because you have described an asynchronous read or because of currently unsupported block RAM features. If you have described an asynchronous read, making it synchronous would allow you to take advantage of available block RAM resources, for optimized device usage and improved timings. Please refer to your documentation for coding guidelines.
+</msg>
+
+<msg type="info" file="Xst" num="3226" delta="old" >The RAM &lt;<arg fmt="%s" index="1">forward_calc_instance/g_func_instance/sbox2/Mram_out_byte</arg>&gt; will be implemented as a BLOCK RAM, absorbing the following register(s):</msg>
+
+<msg type="info" file="Xst" num="3226" delta="old" >The RAM &lt;<arg fmt="%s" index="1">forward_calc_instance/g_func_instance/sbox0/Mram_out_byte</arg>&gt; will be implemented as a BLOCK RAM, absorbing the following register(s):</msg>
+
+<msg type="info" file="Xst" num="3226" delta="old" >The RAM &lt;<arg fmt="%s" index="1">forward_calc_instance/g_func_instance/sbox1/Mram_out_byte</arg>&gt; will be implemented as a BLOCK RAM, absorbing the following register(s):</msg>
+
+<msg type="info" file="Xst" num="3226" delta="old" >The RAM &lt;<arg fmt="%s" index="1">forward_calc_instance/g_func_instance/sbox3/Mram_out_byte</arg>&gt; will be implemented as a BLOCK RAM, absorbing the following register(s):</msg>
+
+<msg type="info" file="Xst" num="2697" delta="old" >Unit &lt;<arg fmt="%s" index="1">MTP_</arg>&gt; : the RAMs &lt;<arg fmt="%s" index="2">forward_calc_instance/g_func_instance/sbox2/Mram_out_byte</arg>&gt;, &lt;<arg fmt="%s" index="3">forward_calc_instance/g_func_instance/sbox0/Mram_out_byte</arg>&gt; are packed into the single block RAM &lt;<arg fmt="%s" index="4">forward_calc_instance/g_func_instance/sbox2/Mram_out_byte1</arg>&gt;
+</msg>
+
+<msg type="info" file="Xst" num="2697" delta="old" >Unit &lt;<arg fmt="%s" index="1">MTP_</arg>&gt; : the RAMs &lt;<arg fmt="%s" index="2">forward_calc_instance/g_func_instance/sbox1/Mram_out_byte</arg>&gt;, &lt;<arg fmt="%s" index="3">forward_calc_instance/g_func_instance/sbox3/Mram_out_byte</arg>&gt; are packed into the single block RAM &lt;<arg fmt="%s" index="4">forward_calc_instance/g_func_instance/sbox1/Mram_out_byte1</arg>&gt;
+</msg>
+
+<msg type="warning" file="Xst" num="1336" delta="old" > (*) More than 100% of Device resources are used
+</msg>
+
+</messages>
+

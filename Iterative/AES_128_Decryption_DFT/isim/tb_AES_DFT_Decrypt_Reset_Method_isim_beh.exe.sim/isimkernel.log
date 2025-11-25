@@ -1,0 +1,28 @@
+Command line:
+   tb_AES_DFT_Decrypt_Reset_Method_isim_beh.exe
+     -simmode  gui
+     -simrunnum  0
+     -socket  65011
+
+Tue Nov 25 16:21:28 2025
+
+
+ Elaboration Time: 0.078125 sec
+
+ Current Memory Usage: 5470.6 Meg
+
+ Total Signals          : 184
+ Total Nets             : 3128
+ Total Signal Drivers   : 152
+ Total Blocks           : 48
+ Total Primitive Blocks : 32
+ Total Processes        : 153
+ Total Traceable Variables  : 103
+ Total Scalar Nets and Variables : 5365
+
+ Total Simulation Time: 0.265625 sec
+
+ Current Memory Usage: 5470.6 Meg
+
+Tue Nov 25 16:22:05 2025
+
