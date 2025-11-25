@@ -42,16 +42,6 @@ end
 
 
 // ----------------------
-// Test vectors
-// ----------------------
-localparam [127:0] TEST_KEY =
-    128'h2B7E151628AED2A6ABF7158809CF4F3C;
-
-localparam [127:0] TEST_CT =
-    128'h3925841D02DC09FBDC118597196A0B32;
-    
-
-// ----------------------
 // MAIN TEST SEQUENCE
 // ----------------------
 initial begin
@@ -71,23 +61,64 @@ initial begin
     rst_n = 1;
     #20;
 
-    // Apply cipher + key
+    // ---------------------------------------
+    // TEST CASE 1
+    // ---------------------------------------
+    $display("\n========== TEST CASE 1 ==========\n");
+
     @(posedge clk);
-    key_in      <= TEST_KEY;
-    cipher_text <= TEST_CT;
+    key_in      <= 128'h000102030405060708090a0b0c0d0e0f;
+    cipher_text <= 128'h69c4e0d86a7b0430d8cdb78070b4c55a;
     valid_in    <= 1;
 
     @(posedge clk);
     valid_in <= 0;
 
-    // Wait for decrypt complete
     wait(valid_out === 1);
 
-    $display("\n--------------------------------------------");
-    $display("Decryption Completed at time %0t ns", $time);
+    $display("TC1 Completed at time %0t ns", $time);
     $display("Plaintext = %h", plain_text);
-    $display("--------------------------------------------\n");
 
+
+    // ---------------------------------------
+    // TEST CASE 2
+    // ---------------------------------------
+    $display("\n========== TEST CASE 2 ==========\n");
+
+    @(posedge clk);
+    key_in      <= 128'h00000000000000000000000000000000;
+    cipher_text <= 128'h66e94bd4ef8a2c3b884cfa59ca342b2e;
+    valid_in    <= 1;
+
+    @(posedge clk);
+    valid_in <= 0;
+
+    wait(valid_out === 1);
+
+    $display("TC2 Completed at time %0t ns", $time);
+    $display("Plaintext = %h", plain_text);
+
+
+    // ---------------------------------------
+    // TEST CASE 3
+    // ---------------------------------------
+    $display("\n========== TEST CASE 3 ==========\n");
+
+    @(posedge clk);
+    key_in      <= 128'h00000000000000000000000000000000;
+    cipher_text <= 128'hc8a331ff8edd3db175e1545dbefb760b;
+    valid_in    <= 1;
+
+    @(posedge clk);
+    valid_in <= 0;
+
+    wait(valid_out === 1);
+
+    $display("TC3 Completed at time %0t ns", $time);
+    $display("Plaintext = %h", plain_text);
+
+
+    // END SIM
     #20;
     $stop;
 end
