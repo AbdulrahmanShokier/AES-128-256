@@ -2,9 +2,10 @@ module rounds_1_to_9 #(parameter BLOCK_LENGTH = 128)
 (
     input                         clk,
     input                         rst,  
-    input      [128-1:0] IN,
-    input      [128-1:0] KEY,
-    output reg [128-1:0] OUT
+    input      [BLOCK_LENGTH-1:0] IN,
+    input      [BLOCK_LENGTH-1:0] KEY,
+    output reg [BLOCK_LENGTH-1:0] OUT,
+    output reg                    valid
 );
 
 
@@ -28,9 +29,11 @@ key_add     xor_with_k1_to_9 (.IN(mix_out), .KEY(KEY), .OUT(xor_out));
 
 
 
+
 always@(posedge clk or negedge rst)
 begin
 
+    valid <= 1'b0;
     if(!rst)
     begin
         OUT <= 128'b0;
@@ -42,6 +45,22 @@ begin
     end
     
 end
+
+
+always@(negedge clk or negedge rst)
+begin
+    if(!rst)
+    begin
+        valid <= 1'b0;
+    end
+
+    else
+    begin
+        valid <= 1'b1;
+    end
+    
+end
+
 
 
 

@@ -2,9 +2,10 @@ module round_0 #(parameter BLOCK_LENGTH = 128)
 (
     input                         clk,
     input                         rst,  
-    input      [128-1:0] IN,
-    input      [128-1:0] KEY,
-    output reg [128-1:0] OUT
+    input      [BLOCK_LENGTH-1:0] IN,
+    input      [BLOCK_LENGTH-1:0] KEY,
+    output reg [BLOCK_LENGTH-1:0] OUT,
+    output reg           valid
 );
 
 wire [127:0] xor_out;
@@ -14,6 +15,7 @@ key_add xor_with_k0 (.IN(IN), .KEY(KEY), .OUT(xor_out)); // first step
 always@(posedge clk or negedge rst)
 begin
 
+    valid <= 1'b0;
     if(!rst)
     begin
         OUT <= 128'b0;
@@ -27,7 +29,18 @@ begin
 end
 
 
+always@(negedge clk or negedge rst)
+begin
+    if(!rst)
+    begin
+        valid <= 1'b0;
+    end
 
-
+    else
+    begin
+        valid <= 1'b1;
+    end
+    
+end
 
 endmodule

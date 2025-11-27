@@ -4,6 +4,7 @@ module key_generator #(parameter BLOCK_LENGTH = 128)
     input      [7 : 0] round_number,
     input      clk,
     input      rst,
+    input      valid,
     output reg [BLOCK_LENGTH-1:0] sub_key
 );
 
@@ -30,22 +31,30 @@ assign round_key = {w4, w5, w6, w7};
 
 
 
-always@(posedge clk or negedge rst)
+always@(rst or valid)
 begin
 
     if(!rst)
     begin
         sub_key <= 128'b0;
     end
-
-    else if (round_number == 8'h0)
+    if(valid)     // if valid signal arrived get out the next key
     begin
-        sub_key <= key;
+        
+        if (round_number == 8'h0)
+        begin
+            sub_key <= key;
+        end
+
+        else
+        begin
+            sub_key <= round_key;
+        end
     end
 
-    else
+    else          // keep the current key  
     begin
-        sub_key <= round_key;
+        sub_key <= sub_key;
     end
     
 end
