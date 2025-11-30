@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module AES_enc_fill_pipeline_tb;
+module AES_enc TB full pipeline_with_enable;
 
     // Parameters
     parameter BLOCK_LENGTH = 128;
@@ -10,6 +10,7 @@ module AES_enc_fill_pipeline_tb;
     // Signals
     reg                         clk;
     reg                         rst;
+    reg                         enable;
     reg      [BLOCK_LENGTH-1:0] IN;
     reg      [BLOCK_LENGTH-1:0] KEY;
     wire     [BLOCK_LENGTH-1:0] OUT;
@@ -34,7 +35,8 @@ module AES_enc_fill_pipeline_tb;
         .rst(rst),
         .IN(IN),
         .KEY(KEY),
-        .OUT(OUT)
+        .OUT(OUT),
+        .enable(enable)
     );
     
     // Clock generation
@@ -57,6 +59,7 @@ module AES_enc_fill_pipeline_tb;
         rst = 0;
         IN = 0;
         KEY = 0;
+        enable=1;
         input_counter = 0;
         output_counter = 0;
         pass_count = 0;
