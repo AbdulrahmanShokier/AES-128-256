@@ -6,7 +6,6 @@ module round_10 #(parameter BLOCK_LENGTH = 128)
     input      [BLOCK_LENGTH-1:0] KEY,
     input                         enable, //to turn on/off the round
     output reg [BLOCK_LENGTH-1:0] OUT,
-    output reg                    valid
 );
 
 
@@ -29,7 +28,6 @@ key_add    xor_with_k10 (.IN(shft_out), .KEY(KEY), .OUT(xor_out));
 always@(posedge clk or negedge rst)
 begin
     
-    valid <= 1'b0;
         if(!rst)
         begin
             OUT <= 128'b0;
@@ -49,21 +47,6 @@ begin
         end
 end
 
-always@(negedge clk or negedge rst)
-begin
-    if(enable)
-    begin
-    if(!rst)
-    begin
-        valid <= 1'b0;
-    end
-
-    else
-    begin
-        valid <= 1'b1;
-    end
-    end
-end
 
 
 

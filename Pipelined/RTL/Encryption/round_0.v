@@ -7,7 +7,6 @@ module round_0 #(parameter BLOCK_LENGTH = 128)
     input                         enable, //to turn on/off the round
     output reg                    next_round_enable, // to move it to the next round
     output reg [BLOCK_LENGTH-1:0] OUT,
-    output reg           valid
 );
 
 wire [127:0] xor_out;
@@ -21,7 +20,6 @@ key_add xor_with_k0 (.IN(IN), .KEY(KEY), .OUT(xor_out)); // first step
 always@(posedge clk or negedge rst)
 begin
 
-    valid <= 1'b0;
         if(!rst)
         begin
             OUT <= 128'b0;
@@ -44,21 +42,5 @@ begin
         end
 end
 
-
-always@(negedge clk or negedge rst)
-begin
-    if(enable)
-    begin
-    if(!rst)
-    begin
-        valid <= 1'b0;
-    end
-
-    else
-    begin
-        valid <= 1'b1;
-    end
-    end
-end
 
 endmodule

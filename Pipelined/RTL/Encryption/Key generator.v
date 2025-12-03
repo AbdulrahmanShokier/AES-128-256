@@ -1,62 +1,135 @@
 module key_generator #(parameter BLOCK_LENGTH = 128)
-(
-    input      [BLOCK_LENGTH-1:0] key,
-    input      [7 : 0] round_number,
+(   
     input      clk,
     input      rst,
-    input      valid,
-    output reg [BLOCK_LENGTH-1:0] sub_key
+    input      en,                   // Enable signal from the FSM 
+    input      [BLOCK_LENGTH-1:0] key,
+    input      [3:0] Round_Count,
+
+    output reg [BLOCK_LENGTH-1:0] k0, 
+    output reg [BLOCK_LENGTH-1:0] k1,
+    output reg [BLOCK_LENGTH-1:0] k2,
+    output reg [BLOCK_LENGTH-1:0] k3,
+    output reg [BLOCK_LENGTH-1:0] k4,
+    output reg [BLOCK_LENGTH-1:0] k5,
+    output reg [BLOCK_LENGTH-1:0] k6,
+    output reg [BLOCK_LENGTH-1:0] k7,
+    output reg [BLOCK_LENGTH-1:0] k8,
+    output reg [BLOCK_LENGTH-1:0] k9,
+    output reg [BLOCK_LENGTH-1:0] k10 // 11 registers to store all the keys once calculated
 );
+
+
+///////////////////////////////////////////Wires and Registers////////////////////////////////////////////
+
 
 wire [31:0] w0, w1, w2, w3;
 wire [31:0] g_out;
 wire [31:0] w4, w5, w6, w7;
 
+
+wire [7 : 0] Round_Const; // round number used in g-func 
+
+
 wire [BLOCK_LENGTH-1:0] round_key;
 
-assign w0 = key[127:96];
-assign w1 = key[95:64];
-assign w2 = key[63:32];
-assign w3 = key[31:0];
 
-g_function g_func (.word_3(w3), .round_number(round_number), .word_3_substituted(g_out));
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-assign w4 = w0 ^ g_out;
-assign w5 = w1 ^ w4;
-assign w6 = w2 ^ w5;
-assign w7 = w3 ^ w6;
+
+
+assign w0 = (en)? round_key[127 : 96] : 32'b0 ;
+assign w1 = (en)? round_key[ 95 : 64] : 32'b0 ;
+assign w2 = (en)? round_key[ 63 : 32] : 32'b0 ;
+assign w3 = (en)? round_key[ 31 : 0 ] : 32'b0 ;
+
+
+g_function g_func (.word_3(w3), .round_number(Round_Const), .word_3_substituted(g_out));
+
+
+assign w4 = (en)? w0 ^ g_out : 32'b0  ;
+assign w5 = (en)? w1 ^ w4    : 32'b0  ;
+assign w6 = (en)? w2 ^ w5    : 32'b0  ;
+assign w7 = (en)? w3 ^ w6    : 32'b0  ;
+
 
 assign round_key = {w4, w5, w6, w7};
 
 
 
-
-always@(rst or valid)
+always@(negedge rst or posedge clk)
 begin
 
     if(!rst)
     begin
-        sub_key <= 128'b0;
-    end
-    if(valid)     // if valid signal arrived get out the next key
-    begin
-        
-        if (round_number == 8'h0)
-        begin
-            sub_key <= key;
-        end
-
-        else
-        begin
-            sub_key <= round_key;
-        end
+     k0  <= 128'b0; 
+     k1  <= 128'b0; 
+     k2  <= 128'b0; 
+     k3  <= 128'b0; 
+     k4  <= 128'b0; 
+     k5  <= 128'b0; 
+     k6  <= 128'b0; 
+     k7  <= 128'b0; 
+     k8  <= 128'b0;  
+     k9  <= 128'b0;  
+     k10 <= 128'b0; 
     end
 
-    else          // keep the current key  
+    else if(en)
     begin
-        sub_key <= sub_key;
+    case(Round_Count)
+    4'd0:  k0  <= key;        // first key
+    4'd1:  k1  <= round_key;
+    4'd2:  k2  <= round_key;
+    4'd3:  k3  <= round_key;
+    4'd4:  k4  <= round_key;
+    4'd5:  k5  <= round_key;
+    4'd6:  k6  <= round_key;
+    4'd7:  k7  <= round_key;
+    4'd8:  k8  <= round_key; 
+    4'd9:  k9  <= round_key; 
+    4'd10: k10 <= round_key;
+    endcase 
     end
-    
+
+    else
+    begin
+     k0  <= k0  ; 
+     k1  <= k1  ; 
+     k2  <= k2  ; 
+     k3  <= k3  ; 
+     k4  <= k4  ; 
+     k5  <= k5  ; 
+     k6  <= k6  ; 
+     k7  <= k7  ; 
+     k8  <= k8  ;  
+     k9  <= k9  ;  
+     k10 <= k10 ; 
+    end
+
 end
+
+
+
+///////////////////////// to calculate the polynomial round number of the decimal counter////////////////////
+
+always@(*)
+begin 
+ case(Round_Count)
+ 4'd1:  Round_Const = 8'h1; 
+ 4'd2:  Round_Const = 8'h2; 
+ 4'd3:  Round_Const = 8'h4; 
+ 4'd4:  Round_Const = 8'h8; 
+ 4'd5:  Round_Const = 8'h10; 
+ 4'd6:  Round_Const = 8'h20; 
+ 4'd7:  Round_Const = 8'h40; 
+ 4'd8:  Round_Const = 8'h80; 
+ 4'd9:  Round_Const = 8'h1B; 
+ 4'd10: Round_Const = 8'h36; 
+ default: Round_Const = 8'h0; 
+ endcase
+end
+
+
 
 endmodule
