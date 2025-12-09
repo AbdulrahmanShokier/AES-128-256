@@ -28,32 +28,52 @@ wire [31:0] g_out;
 wire [31:0] w4, w5, w6, w7;
 
 
-wire [7 : 0] Round_Const; // round number used in g-func 
+wire [7 : 0] Round_Const_in_gfunc; // round number used in g-func 
 
+reg [7 : 0] Round_Const;
 
-wire [BLOCK_LENGTH-1:0] round_key;
+reg [BLOCK_LENGTH-1:0] round_key;
+
+wire [BLOCK_LENGTH-1:0] next_round_key;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+always@(*)
+begin 
+    case(Round_Count)
+    4'd0:  round_key = key;        // first key
+    4'd1:  round_key = k0;
+    4'd2:  round_key = k1;
+    4'd3:  round_key = k2;
+    4'd4:  round_key = k3;
+    4'd5:  round_key = k4;
+    4'd6:  round_key = k5;
+    4'd7:  round_key = k6;
+    4'd8:  round_key = k7; 
+    4'd9:  round_key = k8; 
+    4'd10: round_key = k9;
+    endcase   
+end
 
-assign w0 = (en)? round_key[127 : 96] : 32'b0 ;
-assign w1 = (en)? round_key[ 95 : 64] : 32'b0 ;
-assign w2 = (en)? round_key[ 63 : 32] : 32'b0 ;
-assign w3 = (en)? round_key[ 31 : 0 ] : 32'b0 ;
+
+assign w0 = round_key[127 : 96] ;
+assign w1 = round_key[ 95 : 64] ;
+assign w2 = round_key[ 63 : 32] ;
+assign w3 = round_key[ 31 : 0 ] ;
 
 
-g_function g_func (.word_3(w3), .round_number(Round_Const), .word_3_substituted(g_out));
+g_function g_func (.word_3(w3), .round_number(Round_Const_in_gfunc), .word_3_substituted(g_out));
 
 
-assign w4 = (en)? w0 ^ g_out : 32'b0  ;
-assign w5 = (en)? w1 ^ w4    : 32'b0  ;
-assign w6 = (en)? w2 ^ w5    : 32'b0  ;
-assign w7 = (en)? w3 ^ w6    : 32'b0  ;
+assign w4 = w0 ^ g_out ;
+assign w5 = w1 ^ w4    ;
+assign w6 = w2 ^ w5    ;
+assign w7 = w3 ^ w6    ;
 
 
-assign round_key = {w4, w5, w6, w7};
+assign next_round_key = {w4, w5, w6, w7};
 
 
 
@@ -75,20 +95,20 @@ begin
      k10 <= 128'b0; 
     end
 
-    else if(en)
+    else if(en)  
     begin
+    k0  <= key;        // first key
     case(Round_Count)
-    4'd0:  k0  <= key;        // first key
-    4'd1:  k1  <= round_key;
-    4'd2:  k2  <= round_key;
-    4'd3:  k3  <= round_key;
-    4'd4:  k4  <= round_key;
-    4'd5:  k5  <= round_key;
-    4'd6:  k6  <= round_key;
-    4'd7:  k7  <= round_key;
-    4'd8:  k8  <= round_key; 
-    4'd9:  k9  <= round_key; 
-    4'd10: k10 <= round_key;
+    4'd1:  k1  <= next_round_key;
+    4'd2:  k2  <= next_round_key;
+    4'd3:  k3  <= next_round_key;
+    4'd4:  k4  <= next_round_key;
+    4'd5:  k5  <= next_round_key;
+    4'd6:  k6  <= next_round_key;
+    4'd7:  k7  <= next_round_key;
+    4'd8:  k8  <= next_round_key; 
+    4'd9:  k9  <= next_round_key; 
+    4'd10: k10 <= next_round_key;
     endcase 
     end
 
@@ -130,6 +150,7 @@ begin
  endcase
 end
 
+assign Round_Const_in_gfunc = Round_Const;
 
 
 endmodule

@@ -8,77 +8,102 @@ module FSM(
 
 reg [3:0] counter_value;
 
-
 parameter [1:0]
-idle    = 2'b00;
-counter = 2'b01;
+idle    = 2'b00,
+counter = 2'b01,
 hold    = 2'b10;
 
+reg [1:0] current_state, next_state;
 
-reg [1:0] current_state,next_state;
 
-always@(posedge clk or negedge rst)
+always @(posedge clk or negedge rst) 
 begin
     if(!rst)
-    begin
         current_state <= idle;
-    end
-    
     else
-    begin
         current_state <= next_state;
-    end
-
 end
 
 
-always@(current_state or fsm_en)
+//////////////////////////////
+//   OUTPUT + COUNTER LOGIC
+//////////////////////////////
+always @(posedge clk or negedge rst) 
+begin
+    if(!rst) 
+    begin
+        counter_value <= 4'd0;
+        Round_Count   <= 4'd0;
+        key_gene_en   <= 1'b0;
+    end 
+    
+    else 
+    begin
+        case(next_state)
+            idle: 
+            begin
+                counter_value <= 4'd0;
+                Round_Count   <= 4'd0;
+                key_gene_en   <= 1'b0;
+            end
+
+            counter: 
+            begin
+                if(current_state != counter) 
+                begin
+                    counter_value <= 4'd0;
+                    Round_Count   <= 4'd0;
+                    key_gene_en   <= 1'b1;
+                end
+
+                else 
+                begin
+                    counter_value <= counter_value + 1'b1;
+                    Round_Count   <= counter_value + 1'b1;
+                    key_gene_en   <= 1'b1;
+                end
+            end
+
+            hold:
+            begin
+                counter_value <= 4'd0;
+                Round_Count   <= 4'd0;
+                key_gene_en   <= 1'b0;
+            end
+
+        endcase
+    end
+end
+
+
+always @(*) 
 begin
     case(current_state)
-    
-    idle:
-    begin
-        counter_value = 1'b0;
-        key_gene_en   = 1'b0;
-        if(fsm_en)
-        next_state = counter;
-        else
-        next_state = idle;
-    end
 
-    counter:
-    begin
-        if(counter_value < 4'b11)
-        begin
-            next_state    = counter;
-            counter_value = counter_value + 1'b1 ;
-            key_gene_en   = 1'b1;
-        end
+        idle:
+            if(fsm_en)
+                next_state = counter;
+            else
+                next_state = idle;
 
-        else if(counter_value == 4'b11)
-        begin
-            next_state    = hold;
-            key_gene_en   = 1'b0;
-        end
-    end
-    
-    hold:
-        if(!rst)
-        begin
-            next_state = idle;
-        end
+        counter:
+            if(counter_value == 4'd11)
+                next_state = hold;
+            else
+                next_state = counter;
 
-        else
-        begin
-            next_state = hold;
-        end
+        hold:
+            if(!rst)
+                next_state = idle;
+            else if(fsm_en)
+                next_state = counter;
+            else
+                next_state = hold;
 
         default:
             next_state = idle;
 
     endcase
 end
-
-
 
 endmodule

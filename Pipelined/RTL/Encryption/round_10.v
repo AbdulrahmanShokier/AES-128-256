@@ -5,7 +5,7 @@ module round_10 #(parameter BLOCK_LENGTH = 128)
     input      [BLOCK_LENGTH-1:0] IN,
     input      [BLOCK_LENGTH-1:0] KEY,
     input                         enable, //to turn on/off the round
-    output reg [BLOCK_LENGTH-1:0] OUT,
+    output reg [BLOCK_LENGTH-1:0] OUT
 );
 
 
