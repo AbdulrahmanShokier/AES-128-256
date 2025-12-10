@@ -5,7 +5,8 @@ module AES_enc #(parameter BLOCK_LENGTH = 128)
     input      [BLOCK_LENGTH-1:0] IN,
     input      [BLOCK_LENGTH-1:0] KEY,
     input                         enable, //to turn on/off the round
-    output reg [BLOCK_LENGTH-1:0] OUT
+    input                         fsm_en,
+    output     [BLOCK_LENGTH-1:0] OUT
 );
 
 
@@ -21,7 +22,7 @@ wire en1 ,en2, en3, en4, en5,
      en6, en7, en8, en9, en10;  // to move the enable signal between the rounds                        
 
 
-wire k0, k1 ,k2, k3, k4, k5, 
+wire [127:0] k0, k1 ,k2, k3, k4, k5, 
      k6, k7, k8, k9, k10;
 
 reg [10:0] en_pipe; // enable pipeline: en_pipe[0] is for round0, en_pipe[1] for round1, ..., en_pipe[10] for round10
@@ -30,7 +31,10 @@ reg [10:0] en_pipe; // enable pipeline: en_pipe[0] is for round0, en_pipe[1] for
 
 
 
-
+always@(*)
+begin
+    en_pipe[0] = enable;
+end
 
 always @(posedge clk or negedge rst) 
 begin
@@ -41,13 +45,12 @@ begin
 
     else 
     begin
-        en_pipe[0] <= enable;
         en_pipe[10:1] <= en_pipe[9:0]; // shift enable down the pipeline
     end
 end
 
 
-fsm   fsm_control (.clk(clk), .rst(rst), .fsm_en(enable), .key_gene_en(key_en), .Round_Count(round_counter));
+FSM   fsm_control (.clk(clk), .rst(rst), .fsm_en(fsm_en), .key_gene_en(key_en), .Round_Count(round_counter));
 
 
 
@@ -91,9 +94,7 @@ round_10       round10 (.clk(clk), .rst(rst), .IN(r9_out), .KEY(k10), .enable(en
 
 
 
-always@(*)
-begin
-    OUT <= r10_out;
-end
+assign OUT = r10_out;
+
 
 endmodule
