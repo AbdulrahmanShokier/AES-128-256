@@ -11,7 +11,7 @@
 
 # what is done :
 
-AES encrtypting / decrypting + key generation for 128 bit keys
+AES Pipelined encrypting / decrypting + key generation for 128 bit keys
 
 
 -----------------------------------------------
@@ -19,4 +19,4 @@ AES encrtypting / decrypting + key generation for 128 bit keys
 
 # On progress:
 
-make the 128/256 key generation 
+

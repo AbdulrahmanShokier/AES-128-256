@@ -1,4 +1,4 @@
-module round_0 #(parameter BLOCK_LENGTH = 128)
+module round_10_dec #(parameter BLOCK_LENGTH = 128)
 (
     input                         clk,
     input                         rst,  
@@ -8,10 +8,18 @@ module round_0 #(parameter BLOCK_LENGTH = 128)
     output reg [BLOCK_LENGTH-1:0] OUT
 );
 
+
+
+wire [127:0] sub_out;
+wire [127:0] shft_out;
 wire [127:0] xor_out;
 
 
-key_add xor_with_k0 (.IN(IN), .KEY(KEY), .OUT(xor_out)); // first step
+key_add         xor_with_k10 (.IN(IN), .KEY(KEY), .OUT(xor_out)); 
+
+InvShiftRows    shft_10      (.IN(xor_out), .OUT(shft_out));
+
+InvSubBytes     sub_10       (.IN(shft_out), .OUT(sub_out));
 
 
 
@@ -27,7 +35,7 @@ begin
         begin
             if(enable)
             begin   
-            OUT <= xor_out;
+            OUT <= sub_out;
             end 
             
             else 
@@ -36,6 +44,9 @@ begin
             end
         end
 end
+
+
+
 
 
 endmodule

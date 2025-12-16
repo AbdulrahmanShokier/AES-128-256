@@ -1,4 +1,4 @@
-module round_0 #(parameter BLOCK_LENGTH = 128)
+module round_0_dec #(parameter BLOCK_LENGTH = 128)
 (
     input                         clk,
     input                         rst,  
@@ -9,7 +9,6 @@ module round_0 #(parameter BLOCK_LENGTH = 128)
 );
 
 wire [127:0] xor_out;
-
 
 key_add xor_with_k0 (.IN(IN), .KEY(KEY), .OUT(xor_out)); // first step
 

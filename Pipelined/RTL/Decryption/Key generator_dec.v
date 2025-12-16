@@ -1,4 +1,4 @@
-module key_generator #(parameter BLOCK_LENGTH = 128)
+module key_generator_dec #(parameter BLOCK_LENGTH = 128)
 (   
     input      clk,
     input      rst,

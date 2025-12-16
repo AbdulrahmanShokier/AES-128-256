@@ -1,4 +1,4 @@
-module round_0 #(parameter BLOCK_LENGTH = 128)
+module rounds_9_to_1_dec #(parameter BLOCK_LENGTH = 128)
 (
     input                         clk,
     input                         rst,  
@@ -8,11 +8,21 @@ module round_0 #(parameter BLOCK_LENGTH = 128)
     output reg [BLOCK_LENGTH-1:0] OUT
 );
 
+
+
+wire [127:0] sub_out;
+wire [127:0] shft_out;
+wire [127:0] mix_out;
 wire [127:0] xor_out;
 
 
-key_add xor_with_k0 (.IN(IN), .KEY(KEY), .OUT(xor_out)); // first step
+key_add         xor_with_k9_to_1 (.IN(IN), .KEY(KEY), .OUT(xor_out)); 
 
+InvMixColumns   mix_9_to_1       (.IN(xor_out), .OUT(mix_out));
+
+InvShiftRows    shft_9_to_1      (.IN(mix_out), .OUT(shft_out));
+
+InvSubBytes     sub_9_to_1       (.IN(shft_out), .OUT(sub_out));
 
 
 always@(posedge clk or negedge rst)
@@ -27,7 +37,7 @@ begin
         begin
             if(enable)
             begin   
-            OUT <= xor_out;
+            OUT <= sub_out;
             end 
             
             else 
@@ -36,6 +46,7 @@ begin
             end
         end
 end
+
 
 
 endmodule

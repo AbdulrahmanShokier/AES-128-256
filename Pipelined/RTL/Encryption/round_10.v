@@ -14,8 +14,6 @@ wire [127:0] sub_out;
 wire [127:0] shft_out;
 wire [127:0] xor_out;
 
-reg current_round_enable;
-
 
 sub_bytes  sub_10       (.IN(IN), .OUT(sub_out));
 
