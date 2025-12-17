@@ -30,14 +30,22 @@ reg [10:0] en_pipe; // enable pipeline: en_pipe[0] is for round0, en_pipe[1] for
 
 always@(*)
 begin
-    en_pipe[0] = enable;
+    if (!rst) 
+    begin
+        en_pipe[0] = 1'b0;
+    end
+    
+    else
+    begin
+        en_pipe[0] = enable;
+    end
 end
 
 always @(posedge clk or negedge rst) 
 begin
     if (!rst) 
     begin
-        en_pipe <= 11'b0;
+        en_pipe[10:1] <= 11'b0;
     end 
 
     else 
