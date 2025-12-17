@@ -150,7 +150,9 @@ begin
  endcase
 end
 
-assign Round_Const_in_gfunc = Round_Const;
+assign Round_Const_in_gfunc = Round_Const; // the "Round_Const" is reg becuse its used in always block 
+                                           // but to use it in the g_func instance we need it as wire so i 
+                                           // made the other var "Round_Const_in_gfunc"   
 
 
 endmodule
