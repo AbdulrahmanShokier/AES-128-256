@@ -19,6 +19,9 @@ wire       key_en;
 wire [3:0] round_counter;                      
 
 
+wire [1407:0] all_keys;
+
+
 wire [127:0] k0, k1 ,k2, k3, k4, k5, 
      k6, k7, k8, k9, k10;
 
@@ -60,8 +63,21 @@ FSM   fsm_control (.clk(clk), .rst(rst), .fsm_en(fsm_en), .key_gene_en(key_en), 
 
 
 key_generator  key_round (.key(KEY), .Round_Count(round_counter), .clk(clk), .rst(rst), .en(key_en),
-                          .k0(k0), .k1(k1), .k2(k2), .k3(k3), .k4(k4),
-                          .k5(k5), .k6(k6), .k7(k7), .k8(k8), .k9(k9), .k10(k10));
+                          .keys(all_keys));
+
+
+
+assign k0  = all_keys[ 127:   0]; // calculating every key from the 1408 register
+assign k1  = all_keys[ 255: 128];
+assign k2  = all_keys[ 383: 256];
+assign k3  = all_keys[ 511: 384];
+assign k4  = all_keys[ 639: 512];
+assign k5  = all_keys[ 767: 640];
+assign k6  = all_keys[ 895: 768];
+assign k7  = all_keys[1023: 896];
+assign k8  = all_keys[1151:1024];
+assign k9  = all_keys[1279:1152];
+assign k10 = all_keys[1407:1280];
 
 
 

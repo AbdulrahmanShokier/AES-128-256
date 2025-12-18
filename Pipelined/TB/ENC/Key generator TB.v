@@ -11,7 +11,19 @@ module tb_key_gen_with_fsm();
     wire         key_gene_en;
 
     // Generated keys
-    wire [127:0] k0, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10;
+    wire [1407:0] all_keys;
+
+    wire [127:0] k0;
+    wire [127:0] k1;
+    wire [127:0] k2;
+    wire [127:0] k3;
+    wire [127:0] k4;
+    wire [127:0] k5;
+    wire [127:0] k6;
+    wire [127:0] k7;
+    wire [127:0] k8;
+    wire [127:0] k9;
+    wire [127:0] k10;
 
     //////////////////////////////////////
     //  Clock Generation
@@ -42,18 +54,21 @@ module tb_key_gen_with_fsm();
         .key(key),              // initial input key
         .Round_Count(Round_Count),
 
-        .k0(k0),
-        .k1(k1),
-        .k2(k2),
-        .k3(k3),
-        .k4(k4),
-        .k5(k5),
-        .k6(k6),
-        .k7(k7),
-        .k8(k8),
-        .k9(k9),
-        .k10(k10)
+        .keys(all_keys)
     );
+
+    assign k0  = all_keys[ 127:   0];
+    assign k1  = all_keys[ 255: 128];
+    assign k2  = all_keys[ 383: 256];
+    assign k3  = all_keys[ 511: 384];
+    assign k4  = all_keys[ 639: 512];
+    assign k5  = all_keys[ 767: 640];
+    assign k6  = all_keys[ 895: 768];
+    assign k7  = all_keys[1023: 896];
+    assign k8  = all_keys[1151:1024];
+    assign k9  = all_keys[1279:1152];
+    assign k10 = all_keys[1407:1280];
+
 
     //////////////////////////////////////
     // Stimulus
@@ -62,13 +77,16 @@ module tb_key_gen_with_fsm();
     // Initialize
     rst     = 0;
     fsm_en  = 0;
-    key     = 128'h00010203040506070809550b0c0d0e77;
+    key     = 128'h000102030405060708090a0b0c0d0e0f;
 
     #10 rst = 1; // release reset
 
-    #10 fsm_en = 1; // pulse start
+    #10 fsm_en = 1;   // start pulse
+    #10 fsm_en = 0;   // end after one clock
 
     wait (uut_fsm.current_state == 2'b10); // reach HOLD state
+
+    #40
 
 
     $stop;

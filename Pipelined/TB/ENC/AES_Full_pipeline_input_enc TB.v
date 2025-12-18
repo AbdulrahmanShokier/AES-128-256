@@ -55,6 +55,36 @@ module tb_AES_enc_full_pipeline_in;
         @(posedge clk);
         fsm_en = 0;
 
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #1
+
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #2
+
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #3
+
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #4
+
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #5
+
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #6
+
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #7
+
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #8
+
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #9
+
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #10
+
         // -----------------------------------------
         //  Fill pipeline with 11 inputs (Round 0 → 10)
         //  Each one enters in a separate clock cycle
