@@ -1,4 +1,4 @@
-module S_box_seq
+module S_box
 (
     input  wire        clk,
     input  wire        rst,       // synchronous reset
