@@ -10,24 +10,27 @@ module AES_enc #(parameter BLOCK_LENGTH = 128)
 );
 
 
+    reg [127:0] k0, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10;
 
-wire [BLOCK_LENGTH-1:0]  r0_out, r1_out ,r2_out, r3_out, r4_out, 
+
+
+
+wire [BLOCK_LENGTH-1:0]    r0_out, r1_out ,r2_out, r3_out, r4_out, 
                          r5_out, r6_out, r7_out, r8_out, r9_out, r10_out;
+
+
 
 
 wire       key_en;
 wire [3:0] round_counter;                      
+wire [127:0] current_key;
 
-
-wire [1407:0] all_keys;
-
-
-wire [127:0] k0, k1 ,k2, k3, k4, k5, 
-     k6, k7, k8, k9, k10;
 
 reg [10:0] en_pipe; // enable pipeline: en_pipe[0] is for round0, en_pipe[1] for round1, ..., en_pipe[10] for round10
                     // it was made of reg type to be saved and to move the value with it's plain text pair
                     //between stages for all rounds
+
+
 
 
 
@@ -58,26 +61,78 @@ begin
 end
 
 
+
+
+    wire [10:0] wen;
+    assign wen = (key_valid) ? (11'b1 << round_counter) : 11'b0;
+
+
+    // ── Individual FF registers ──
+    always @(posedge clk) begin
+        if (!rst)        k0 <= 128'b0;
+        else if (wen[0]) k0 <= current_key;
+    end
+
+    always @(posedge clk) begin
+        if (!rst)        k1 <= 128'b0;
+        else if (wen[1]) k1 <= current_key;
+    end
+
+    always @(posedge clk) begin
+        if (!rst)        k2 <= 128'b0;
+        else if (wen[2]) k2 <= current_key;
+    end
+
+    always @(posedge clk) begin
+        if (!rst)        k3 <= 128'b0;
+        else if (wen[3]) k3 <= current_key;
+    end
+
+    always @(posedge clk) begin
+        if (!rst)        k4 <= 128'b0;
+        else if (wen[4]) k4 <= current_key;
+    end
+
+    always @(posedge clk) begin
+        if (!rst)        k5 <= 128'b0;
+        else if (wen[5]) k5 <= current_key;
+    end
+
+    always @(posedge clk) begin
+        if (!rst)        k6 <= 128'b0;
+        else if (wen[6]) k6 <= current_key;
+    end
+
+    always @(posedge clk) begin
+        if (!rst)        k7 <= 128'b0;
+        else if (wen[7]) k7 <= current_key;
+    end
+
+    always @(posedge clk) begin
+        if (!rst)        k8 <= 128'b0;
+        else if (wen[8]) k8 <= current_key;
+    end
+
+    always @(posedge clk) begin
+        if (!rst)        k9 <= 128'b0;
+        else if (wen[9]) k9 <= current_key;
+    end
+
+    always @(posedge clk) begin
+        if (!rst)         k10 <= 128'b0;
+        else if (wen[10]) k10 <= current_key;
+    end
+
+
+
+
+
 FSM   fsm_control (.clk(clk), .rst(rst), .fsm_en(fsm_en), .key_gene_en(key_en), .Round_Count(round_counter));
 
 
 
-key_generator  key_round (.key(KEY), .Round_Count(round_counter), .clk(clk), .rst(rst), .en(key_en),
-                          .keys(all_keys));
-
-
-
-assign k0  = all_keys[ 127:   0]; // calculating every key from the 1408 register
-assign k1  = all_keys[ 255: 128];
-assign k2  = all_keys[ 383: 256];
-assign k3  = all_keys[ 511: 384];
-assign k4  = all_keys[ 639: 512];
-assign k5  = all_keys[ 767: 640];
-assign k6  = all_keys[ 895: 768];
-assign k7  = all_keys[1023: 896];
-assign k8  = all_keys[1151:1024];
-assign k9  = all_keys[1279:1152];
-assign k10 = all_keys[1407:1280];
+key_generator  key_round (.key(KEY), .Round_Count(round_counter), 
+                         .clk(clk), .rst(rst), .en(key_en), .current_key(current_key));
 
 
 

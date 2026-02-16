@@ -7,7 +7,7 @@
 //   - Minimal resource usage
 //   - Pipelined output
 //==============================================================================
-module key_generator_dec_optimized #(
+module key_generator #(
     parameter BLOCK_LENGTH = 128
 )
 (   
@@ -56,30 +56,6 @@ assign w7 = w3 ^ w6;
 assign next_key = {w4, w5, w6, w7};
 
 //==============================================================================
-// Round Constant Generation (Optimized LUT-based)
-//==============================================================================
-function [7:0] get_round_constant;
-    input [3:0] round;
-    begin
-        case (round)
-            4'd1:    get_round_constant = 8'h01;
-            4'd2:    get_round_constant = 8'h02;
-            4'd3:    get_round_constant = 8'h04;
-            4'd4:    get_round_constant = 8'h08;
-            4'd5:    get_round_constant = 8'h10;
-            4'd6:    get_round_constant = 8'h20;
-            4'd7:    get_round_constant = 8'h40;
-            4'd8:    get_round_constant = 8'h80;
-            4'd9:    get_round_constant = 8'h1B;
-            4'd10:   get_round_constant = 8'h36;
-            default: get_round_constant = 8'h00;
-        endcase
-    end
-endfunction
-
-assign round_const = get_round_constant(Round_Count);
-
-//==============================================================================
 // Sequential Logic - Key Generation State Machine
 //==============================================================================
 always @(posedge clk) begin
@@ -106,4 +82,29 @@ always @(posedge clk) begin
     end
 end
 
+//==============================================================================
+// Round Constant Generation (Optimized LUT-based)
+//==============================================================================
+
+
+function [7:0] get_round_constant;
+    input [3:0] round;
+    begin
+        case (round)
+            4'd1:    get_round_constant = 8'h01;
+            4'd2:    get_round_constant = 8'h02;
+            4'd3:    get_round_constant = 8'h04;
+            4'd4:    get_round_constant = 8'h08;
+            4'd5:    get_round_constant = 8'h10;
+            4'd6:    get_round_constant = 8'h20;
+            4'd7:    get_round_constant = 8'h40;
+            4'd8:    get_round_constant = 8'h80;
+            4'd9:    get_round_constant = 8'h1B;
+            4'd10:   get_round_constant = 8'h36;
+            default: get_round_constant = 8'h00;
+        endcase
+    end
+endfunction
+
+assign round_const = get_round_constant(Round_Count);
 endmodule
