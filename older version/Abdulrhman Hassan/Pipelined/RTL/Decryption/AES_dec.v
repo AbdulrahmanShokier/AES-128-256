@@ -18,7 +18,6 @@ reg [127:0] k0, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10;
 wire [BLOCK_LENGTH-1:0]    r0_out, r1_out ,r2_out, r3_out, r4_out, 
                          r5_out, r6_out, r7_out, r8_out, r9_out, r10_out;
 
-wire         key_valid;
 wire         key_en;
 wire [3:0]   round_counter;                      
 wire [127:0] current_key;
@@ -119,7 +118,7 @@ FSM   fsm_control (.clk(clk), .rst(rst), .fsm_en(fsm_en),
 
 key_generator  key_round (.key(KEY), .Round_Count(round_counter), 
                          .clk(clk), .rst(rst), .en(key_en), 
-                         .current_key(current_key), .key_valid(key_valid));
+                         .current_key(current_key));
 
 
 
