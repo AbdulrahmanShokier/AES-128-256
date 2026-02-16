@@ -7,7 +7,7 @@
 //   - Minimal resource usage
 //   - Optimized for encryption key schedule
 //==============================================================================
-module key_generator_optimized #(
+module key_generator #(
     parameter BLOCK_LENGTH = 128
 )
 (   
