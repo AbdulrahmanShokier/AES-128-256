@@ -12,6 +12,7 @@ module tb_AES_enc_dec_single_input;
     reg          fsm_en_enc;
     reg          fsm_en_dec;
 
+    reg [127:0]ct_reg;
     wire [127:0] CT;
 
     wire [127:0] PT_Final;
@@ -19,6 +20,11 @@ module tb_AES_enc_dec_single_input;
     // -------------------------------------------------
     // DUT
     // -------------------------------------------------
+
+    always@(*)
+    begin
+        ct_reg = CT;
+    end
 
     AES_enc dut1 (
         .clk(clk),
@@ -34,7 +40,7 @@ module tb_AES_enc_dec_single_input;
     AES_dec dut2 (
         .clk(clk),
         .rst(rst),
-        .IN(CT),
+        .IN(ct_reg),
         .KEY(KEY),
         .enable(enable_dec),
         .fsm_en(fsm_en_dec),
@@ -75,6 +81,7 @@ module tb_AES_enc_dec_single_input;
         fsm_en_enc = 0;
         fsm_en_dec = 0;
 
+        @(posedge clk); // wait for the first key to be assigned in the register  
 
         @(posedge clk);
         PT = 128'h00112233445566778899aabbccddeeff;   // Fill
@@ -83,7 +90,7 @@ module tb_AES_enc_dec_single_input;
         @(posedge clk);
         enable_enc = 0;
 
-        repeat(10) @(posedge clk);
+        repeat(9) @(posedge clk);
 
 
         @(posedge clk);

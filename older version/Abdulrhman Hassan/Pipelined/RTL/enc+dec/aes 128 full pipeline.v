@@ -120,6 +120,9 @@ module tb_AES_enc_dec_full_pipeline;
         fsm_en_enc = 0;
         fsm_en_dec = 0;
 
+        @(posedge clk); // wait for the first key to be assigned in the register  
+
+
         // =============================================
         // Loop over all 11 test cases
         // =============================================
