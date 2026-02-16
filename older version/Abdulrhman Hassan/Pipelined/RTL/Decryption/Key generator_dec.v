@@ -17,7 +17,7 @@ module key_generator_dec #(
     input  wire [BLOCK_LENGTH-1:0]   key,           // Initial key (K0)
     input  wire [3:0]                Round_Count,   // Current round (0-10)
     output reg  [BLOCK_LENGTH-1:0]   current_key,   // Current round key
-    output reg                       key_valid      // Key valid flag
+//    output reg                       key_valid      // Key valid flag
 );
 
 //==============================================================================
