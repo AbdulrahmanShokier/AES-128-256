@@ -1,0 +1,251 @@
+   Build: PlanAhead v14.7 by xbuild
+          on Fri Sep 27 19:29:51 MDT 2013
+  Report: by VM on host VM-PC, pid 1216
+          on Mon Feb 16 08:54:41 2026
+
+Report for instance: round10
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+FLOP_LATCH      128    
+LUT             769    
+MUXFX           384    
+
+
+
+Report for instance: round10/xor_with_k10
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             128    
+
+
+
+Report for instance: round10/sub_10
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             512    
+MUXFX           384    
+
+
+
+Report for instance: round10/sub_10/sbox15
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox14
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox13
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox12
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox11
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox10
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox9
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox8
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox7
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox6
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox5
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox4
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox3
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox2
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox1
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round10/sub_10/sbox0
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+

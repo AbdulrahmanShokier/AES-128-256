@@ -1,0 +1,263 @@
+   Build: PlanAhead v14.7 by xbuild
+          on Fri Sep 27 19:29:51 MDT 2013
+  Report: by VM on host VM-PC, pid 1216
+          on Mon Feb 16 08:57:57 2026
+
+Report for instance: round4
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+FLOP_LATCH      128    
+LUT             945    
+MUXFX           384    
+
+
+
+Report for instance: round4/xor_with_k1_to_9
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             128    
+
+
+
+Report for instance: round4/sub_1_to_9
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             512    
+MUXFX           384    
+
+
+
+Report for instance: round4/mix_1_to_9
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             176    
+
+
+
+Report for instance: round4/sub_1_to_9/sbox15
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox14
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox13
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox12
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox11
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox10
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox9
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox8
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox7
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox6
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox5
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox4
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox3
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox2
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox1
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: round4/sub_1_to_9/sbox0
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+

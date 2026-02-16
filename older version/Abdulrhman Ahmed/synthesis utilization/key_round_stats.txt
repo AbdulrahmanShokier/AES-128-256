@@ -1,0 +1,83 @@
+   Build: PlanAhead v14.7 by xbuild
+          on Fri Sep 27 19:29:51 MDT 2013
+  Report: by VM on host VM-PC, pid 1216
+          on Mon Feb 16 08:54:05 2026
+
+Report for instance: key_round
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+FLOP_LATCH      1408   
+LUT             1587   
+MUXFX           96     
+
+
+
+Report for instance: key_round/g_func
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             136    
+MUXFX           96     
+
+
+
+Report for instance: key_round/g_func/v0_out
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: key_round/g_func/v1_out
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: key_round/g_func/v2_out
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+
+
+Report for instance: key_round/g_func/v3_out
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+LUT             32     
+MUXFX           24     
+
+

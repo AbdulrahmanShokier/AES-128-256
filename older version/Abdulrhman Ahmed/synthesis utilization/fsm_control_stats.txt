@@ -1,0 +1,17 @@
+   Build: PlanAhead v14.7 by xbuild
+          on Fri Sep 27 19:29:51 MDT 2013
+  Report: by VM on host VM-PC, pid 1216
+          on Mon Feb 16 08:53:53 2026
+
+Report for instance: fsm_control
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+FLOP_LATCH      6      
+LUT             10     
+
+

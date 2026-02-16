@@ -1,0 +1,18 @@
+   Build: PlanAhead v14.7 by xbuild
+          on Fri Sep 27 19:29:51 MDT 2013
+  Report: by VM on host VM-PC, pid 1216
+          on Mon Feb 16 08:58:11 2026
+
+Report for instance: round6
+
+
+Primitive Statistics
+====================
+
+Primitive type  Count  
+---------------------
+FLOP_LATCH      128    
+LUT             945    
+MUXFX           384    
+
+
