@@ -15,7 +15,7 @@ wire [127:0] shft_out;
 wire [127:0] xor_out;
 
 
-sub_bytes  sub_10       (.IN(IN), .OUT(sub_out), .clk(clk), .rst(rst));
+sub_bytes  sub_10       (.IN(IN), .OUT(sub_out));
 
 shift_rows shft_10      (.IN(sub_out), .OUT(shft_out));
 

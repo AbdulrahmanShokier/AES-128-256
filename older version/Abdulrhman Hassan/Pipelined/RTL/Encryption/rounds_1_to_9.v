@@ -16,7 +16,7 @@ wire [127:0] mix_out;
 wire [127:0] xor_out;
 
 
-sub_bytes   sub_1_to_9       (.IN(IN), .OUT(sub_out), .clk(clk), .rst(rst));
+sub_bytes   sub_1_to_9       (.IN(IN), .OUT(sub_out));
 
 shift_rows  shft_1_to_9      (.IN(sub_out), .OUT(shft_out));
 
