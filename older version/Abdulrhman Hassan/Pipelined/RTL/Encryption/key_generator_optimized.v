@@ -77,18 +77,22 @@ always @(posedge clk) begin
     end
     else if (en) begin
         key_valid <= 1'b1;
-        if (Round_Count == 4'd0) begin
+        if (Round_Count == 4'd0) 
+        begin
             // Load initial cipher key
             prev_key    <= key;
             current_key <= key;
         end
-        else if (Round_Count <= 4'd10) begin
+
+        else if (Round_Count <= 4'd10) 
+        begin
             // Generate and output next round key
             prev_key    <= next_key;
             current_key <= next_key;
         end
     end
-    else begin
+    else
+    begin
         key_valid <= 1'b0;
     end
 end

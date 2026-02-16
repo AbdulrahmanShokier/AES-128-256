@@ -60,71 +60,68 @@ end
 
 
 
-    wire [10:0] wen;
-    assign wen = (key_valid) ? (11'b1 << round_counter) : 11'b0;
-
-
     // ── Individual FF registers ──
     always @(posedge clk) begin
-        if (!rst)        k0 <= 128'b0;
-        else if (wen[0]) k0 <= current_key;
+        if (!rst)                       k0 <= 128'b0;
+        else if (round_counter == 4'd1) k0 <= KEY;
     end
 
     always @(posedge clk) begin
-        if (!rst)        k1 <= 128'b0;
-        else if (wen[1]) k1 <= current_key;
+        if (!rst)                       k1 <= 128'b0;
+        else if (round_counter == 4'd2) k1 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (!rst)        k2 <= 128'b0;
-        else if (wen[2]) k2 <= current_key;
+        if (!rst)                       k2 <= 128'b0;
+        else if (round_counter == 4'd3) k2 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (!rst)        k3 <= 128'b0;
-        else if (wen[3]) k3 <= current_key;
+        if (!rst)                       k3 <= 128'b0;
+        else if (round_counter == 4'd4) k3 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (!rst)        k4 <= 128'b0;
-        else if (wen[4]) k4 <= current_key;
+        if (!rst)                       k4 <= 128'b0;
+        else if (round_counter == 4'd5) k4 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (!rst)        k5 <= 128'b0;
-        else if (wen[5]) k5 <= current_key;
+        if (!rst)                       k5 <= 128'b0;
+        else if (round_counter == 4'd6) k5 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (!rst)        k6 <= 128'b0;
-        else if (wen[6]) k6 <= current_key;
+        if (!rst)                       k6 <= 128'b0;
+        else if (round_counter == 4'd7) k6 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (!rst)        k7 <= 128'b0;
-        else if (wen[7]) k7 <= current_key;
+        if (!rst)                       k7 <= 128'b0;
+        else if (round_counter == 4'd8) k7 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (!rst)        k8 <= 128'b0;
-        else if (wen[8]) k8 <= current_key;
+        if (!rst)                       k8 <= 128'b0;
+        else if (round_counter == 4'd9) k8 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (!rst)        k9 <= 128'b0;
-        else if (wen[9]) k9 <= current_key;
+        if (!rst)                       k9 <= 128'b0;
+        else if (round_counter == 4'd10) k9 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (!rst)         k10 <= 128'b0;
-        else if (wen[10]) k10 <= current_key;
+        if (!rst)                        k10 <= 128'b0;
+        else if (round_counter == 4'd11) k10 <= current_key;
     end
 
 
 
 
 
-FSM   fsm_control (.clk(clk), .rst(rst), .fsm_en(fsm_en), .key_gene_en(key_en), .Round_Count(round_counter));
+FSM   fsm_control (.clk(clk), .rst(rst), .fsm_en(fsm_en), 
+                   .key_gene_en(key_en), .Round_Count(round_counter));
 
 
 

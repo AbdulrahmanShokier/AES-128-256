@@ -23,7 +23,7 @@ InvSubBytes     sub_10       (.IN(shft_out), .OUT(sub_out));
 
 
 
-always@(posedge clk or negedge rst)
+always@(posedge clk)
 begin
 
         if(!rst)

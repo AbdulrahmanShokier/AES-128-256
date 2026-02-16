@@ -1,108 +1,110 @@
-module key_generator_dec #(parameter BLOCK_LENGTH = 128)
+//==============================================================================
+// Module: key_generator_dec_optimized
+// Description: Optimized AES-128 key expansion for decryption
+// Resource Usage: 256 flip-flops (vs 1408 in original)
+// Features: 
+//   - Sequential key generation (one key per enable cycle)
+//   - Minimal resource usage
+//   - Pipelined output
+//==============================================================================
+module key_generator_dec #(
+    parameter BLOCK_LENGTH = 128
+)
 (   
-    input      clk,
-    input      rst,
-    input      en,                   // Enable signal from the FSM 
-    input      [BLOCK_LENGTH-1:0] key,
-    input      [3:0] Round_Count,
-    output reg [1407:0] keys // 11 registers to store all the keys once calculated
-
+    input  wire                      clk,
+    input  wire                      rst,           // Active low reset
+    input  wire                      en,            // Enable signal from FSM
+    input  wire [BLOCK_LENGTH-1:0]   key,           // Initial key (K0)
+    input  wire [3:0]                Round_Count,   // Current round (0-10)
+    output reg  [BLOCK_LENGTH-1:0]   current_key,   // Current round key
+    output reg                       key_valid      // Key valid flag
 );
 
+//==============================================================================
+// Internal Registers and Wires
+//==============================================================================
+reg  [127:0] prev_key;              // Previous round key for expansion
+wire [31:0]  w0, w1, w2, w3;        // Current key words
+wire [31:0]  g_out;                 // G-function output
+wire [31:0]  w4, w5, w6, w7;        // Next key words
+wire [7:0]   round_const;           // AES round constant
+wire [127:0] next_key;              // Computed next key
 
-///////////////////////////////////////////Wires and Registers////////////////////////////////////////////
+//==============================================================================
+// Key Expansion Logic
+//==============================================================================
+// Extract 32-bit words from previous key
+assign w0 = prev_key[127:96];
+assign w1 = prev_key[95:64];
+assign w2 = prev_key[63:32];
+assign w3 = prev_key[31:0];
 
+// G-function instantiation
+g_function g_func (
+    .word_3(w3),
+    .round_number(round_const),
+    .word_3_substituted(g_out)
+);
 
-wire [31:0] w0, w1, w2, w3;
-wire [31:0] g_out;
-wire [31:0] w4, w5, w6, w7;
+// Key expansion XOR chain
+assign w4 = w0 ^ g_out;
+assign w5 = w1 ^ w4;
+assign w6 = w2 ^ w5;
+assign w7 = w3 ^ w6;
 
+// Assemble next round key
+assign next_key = {w4, w5, w6, w7};
 
-wire [7 : 0] Round_Const_in_gfunc; // round number used in g-func 
-
-reg [7 : 0] Round_Const;
-
-wire [BLOCK_LENGTH-1:0] next_round_key;
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-assign w0 = keys[1407 : 1376] ;
-assign w1 = keys[1375 : 1344] ;
-assign w2 = keys[1343 : 1312] ;
-assign w3 = keys[1311 : 1280] ;
-
-
-g_function g_func (.word_3(w3), .round_number(Round_Const_in_gfunc), .word_3_substituted(g_out));
-
-
-assign w4 = w0 ^ g_out ;
-assign w5 = w1 ^ w4    ;
-assign w6 = w2 ^ w5    ;
-assign w7 = w3 ^ w6    ;
-
-
-assign next_round_key = {w4, w5, w6, w7};
-
-
-
-always@(negedge rst or posedge clk)
-begin
-
-    if(!rst)
-    begin
-    keys  <= 1408'b0;  
+//==============================================================================
+// Sequential Logic - Key Generation State Machine
+//==============================================================================
+always @(posedge clk) begin
+    if (!rst) begin
+        prev_key    <= 128'b0;
+        current_key <= 128'b0;
+        key_valid   <= 1'b0;
     end
-
-    else if(en)  
-    begin
-
-    if(Round_Count == 4'b0)
-    begin
-        keys[1407:1280] <= key;      // first key
+    else if (en) begin
+        key_valid <= 1'b1;
+        if (Round_Count == 4'd0) begin
+            // Load initial key
+            prev_key    <= key;
+            current_key <= key;
+        end
+        else if (Round_Count <= 4'd10) begin
+            // Generate and output next round key
+            prev_key    <= next_key;
+            current_key <= next_key;
+        end
     end
-
-    if(Round_Count > 4'b0 && Round_Count < 4'd11)
-     begin
-        keys            <= keys >> 8'b10000000; // to shift the key to make a space for the next key 
-        keys[1407:1280] <= next_round_key;      // put the next key in the MSB 128 bits
-     end
-
+    else begin
+        key_valid <= 1'b0;
     end
-
-    else
-    begin
-     keys <= keys  ; 
-    end
-
 end
 
+//==============================================================================
+// Round Constant Generation (Optimized LUT-based)
+//==============================================================================
 
 
-///////////////////////// to calculate the polynomial round number of the decimal counter////////////////////
+function [7:0] get_round_constant;
+    input [3:0] round;
+    begin
+        case (round)
+            4'd1:    get_round_constant = 8'h01;
+            4'd2:    get_round_constant = 8'h02;
+            4'd3:    get_round_constant = 8'h04;
+            4'd4:    get_round_constant = 8'h08;
+            4'd5:    get_round_constant = 8'h10;
+            4'd6:    get_round_constant = 8'h20;
+            4'd7:    get_round_constant = 8'h40;
+            4'd8:    get_round_constant = 8'h80;
+            4'd9:    get_round_constant = 8'h1B;
+            4'd10:   get_round_constant = 8'h36;
+            default: get_round_constant = 8'h00;
+        endcase
+    end
+endfunction
 
-always@(*)
-begin 
- case(Round_Count)
- 4'd1:  Round_Const = 8'h1; 
- 4'd2:  Round_Const = 8'h2; 
- 4'd3:  Round_Const = 8'h4; 
- 4'd4:  Round_Const = 8'h8; 
- 4'd5:  Round_Const = 8'h10; 
- 4'd6:  Round_Const = 8'h20; 
- 4'd7:  Round_Const = 8'h40; 
- 4'd8:  Round_Const = 8'h80; 
- 4'd9:  Round_Const = 8'h1B; 
- 4'd10: Round_Const = 8'h36; 
- default: Round_Const = 8'h0; 
- endcase
-end
-
-assign Round_Const_in_gfunc = Round_Const;
-
-
+assign round_const = get_round_constant(Round_Count);
 endmodule
-
-
-
-//k10 is on the MSB and k0 is on LSB

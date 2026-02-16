@@ -25,7 +25,7 @@ InvShiftRows    shft_9_to_1      (.IN(mix_out), .OUT(shft_out));
 InvSubBytes     sub_9_to_1       (.IN(shft_out), .OUT(sub_out));
 
 
-always@(posedge clk or negedge rst)
+always@(posedge clk)
 begin
 
         if(!rst)
