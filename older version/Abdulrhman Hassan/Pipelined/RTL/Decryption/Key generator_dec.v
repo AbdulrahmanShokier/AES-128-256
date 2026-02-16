@@ -16,7 +16,7 @@ module key_generator_dec #(
     input  wire                      en,            // Enable signal from FSM
     input  wire [BLOCK_LENGTH-1:0]   key,           // Initial key (K0)
     input  wire [3:0]                Round_Count,   // Current round (0-10)
-    output reg  [BLOCK_LENGTH-1:0]   current_key,   // Current round key
+    output reg  [BLOCK_LENGTH-1:0]   current_key   // Current round key
 //    output reg                       key_valid      // Key valid flag
 );
 
@@ -62,10 +62,10 @@ always @(posedge clk) begin
     if (!rst) begin
         prev_key    <= 128'b0;
         current_key <= 128'b0;
-        key_valid   <= 1'b0;
+        //key_valid   <= 1'b0;
     end
     else if (en) begin
-        key_valid <= 1'b1;
+        //key_valid <= 1'b1;
         if (Round_Count == 4'd0) begin
             // Load initial key
             prev_key    <= key;
@@ -78,7 +78,7 @@ always @(posedge clk) begin
         end
     end
     else begin
-        key_valid <= 1'b0;
+        //key_valid <= 1'b0;
     end
 end
 

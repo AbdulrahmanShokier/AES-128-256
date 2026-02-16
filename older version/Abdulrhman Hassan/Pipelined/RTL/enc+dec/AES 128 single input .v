@@ -83,7 +83,7 @@ module tb_AES_enc_dec_single_input;
         @(posedge clk);
         enable_enc = 0;
 
-        repeat(9) @(posedge clk);
+        repeat(10) @(posedge clk);
 
 
         @(posedge clk);
