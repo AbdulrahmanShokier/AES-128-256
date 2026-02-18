@@ -22,8 +22,6 @@ module key_generator_tb;
     reg  [BLOCK_LENGTH-1:0]  key;
     reg  [3:0]               Round_Count;
     wire [BLOCK_LENGTH-1:0]  current_key;
-    wire                     key_valid;
-
     //==========================================================================
     // Expected Round Keys (NIST FIPS-197 Appendix A.1)
     // Initial Key: 128'h2b7e151628aed2a6abf7158809cf4f3c
@@ -55,8 +53,7 @@ module key_generator_tb;
         .en(en),
         .key(key),
         .Round_Count(Round_Count),
-        .current_key(current_key),
-        .key_valid(key_valid)
+        .current_key(current_key)
     );
 
     //==========================================================================
@@ -124,13 +121,13 @@ module key_generator_tb;
         $display("\n--- TEST 1: Reset Verification ---");
         reset_dut;
 
-        if (current_key === 128'b0 && key_valid === 1'b0) begin
-            $display("[PASS] Reset: current_key = 0, key_valid = 0");
+        if (current_key === 128'b0 ) begin
+            $display("[PASS] Reset: current_key = 0");
             pass_count = pass_count + 1;
         end
         else begin
             $display("[FAIL] Reset state incorrect");
-            $display("       current_key = %h, key_valid = %b", current_key, key_valid);
+            $display("       current_key = %h", current_key);
             fail_count = fail_count + 1;
         end
 
@@ -158,22 +155,6 @@ module key_generator_tb;
             check_key(i[3:0], expected_keys[i]);
         end
 
-        // ──────────────────────────────────────────────────
-        // TEST 3: key_valid deasserts when en = 0
-        // ──────────────────────────────────────────────────
-        $display("\n--- TEST 3: key_valid Deassert ---");
-        en = 1'b0;
-        @(posedge clk);
-        #1;
-
-        if (key_valid === 1'b0) begin
-            $display("[PASS] key_valid deasserted when en = 0");
-            pass_count = pass_count + 1;
-        end
-        else begin
-            $display("[FAIL] key_valid should be 0 when en = 0");
-            fail_count = fail_count + 1;
-        end
 
         // ──────────────────────────────────────────────────
         // TEST 4: Reset mid-operation
@@ -194,7 +175,7 @@ module key_generator_tb;
         @(posedge clk);
         #1;
 
-        if (current_key === 128'b0 && key_valid === 1'b0) begin
+        if (current_key === 128'b0 ) begin
             $display("[PASS] Mid-operation reset: state cleared");
             pass_count = pass_count + 1;
         end

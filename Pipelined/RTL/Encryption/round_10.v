@@ -37,11 +37,6 @@ begin
             begin   
             OUT <= xor_out;
             end 
-            
-            else 
-            begin
-            OUT <= 128'b0;
-            end
         end
 end
 

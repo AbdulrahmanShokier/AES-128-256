@@ -47,7 +47,7 @@ always @(posedge clk)
 begin
     if (!rst) 
     begin
-        en_pipe[10:1] <= 11'b0;
+        en_pipe[10:1] <= 10'b0;
     end 
 
     else 
