@@ -4,7 +4,7 @@ module round_0_dec #(parameter BLOCK_LENGTH = 128)
     input                         rst,  
     input      [BLOCK_LENGTH-1:0] IN,
     input      [BLOCK_LENGTH-1:0] KEY,
-    input                         enable, //to turn on/off the round
+//    input                         enable, //to turn on/off the round
     output reg [BLOCK_LENGTH-1:0] OUT
 );
 
@@ -22,18 +22,19 @@ begin
             OUT <= 128'b0;
         end
 
-        else
-        begin
-            if(enable)
-            begin   
-            OUT <= xor_out;
-            end 
+        else 
+        OUT <= xor_out;
+        // begin
+        //     if(enable)
+        //     begin   
+           
+        //     end 
             
-            else 
-            begin
-            OUT <= 128'b0;
-            end
-        end
+        //     else 
+        //     begin
+        //     OUT <= 128'b0;
+        //     end
+        // end
 end
 
 

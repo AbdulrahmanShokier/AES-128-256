@@ -4,7 +4,7 @@ module rounds_9_to_1_dec #(parameter BLOCK_LENGTH = 128)
     input                         rst,  
     input      [BLOCK_LENGTH-1:0] IN,
     input      [BLOCK_LENGTH-1:0] KEY,
-    input                         enable, //to turn on/off the round
+//    input                         enable, //to turn on/off the round
     output reg [BLOCK_LENGTH-1:0] OUT
 );
 
@@ -34,17 +34,18 @@ begin
         end
 
         else
-        begin
-            if(enable)
-            begin   
-            OUT <= sub_out;
-            end 
+        OUT <= sub_out;
+        // begin
+        //     if(enable)
+        //     begin   
             
-            else 
-            begin
-            OUT <= 128'b0;
-            end
-        end
+        //     end 
+            
+        //     else 
+        //     begin
+        //     OUT <= 128'b0;
+        //     end
+        // end
 end
 
 

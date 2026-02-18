@@ -4,7 +4,7 @@ module round_10 #(parameter BLOCK_LENGTH = 128)
     input                         rst,  
     input      [BLOCK_LENGTH-1:0] IN,
     input      [BLOCK_LENGTH-1:0] KEY,
-    input                         enable, //to turn on/off the round
+//    input                         enable, //to turn on/off the round
     output reg [BLOCK_LENGTH-1:0] OUT
 );
 
@@ -32,12 +32,13 @@ begin
         end
 
         else
-        begin
-            if(enable)
-            begin   
-            OUT <= xor_out;
-            end 
-        end
+       OUT <= xor_out; 
+    //    begin
+    //         if(enable)
+    //         begin   
+            
+    //         end 
+    //     end
 end
 
 
