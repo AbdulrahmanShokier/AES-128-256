@@ -14,7 +14,7 @@ key_add xor_with_k0 (.IN(IN), .KEY(KEY), .OUT(xor_out)); // first step
 
 
 
-always@(posedge clk or negedge rst)
+always@(posedge clk)
 begin
 
         if(!rst)

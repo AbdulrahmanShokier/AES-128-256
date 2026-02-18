@@ -29,7 +29,7 @@ key_add     xor_with_k1_to_9 (.IN(mix_out), .KEY(KEY), .OUT(xor_out));
 
 
 
-always@(posedge clk or negedge rst)
+always@(posedge clk )
 begin
 
         if(!rst)

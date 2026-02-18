@@ -85,6 +85,9 @@ module tb_AES_dec_full_pipeline_in;
         @(posedge clk);
            // NOP to wait for the key generator to calculate the 10 keys #10
 
+        @(posedge clk);
+           // NOP to wait for the key generator to calculate the 10 keys #10
+
         // -----------------------------------------
         //  Fill pipeline with 11 inputs (Round 0 → 10)
         //  Each one enters in a separate clock cycle

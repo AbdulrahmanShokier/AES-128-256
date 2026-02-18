@@ -1,5 +1,5 @@
 module g_function
-(
+(   
     input  [31:0] word_3,
     input  [7 :0] round_number,
     output [31:0] word_3_substituted

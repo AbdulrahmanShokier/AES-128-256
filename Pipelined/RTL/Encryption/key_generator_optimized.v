@@ -1,20 +1,20 @@
 //==============================================================================
-// Module: key_generator_dec_optimized
-// Description: Optimized AES-128 key expansion for decryption
+// Module: key_generator_optimized
+// Description: Optimized AES-128 key expansion for ENCRYPTION
 // Resource Usage: 256 flip-flops (vs 1408 in original)
 // Features: 
 //   - Sequential key generation (one key per enable cycle)
 //   - Minimal resource usage
-//   - Pipelined output
+//   - Optimized for encryption key schedule
 //==============================================================================
-module key_generator_dec #(
+module key_generator #(
     parameter BLOCK_LENGTH = 128
 )
 (   
     input  wire                      clk,
     input  wire                      rst,           // Active low reset
     input  wire                      en,            // Enable signal from FSM
-    input  wire [BLOCK_LENGTH-1:0]   key,           // Initial key (K0)
+    input  wire [BLOCK_LENGTH-1:0]   key,           // Initial cipher key (K0)
     input  wire [3:0]                Round_Count,   // Current round (0-10)
     output reg  [BLOCK_LENGTH-1:0]   current_key   // Current round key
 //    output reg                       key_valid      // Key valid flag
@@ -23,6 +23,8 @@ module key_generator_dec #(
 //==============================================================================
 // Internal Registers and Wires
 //==============================================================================
+
+
 reg  [127:0] prev_key;              // Previous round key for expansion
 wire [31:0]  w0, w1, w2, w3;        // Current key words
 wire [31:0]  g_out;                 // G-function output
@@ -31,33 +33,42 @@ wire [7:0]   round_const;           // AES round constant
 wire [127:0] next_key;              // Computed next key
 
 //==============================================================================
-// Key Expansion Logic
+// Key Expansion Logic (Encryption Schedule)
 //==============================================================================
+
+
 // Extract 32-bit words from previous key
 assign w0 = prev_key[127:96];
 assign w1 = prev_key[95:64];
 assign w2 = prev_key[63:32];
 assign w3 = prev_key[31:0];
 
-// G-function instantiation
+
+// G-function instantiation (SubWord + RotWord + Rcon)
 g_function g_func (
     .word_3(w3),
     .round_number(round_const),
     .word_3_substituted(g_out)
 );
 
-// Key expansion XOR chain
+
+// Key expansion XOR chain (standard AES-128 expansion)
 assign w4 = w0 ^ g_out;
 assign w5 = w1 ^ w4;
 assign w6 = w2 ^ w5;
 assign w7 = w3 ^ w6;
 
+
+
 // Assemble next round key
 assign next_key = {w4, w5, w6, w7};
+
 
 //==============================================================================
 // Sequential Logic - Key Generation State Machine
 //==============================================================================
+
+
 always @(posedge clk) begin
     if (!rst) begin
         prev_key    <= 128'b0;
@@ -66,21 +77,26 @@ always @(posedge clk) begin
     end
     else if (en) begin
         //key_valid <= 1'b1;
-        if (Round_Count == 4'd0) begin
-            // Load initial key
+        if (Round_Count == 4'd0) 
+        begin
+            // Load initial cipher key
             prev_key    <= key;
             current_key <= key;
         end
-        else if (Round_Count <= 4'd10) begin
+
+        else if (Round_Count <= 4'd10) 
+        begin
             // Generate and output next round key
             prev_key    <= next_key;
             current_key <= next_key;
         end
     end
-    else begin
+    else
+    begin
         //key_valid <= 1'b0;
     end
 end
+
 
 //==============================================================================
 // Round Constant Generation (Optimized LUT-based)
@@ -107,4 +123,6 @@ function [7:0] get_round_constant;
 endfunction
 
 assign round_const = get_round_constant(Round_Count);
+
+
 endmodule

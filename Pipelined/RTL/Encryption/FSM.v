@@ -16,7 +16,7 @@ hold    = 2'b10;
 reg [1:0] current_state, next_state;
 
 
-always @(posedge clk or negedge rst) 
+always @(posedge clk ) 
 begin
     if(!rst)
         current_state <= idle;
@@ -28,7 +28,7 @@ end
 //////////////////////////////
 //   OUTPUT + COUNTER LOGIC
 //////////////////////////////
-always @(posedge clk or negedge rst) 
+always @(posedge clk ) 
 begin
     if(!rst) 
     begin
