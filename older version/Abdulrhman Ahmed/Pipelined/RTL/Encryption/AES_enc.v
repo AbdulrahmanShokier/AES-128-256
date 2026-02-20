@@ -108,7 +108,7 @@ module AES_enc #(parameter BLOCK_LENGTH = 128)
     round_10       round10 (.clk(clk), .rst(rst), .IN(r9_out), .KEY(k10), .OUT(r10_out));
 
     // Outputs 
-    assign OUT = r10_out;
+    assign OUT = (valid_out)? r10_out : 128'b0;
     assign valid_out = en_pipe[10]; // Output is valid when pipeline is full
 
 endmodule

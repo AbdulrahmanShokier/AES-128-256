@@ -109,7 +109,7 @@ module AES_dec #(parameter BLOCK_LENGTH = 128)
     round_0_dec        round0 (.clk(clk), .rst(rst), .IN(r1_out), .KEY(k0), .OUT(r0_out));
 
     // Outputs 
-    assign OUT = r0_out;
+    assign OUT = (valid_out)? r0_out : 128'b0;
     assign valid_out = en_pipe[10]; // Output is valid when pipeline is full
 
 endmodule
