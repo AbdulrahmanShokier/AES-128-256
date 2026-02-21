@@ -1,1 +1,0 @@
--intstyle "ise" -incremental -lib "unisims_ver" -lib "unimacro_ver" -lib "xilinxcorelib_ver" -lib "secureip" -o "C:/Users/VM/Documents/ISE/AES_Decryption_Final/tb_AES_dec_full_pipeline_in_isim_beh.exe" -prj "C:/Users/VM/Documents/ISE/AES_Decryption_Final/tb_AES_dec_full_pipeline_in_beh.prj" "work.tb_AES_dec_full_pipeline_in" "work.glbl" 

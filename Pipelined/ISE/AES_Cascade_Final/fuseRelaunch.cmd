@@ -1,1 +1,0 @@
--intstyle "ise" -incremental -lib "simprims_ver" -lib "unisims_ver" -lib "unimacro_ver" -lib "xilinxcorelib_ver" -lib "secureip" -o "C:/Users/VM/Documents/ISE/AES_Cascade_Final/tb_AES_cascade_top_isim_translate.exe" -prj "C:/Users/VM/Documents/ISE/AES_Cascade_Final/tb_AES_cascade_top_translate.prj" "work.tb_AES_cascade_top" "work.glbl" 

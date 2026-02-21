@@ -1,3 +1,0 @@
-xst -intstyle ise -ifn "C:/Users/VM/Documents/ISE/AES_Decryption_Final/AES_dec.xst" -ofn "C:/Users/VM/Documents/ISE/AES_Decryption_Final/AES_dec.syr" 
-ngdbuild -intstyle ise -dd _ngo -nt timestamp -i -p xc6slx45-csg324-3 AES_dec.ngc AES_dec.ngd  
-netgen -intstyle ise -insert_glbl true -w -dir netgen/translate -ofmt verilog -sim AES_dec.ngd AES_dec_translate.v 
