@@ -1,0 +1,28 @@
+Command line:
+   tb_AES_dec_full_pipeline_in_isim_beh.exe
+     -simmode  gui
+     -simrunnum  0
+     -socket  49164
+
+Fri Feb 20 23:48:17 2026
+
+
+ Elaboration Time: 0.202802 sec
+
+ Current Memory Usage: 695.271 Meg
+
+ Total Signals          : 746
+ Total Nets             : 14943
+ Total Signal Drivers   : 860
+ Total Blocks           : 266
+ Total Primitive Blocks : 197
+ Total Processes        : 619
+ Total Traceable Variables  : 364
+ Total Scalar Nets and Variables : 21965
+
+ Total Simulation Time: 0.374403 sec
+
+ Current Memory Usage: 1009.84 Meg
+
+Fri Feb 20 23:48:48 2026
+

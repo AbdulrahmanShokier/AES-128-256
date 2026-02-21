@@ -1,0 +1,28 @@
+Command line:
+   tb_AES_cascade_top_isim_translate.exe
+     -simmode  gui
+     -simrunnum  0
+     -socket  49170
+
+Sat Feb 21 00:39:05 2026
+
+
+ Elaboration Time: 28.5482 sec
+
+ Current Memory Usage: 1942.77 Meg
+
+ Total Signals          : 491045
+ Total Nets             : 295771
+ Total Signal Drivers   : 282914
+ Total Blocks           : 52392
+ Total Primitive Blocks : 26424
+ Total Processes        : 385047
+ Total Traceable Variables  : 152173
+ Total Scalar Nets and Variables : 5069104
+
+ Total Simulation Time: 48.8751 sec
+
+ Current Memory Usage: 2100.06 Meg
+
+Sat Feb 21 00:41:02 2026
+

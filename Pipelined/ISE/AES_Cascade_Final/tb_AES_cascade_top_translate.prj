@@ -1,0 +1,2 @@
+verilog work "netgen/translate/AES_cascade_top_translate.v"
+verilog work "TB_enc_dec.v"

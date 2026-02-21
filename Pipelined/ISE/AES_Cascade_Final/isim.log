@@ -1,0 +1,36 @@
+ISim log file
+Running: C:\Users\VM\Documents\ISE\AES_Cascade_Final\tb_AES_cascade_top_isim_translate.exe -intstyle ise -gui -tclbatch isim.cmd -wdb C:/Users/VM/Documents/ISE/AES_Cascade_Final/tb_AES_cascade_top_isim_translate.wdb 
+ISim P.20131013 (signature 0x7708f090)
+This is a Full version of ISim.
+Time resolution is 1 ps
+# onerror resume
+# wave add /
+# run 1000 ns
+Simulator is doing circuit initialization process.
+Finished circuit initialization process.
+Time:               810000 | Valid Decrypted Output: 00112233445566778899aabbccddeeff
+Time:               830000 | Valid Decrypted Output: 00112233445566000099aabbccddeeff
+Time:               850000 | Valid Decrypted Output: 66542233445566000099aabbccddeeff
+Time:               870000 | Valid Decrypted Output: 00000000000000000000000000000000
+Time:               890000 | Valid Decrypted Output: 11111111111111111111111111111111
+Time:               910000 | Valid Decrypted Output: 10101010101010101010101010101010
+Time:               930000 | Valid Decrypted Output: 01010101010101010101010101010101
+Time:               950000 | Valid Decrypted Output: 05050505050505050505050505050505
+Time:               970000 | Valid Decrypted Output: ffffffffffffffffffffffffffffffff
+Time:               990000 | Valid Decrypted Output: 33333333333333333333333333333333
+# restart
+# run all
+Simulator is doing circuit initialization process.
+Finished circuit initialization process.
+Time:               810000 | Valid Decrypted Output: 00112233445566778899aabbccddeeff
+Time:               830000 | Valid Decrypted Output: 00112233445566000099aabbccddeeff
+Time:               850000 | Valid Decrypted Output: 66542233445566000099aabbccddeeff
+Time:               870000 | Valid Decrypted Output: 00000000000000000000000000000000
+Time:               890000 | Valid Decrypted Output: 11111111111111111111111111111111
+Time:               910000 | Valid Decrypted Output: 10101010101010101010101010101010
+Time:               930000 | Valid Decrypted Output: 01010101010101010101010101010101
+Time:               950000 | Valid Decrypted Output: 05050505050505050505050505050505
+Time:               970000 | Valid Decrypted Output: ffffffffffffffffffffffffffffffff
+Time:               990000 | Valid Decrypted Output: 33333333333333333333333333333333
+Time:              1010000 | Valid Decrypted Output: cccccccccccccccccccccccccccccccc
+Stopped at time : 1390 ns : File "C:/Users/VM/Documents/ISE/AES_Cascade_Final/TB_enc_dec.v" Line 140

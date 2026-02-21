@@ -1,0 +1,21 @@
+# ----------------------------------------------------------------------------
+# System Controls
+# ----------------------------------------------------------------------------
+NET "clk"         LOC = "L15"; # 100MHz clock
+NET "btn_rst"     LOC = "P3";  # BTND (Down Button) - Press to Reset
+NET "btn_start"   LOC = "F5";  # BTNC (Center Button) - Press to Start
+
+# ----------------------------------------------------------------------------
+# Result LEDs
+# ----------------------------------------------------------------------------
+NET "led_success" LOC = "U18"; # LD0
+NET "led_error"   LOC = "M14"; # LD1
+NET "led_done"    LOC = "N14"; # LD2
+
+# ----------------------------------------------------------------------------
+# Diagnostic LEDs
+# ----------------------------------------------------------------------------
+NET "led_feeding"   LOC = "L14"; # LD3
+NET "led_wait_key"  LOC = "M13"; # LD4
+NET "led_idle"      LOC = "D4";  # LD5
+NET "led_heartbeat" LOC = "N12"; # LD7
