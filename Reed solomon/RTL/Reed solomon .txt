@@ -1,0 +1,637 @@
+High-Level Architecture Considerations
+┌─────────────────────────────────────────────┐
+│     TOP-LEVEL ENCODER ARCHITECTURE                        │
+│                                                           │
+│  Design Choices:                                          │
+│  ─────────────                                        │
+│  1. Serial vs Parallel:                                   │
+│     • Serial: 1 symbol/cycle, smaller area                │
+│     • Parallel: Multiple symbols/cycle, higher throughput │
+│                                                           │
+│  2. Clock Domain:                                         │
+│     • Single clock: simpler                               │
+│     • Dual clock: input FIFO + encoder core               │
+│                                                           │
+│  3. Datapath Width:                                       │
+│     • Usually m bits (e.g., 8 for GF(2^8))                │
+│     • Pipeline considerations                             │
+│                                                           │
+│  4. State Machine:                                        │
+│     • IDLE → LOAD_DATA → ENCODE → OUTPUT                  │
+│                                                           │
+│  5. Resource Sharing:                                     │
+│     • Single GF multiplier (time-multiplexed)             │
+│     • Multiple GF multipliers (parallel)                  │
+└─────────────────────────────────────────────┘
+Block 1: Input Interface & Data Buffer
+
+┌───────────────────────────────────────────┐
+│     INPUT INTERFACE                                   │
+│                                                       │
+│  RTL Hints:                                           │
+│  ───────                                            │
+│                                                       │
+│  1. Input Signals:                                    │
+│     • data_in[m-1:0]      : Input symbol              │
+│     • data_valid          : Data valid strobe         │
+│     • start_encode        : Begin encoding            │
+│     • reset_n, clk        : Standard signals          │
+│                                                       │
+│  2. Data Buffer (RAM/Register Array):                 │
+│     • Size: k symbols × m bits                        │
+│     • Can be:                                         │
+│       - Register array (small k)                      │
+│       - Single-port RAM (larger k)                    │
+│       - Dual-port RAM (if need read during write)     │
+│                                                       │
+│  3. Address Counter:                                  │
+│     • Counts 0 to k-1                                 │
+│     • Wraps or stops at k                             │
+│     • Reset on start_encode                           │
+│                                                       │
+│  4. Buffer Full Detection:                            │
+│     • Flag when k symbols received                    │
+│     • Triggers state transition                       │
+│                                                       │
+│  5. Optional: Input FIFO                              │
+│     • For rate matching                               │
+│     • Absorbs burst inputs                            │
+│     • Provides backpressure (almost_full)             │
+│                                                       │
+│  Design Tip:                                          │
+│  Use a WRITE state that simply accumulates data       │
+│  until k symbols are collected before starting        │
+│  polynomial division.                                 │
+└───────────────────────────────────────────┘
+
+Block 2: Galois Field Arithmetic Units
+ 
+┌──────────────────────────────────────────────┐
+│     GALOIS FIELD OPERATORS                                │
+│                                                           │
+│  ════════════════════════                          │
+│  GF ADDER                                                 │
+│  ════════════════════════                          │
+│                                                           │
+│  RTL Hints:                                               │
+│  • Pure combinational logic                               │
+│  • Just XOR gates!                                        │
+│  • No lookup tables needed                                │
+│                                                           │
+│  Implementation:                                          │
+│    result = operand_a ^ operand_b;                        │
+│                                                           │
+│  Area: m XOR gates                                        │
+│  Delay: 1 XOR gate delay                                  │
+│                                                           │
+│  ═════════════════════════               	  		  │
+│  GF MULTIPLIER                                            │
+│  ═════════════════════════				            │
+│                                                           │
+│  Three Implementation Options:                            │
+│                                                           │
+│  ┌────────────────────────────────┐              │
+│  │ Option 1: LOOKUP TABLE (LUT)            │              │
+│  ├────────────────────────────────┤              │
+│  │ • ROM with 2^m × 2^m entries            │              │
+│  │ • Each entry is m bits                  │              │
+│  │ • Total size: 2^(2m) × m bits           │              │
+│  │                                         │              │
+│  │ For GF(2^8): 64KB ROM                   │              │
+│  │                                         │              │
+│  │ RTL Hints:                              │              │
+│  │ - Use dual-port ROM if need 2 mults/cycle│             │
+│  │ - Synthesizer may infer BRAM            │              │
+│  │ - 1 cycle latency                       │              │
+│  │ - Fast but large area                   │              │
+│  │                                         │              │
+│  │ Address = {operand_a, operand_b}        │              │
+│  │ result = ROM[address]                   │              │
+│  └────────────────────────────────┘              │
+│                                                            │
+│  ┌────────────────────────────────┐              │
+│  │ Option 2: LOG/ANTILOG METHOD            │              │
+│  ├────────────────────────────────┤              │
+│  │ Uses logarithms in GF:                  │              │
+│  │   a × b = antilog(log(a) + log(b))      │              │
+│  │                                         │              │
+│  │ RTL Hints:                              │              │
+│  │ - Two small ROMs: log_table, exp_table  │              │
+│  │ - Each 2^m × m bits                     │              │
+│  │ - For GF(2^8): 2 × 256B = 512B total    │              │
+│  │ - Need adder for log addition           │              │
+│  │ - Special case: if a=0 or b=0 → 0       │              │
+│  │ - 2-3 cycle latency (pipeline stages)   │              │
+│  │ - Medium area, medium speed             │              │
+│  │                                         │              │
+│  │ Pipeline:                               │              │
+│  │   Stage 1: log_a = log_ROM[a]           │              │
+│  │            log_b = log_ROM[b]           │              │
+│  │   Stage 2: log_sum = log_a + log_b      │              │
+│  │   Stage 3: result = exp_ROM[log_sum]    │              │
+│  └────────────────────────────────┘              │
+│                                                            │
+│  ┌─────────────────────────────────┐             │
+│  │ Option 3: COMBINATIONAL MULTIPLIER       │              │
+│  ├─────────────────────────────────┤              │
+│  │ Pure logic implementation                │              │
+│  │                                          │              │
+│  │ RTL Hints:                               │              │
+│  │ - Polynomial multiplication mod p(x)     │              │
+│  │ - Shift-and-XOR structure                │              │
+│  │ - Can be serial (m cycles) or parallel   │              │
+│  │                                          │              │
+│  │ Serial (m cycles):                       │              │
+│  │   for i = 0 to m-1:                      │              │
+│  │     if b[i]: result ^= (a << i)          │              │
+│  │     result = reduce_mod_p(result)        │              │
+│  │                                          │              │
+│  │ Parallel (1 cycle):                      │              │
+│  │   Unroll loop → lots of AND/XOR trees    │              │
+│  │   - Small area (no ROM)                  │              │
+│  │   - Slowest (long combinational path)    │              │
+│  │   - Good for small m (m ≤ 4)             │              │
+│  └─────────────────────────────────┘              │
+│                                                             │
+│  Recommendation:                                            │
+│  • GF(2^8): LOG/ANTILOG method                              │
+│  • GF(2^4): Combinational                                   │
+│  • High-speed designs: Full LUT                             │
+└───────────────────────────────────────────────┘
+
+Block 3: Generator Polynomial Storage
+
+┌─────────────────────────────────┐
+│     GENERATOR POLYNOMIAL COEFFICIENTS                     │
+│                                                                                                  │
+│  RTL Hints:                                           				 │
+│  ─────────                                           			 │
+│                                                                                                  │
+│  G(x) = g₀ + g₁x + g₂x² + ... + g_{2t}x^{2t}                  │
+│                                                                                                     │
+│  1. Storage Options:                                                            │ 
+│     ┌─────────────────────────┐               │
+│     │ Option A: CONSTANTS/PARAMETERS        │               │
+│     ├─────────────────────────┤               │
+│     │ • Hardcode in RTL                                       │              │
+│     │ • parameter [m-1:0] G0 = 8'h1F;             │              │
+│     │ • parameter [m-1:0] G1 = 8'h3A;             │              │
+│     │ • ...                                                                     │              │
+│     │                                                                           │              │
+│     │ Pros: No storage overhead                     │              │
+│     │ Cons: Not configurable                           │              │
+│     └─────────────────────────┘              │
+│                                                                                                    │
+│     ┌─────────────────────────┐              │
+│     │ Option B: ROM                                               │              │
+│     ├─────────────────────────┤              │
+│     │ • Small ROM: (2t+1) × m bits     		 │              │
+│     │ • For RS(255,223): 33 × 8 bits   		 │              │
+│     │ • Can support multiple codes     	  │              │
+│     │ • Load via configuration         		  │              │
+│     │                                   					   │              │
+│     │ Indexed access: g[i]             		  │              │
+│     └──────────────────────────┘              │
+│                                                       					  │
+│     ┌──────────────────────────┐              │
+│     │ Option C: REGISTERS (writable)   	  │              │
+│     ├──────────────────────────┤              │
+│     │ • For runtime configurability    	  │              │
+│     │ • CPU/bus interface to write     	  │              │
+│     │ • Register array [0:2t]          		     │              │
+│     └──────────────────────────┘              │
+│                                                       					   │
+│  2. Access Pattern:                                  			   │
+│     • Sequential access during encoding               	   │
+│     • Can pre-load into faster registers              	   │
+│                                                      					   │
+│  3. Multiple Code Support:                            		   │
+│     • Store multiple G(x) sets                        		 │	
+│     • MUX select based on code_select signal             │
+│                                                       					  │
+│  Recommendation:                                      				│
+│  Start with hardcoded parameters for simplicity,      │
+│  add ROM/register configurability later if needed.    │
+└──────────────────────────────────────┘
+
+Block 4: LFSR-Based Polynomial Division Core
+
+
+┌──────────────────────────────────────────────────────────┐
+│     LFSR ENCODER CORE (Heart of Encoder)                  										│
+│                                                           															│
+│  This is the MOST IMPORTANT block!         										                │
+│                                                           															│
+│  ═══════════════════════════════════════════             				│
+│  ARCHITECTURE                                         												      │
+│  ═══════════════════════════════════════════               				│
+│                                                           															│
+│  Registers: r[0], r[1], ..., r[2t-1]           											             │
+│  Each register is m bits wide                            											 │
+│                                                           															│
+│  Feedback Path:                                          													 │
+│    feedback = data_in XOR r[2t-1]                    										      │
+│                                                          															 │
+│  Update Equations (each cycle):                       										      │
+│    r[2t-1] <= r[2t-2] XOR (feedback * g[2t-1])       									   │
+│    r[2t-2] <= r[2t-3] XOR (feedback * g[2t-2])          												│
+│    ...                                                    													│
+│    r[1]    <= r[0]    XOR (feedback * g[1])           											   │
+│    r[0]    <=         (feedback * g[0])                 											 │
+│                                                         														  │
+│  ═══════════════════════════════════════════            				   │
+│  RTL IMPLEMENTATION HINTS                              													   │
+│  ═══════════════════════════════════════════           			    │
+│                                                      													     │
+│  1. Register Array:                                    										   │
+│     reg [m-1:0] lfsr_regs [0:2*t-1];               										      │
+│                                                       												    │
+│  2. Feedback Computation (Combinational):          											       │
+│     wire [m-1:0] feedback;                             									  │
+│     assign feedback = data_in ^ lfsr_regs[2*t-1];      										  │
+│                                                       										    │
+│  3. GF Multipliers:              									                         │
+│     • Need 2t multipliers (one per register stage)   									     │
+│     • Each computes: feedback * g[i]                    									 │
+│                                                    														       │
+│     Resource Sharing Option:                             								 │
+│     • Use 1 multiplier, time-multiplex               							    │
+│     • Takes 2t cycles per symbol                       							  │
+│     • Lower area, lower throughput                     							  │
+│                                                     									      │
+│     Parallel Option:                                   							   │
+│     • Instantiate 2t multipliers                     										    │
+│     • 1 cycle per symbol                                 												│
+│     • Higher area, higher throughput                  						   │
+│                                                    																			       │
+│  4. Register Update (Sequential):                      							   │
+│     always @(posedge clk) begin                        									  │
+│       if (reset_n == 0) begin                          											  │
+│         // Clear all registers                       									    │
+│       end else if (encode_enable) begin               									   │
+│         lfsr_regs[0] <= gf_mult(feedback, g[0]);   									     │
+│         for (i = 1; i < 2*t; i++) begin              								   │
+│           lfsr_regs[i] <= lfsr_regs[i-1] ^        							     │
+│                           gf_mult(feedback, g[i]);     							 │
+│         end                                            														  │
+│       end                                            														    │
+│     end                                                								  │
+│                                                        														   │
+│  5. Control States:                                       │
+│     ┌────────────────────────────────────┐               │
+│     │ IDLE:                              │               │
+│     │   - Clear LFSR registers           │               │
+│     │   - Wait for start                 │               │
+│     ├────────────────────────────────────┤               │
+│     │ LOAD (k cycles):                   │               │
+│     │   - Feed data symbols through LFSR │               │
+│     │   - Count k symbols                │               │
+│     ├────────────────────────────────────┤               │
+│     │ PARITY_READY:                      │               │
+│     │   - LFSR registers now contain     │               │
+│     │     parity symbols                 │               │
+│     │   - Transition to output           │               │
+│     └────────────────────────────────────┘               │
+│                                                           │
+│  6. Cycle Count:                                          │
+│     • k clock cycles to process k data symbols            │
+│     • Parity available in registers immediately after     │
+│                                                           │
+│  7. Pipeline Considerations:                              │
+│     • If GF multiplier has latency > 1:                  │
+│       - Add pipeline stages                              │
+│       - Adjust control FSM timing                        │
+│       - Buffer intermediate results                      │
+│                                                           │
+│  8. Optimization: Constant Coefficient Multipliers        │
+│     • Since g[i] are constants, can optimize:            │
+│       - Precompute partial products                      │
+│       - Reduce logic depth                               │
+│       - Use constant-coefficient multiplier              │
+│         (simpler than general GF multiplier)             │
+└──────────────────────────────────────────────────────────┘
+
+Block 5: Output Controller & Codeword Assembly
+
+
+┌──────────────────────────────────────────────────────┐
+│     OUTPUT CONTROLLER                                 │
+│                                                       │
+│  RTL Hints:                                           │
+│  ─────────                                            │
+│                                                       │
+│  1. Output Sequence:                                  │
+│     • First output k data symbols (in order)          │
+│     • Then output 2t parity symbols                   │
+│                                                       │
+│  2. Data Source MUX:                                  │
+│     ┌──────────────────────────────┐                  │
+│     │  case (output_state)         │                  │
+│     │    DATA_PHASE:               │                  │
+│     │      data_out = data_buf[i]  │                  │
+│     │    PARITY_PHASE:             │                  │
+│     │      data_out = lfsr_regs[j] │                  │
+│     │  endcase                     │                  │
+│     └──────────────────────────────┘                  │
+│                                                       │
+│  3. Output Counter:                                   │
+│     • Counts 0 to n-1 (total codeword length)         │
+│     • Switches source at count = k                    │
+│                                                       │
+│  4. Output Handshake:                                 │
+│     Signals:                                          │
+│     • data_out[m-1:0]  : Output symbol                │
+│     • data_out_valid   : Indicates valid data         │
+│     • data_out_ready   : Backpressure from sink       │
+│                                                       │
+│     Only advance when:                                │
+│       data_out_valid && data_out_ready                │
+│                                                       │
+│  5. First-Word Flag:                                  │
+│     • start_of_codeword : Marks first symbol          │
+│     • end_of_codeword   : Marks last symbol           │
+│     • Useful for downstream processing                │
+│                                                       │
+│  6. Parallel Output Option:                           │
+│     • For high throughput                             │
+│     • Output multiple symbols/cycle                   │
+│     • Wider data bus                                  │
+│     • Requires wider memory read                      │
+│                                                       │
+│  7. Bypass Path (No Parity):                          │
+│     • Optional: Just output data without parity       │
+│     • Saves bandwidth in error-free channels          │
+│     • MUX control signal                              │
+│                                                       │
+│  8. Output Buffer:                                    │
+│     • Optional FIFO                                   │
+│     • Decouples encoder timing from output            │
+│     • Smooths data flow                               │
+│     • Depth: n symbols (one codeword)                 │
+└──────────────────────────────────────────────────────┘
+
+Block 6: Control FSM (State Machine)
+
+┌──────────────────────────────────────────────────────────┐
+│     CONTROL FINITE STATE MACHINE                          │
+│                                                           │
+│  States:                                                  │
+│  ══════                                                   │
+│                                                           │
+│     ┌─────────┐                                           │
+│     │  IDLE   │◄──────────────────────┐                   │
+│     └────┬────┘                       │                   │
+│          │ start_encode               │                   │
+│          ▼                            │                   │
+│     ┌─────────┐                       │                   │
+│     │  LOAD   │                       │ done              │
+│     │  DATA   │                       │                   │
+│     └────┬────┘                       │                   │
+│          │ count == k                 │                   │
+│          ▼                            │                   │
+│     ┌─────────┐                       │                   │
+│     │ ENCODE  │                       │                   │
+│     │(computing)│                      │                   │
+│     └────┬────┘                       │                   │
+│          │ parity ready               │                   │
+│          ▼                            │                   │
+│     ┌─────────┐                       │                   │
+│     │ OUTPUT  │                       │                   │
+│     │  DATA   │                       │                   │
+│     └────┬────┘                       │                   │
+│          │ data_count == k            │                   │
+│          ▼                            │                   │
+│     ┌─────────┐                       │                   │
+│     │ OUTPUT  │                       │                   │
+│     │ PARITY  │                       │                   │
+│     └────┬────┘                       │                   │
+│          │ parity_count == 2t         │                   │
+│          └────────────────────────────┘                   │
+│                                                           │
+│  ═══════════════════════════════════════════               │
+│  RTL HINTS                                                │
+│  ═══════════════════════════════════════════               │
+│                                                           │
+│  1. State Encoding:                                       │
+│     typedef enum logic [2:0] {                           │
+│       IDLE         = 3'b000,                             │
+│       LOAD_DATA    = 3'b001,                             │
+│       ENCODE       = 3'b010,                             │
+│       OUTPUT_DATA  = 3'b011,                             │
+│       OUTPUT_PARITY= 3'b100                              │
+│     } state_t;                                           │
+│                                                           │
+│  2. State Register:                                       │
+│     state_t current_state, next_state;                   │
+│                                                           │
+│  3. State Transition Logic (Combinational):               │
+│     always_comb begin                                    │
+│       next_state = current_state;                        │
+│       case (current_state)                               │
+│         IDLE: if (start) next_state = LOAD_DATA;        │
+│         LOAD_DATA: if (count==k) next_state = ENCODE;   │
+│         // ... etc                                       │
+│       endcase                                            │
+│     end                                                  │
+│                                                           │
+│  4. State Update (Sequential):                            │
+│     always_ff @(posedge clk) begin                       │
+│       if (!reset_n)                                      │
+│         current_state <= IDLE;                           │
+│       else                                               │
+│         current_state <= next_state;                     │
+│     end                                                  │
+│                                                           │
+│  5. Output Logic (Combinational or Registered):           │
+│     Generate control signals based on state:             │
+│     • lfsr_enable                                        │
+│     • data_buf_write_enable                              │
+│     • output_mux_select                                  │
+│     • counters_enable                                    │
+│     • done signal                                        │
+│                                                           │
+│  6. Counters:                                             │
+│     • input_count: 0 to k-1                              │
+│     • output_data_count: 0 to k-1                        │
+│     • output_parity_count: 0 to 2t-1                     │
+│                                                           │
+│  7. Optional: Continuous Mode                             │
+│     • Process multiple codewords back-to-back            │
+│     • Don't return to IDLE                               │
+│     • Loop OUTPUT_PARITY → LOAD_DATA                     │
+└──────────────────────────────────────────────────────────┘
+
+
+Block 7: Optional Pipelining & Throughput Optimization
+
+
+┌──────────────────────────────────────────────────────────┐
+│     PIPELINING STRATEGIES                                 │
+│                                                           │
+│  1. Basic Pipeline Stages:                                │
+│     ┌──────────┬──────────┬──────────┬──────────┐         │
+│     │  INPUT   │  LFSR    │  GF      │  OUTPUT  │         │
+│     │  BUFFER  │  UPDATE  │  MULT    │  MUX     │         │
+│     └──────────┴──────────┴──────────┴──────────┘         │
+│                                                           │
+│  2. Deep Pipeline (High Throughput):                      │
+│     Stage 1: Input buffering                              │
+│     Stage 2: Feedback computation                         │
+│     Stage 3: GF multiplication                            │
+│     Stage 4: XOR with previous register                   │
+│     Stage 5: Register update                              │
+│     Stage 6: Output selection                             │
+│                                                           │
+│     RTL Hints:                                            │
+│     • Add register stages between logic                   │
+│     • Balance logic depth in each stage                   │
+│     • Adjust FSM for pipeline latency                     │
+│     • Add pipeline valid/ready signals                    │
+│                                                           │
+│  3. Parallel Processing:                                  │
+│     Process multiple codewords simultaneously:            │
+│                                                           │
+│     ┌──────────┐  ┌──────────┐  ┌──────────┐             │
+│     │ Encoder  │  │ Encoder  │  │ Encoder  │             │
+│     │  Core 0  │  │  Core 1  │  │  Core 2  │             │
+│     └──────────┘  └──────────┘  └──────────┘             │
+│          ▲              ▲              ▲                  │
+│          └──────┬───────┴──────┬───────┘                  │
+│              ┌──┴──────────────┴──┐                       │
+│              │   Input Arbiter    │                       │
+│              └────────────────────┘                       │
+│                                                           │
+│     • Round-robin distribution                            │
+│     • Increases throughput by N×                          │
+│     • Requires more area (N cores)                        │
+│                                                           │
+│  4. Streaming Interface:                                  │
+│     • Process symbols as they arrive                      │
+│     • No waiting for full block                           │
+│     • Use AXI-Stream or similar protocol                  │
+│     • Add TDATA, TVALID, TREADY, TLAST                    │
+│                                                           │
+│  5. Latency Hiding:                                       │
+│     • Start outputting data symbols immediately           │
+│     • Compute parity in parallel                          │
+│     • Requires dual-port memory for data                  │
+└──────────────────────────────────────────────────────────┘
+
+Block 8: Verification & Debug Features
+
+┌──────────────────────────────────────────────────────┐
+│     DEBUG & VERIFICATION HINTS                        │
+│                                                       │
+│  1. Status Registers:                                 │
+│     • current_state                                   │
+│     • symbol_count                                    │
+│     • error flags                                     │
+│     • Readable via bus interface                      │
+│                                                       │
+│  2. Performance Counters:                             │
+│     • total_codewords_encoded                         │
+│     • total_cycles                                    │
+│     • idle_cycles                                     │
+│                                                       │
+│  3. Debug Outputs:                                    │
+│     • LFSR register contents                          │
+│     • feedback value                                  │
+│     • GF multiplier outputs                           │
+│     • FSM state (one-hot encoding for visibility)     │
+│                                                       │
+│  4. Bypass Modes:                                     │
+│     • Bypass encoding (pass-through)                  │
+│     • Test pattern injection                          │
+│     • Loopback mode                                   │
+│                                                       │
+│  5. Assertions (SVA):                                 │
+│     • Check LFSR never overflows                      │
+│     • Verify counter ranges                           │
+│     • Check state transitions                         │
+│     • Verify handshake protocols                      │
+│                                                       │
+│  6. Coverage Points:                                  │
+│     • All FSM states visited                          │
+│     • All transitions exercised                       │
+│     • Corner cases (k=1, k=max)                       │
+│     • Backpressure handling                           │
+└──────────────────────────────────────────────────────┘
+
+Example Parameter Configuration
+
+┌──────────────────────────────────────────────────────┐
+│     PARAMETERIZATION                                  │
+│                                                       │
+│  Make encoder configurable:                           │
+│                                                       │
+│  module rs_encoder #(                                │
+│    parameter M = 8,           // GF(2^M)             │
+│    parameter N = 255,         // Codeword length     │
+│    parameter K = 223,         // Data symbols        │
+│    parameter T = (N-K)/2,     // Error correction    │
+│    parameter PRIM_POLY = 285, // Primitive poly      │
+│    parameter USE_PIPELINE = 1,                       │
+│    parameter GF_MULT_TYPE = "LOG_ANTILOG" // or "LUT"│
+│  ) (                                                 │
+│    // ports...                                       │
+│  );                                                  │
+│                                                       │
+│  Localparam:                                          │
+│    localparam PARITY_SYMS = N - K;                   │
+│    localparam DATA_WIDTH = M;                        │
+│    localparam LFSR_DEPTH = PARITY_SYMS;              │
+└──────────────────────────────────────────────────────┘
+
+Resource Estimation
+
+
+┌──────────────────────────────────────────────────────────┐
+│     RESOURCE USAGE (Approximate for GF(2^8), RS(255,223))│
+│                                                           │
+│  ┌────────────────────────┬──────────────────────┐        │
+│  │ Component              │ Resources            │        │
+│  ├────────────────────────┼──────────────────────┤        │
+│  │ Data Buffer (k×m)      │ 223×8 = 1784 bits   │        │
+│  │ LFSR Registers (2t×m)  │ 32×8 = 256 bits     │        │
+│  │ Generator ROM          │ 33×8 = 264 bits     │        │
+│  │ GF Multipliers (2t)    │ ~32 × 1KB = 32KB    │        │
+│  │   (if LUT-based)       │                      │        │
+│  │ GF Multipliers (2t)    │ ~32 × 512B = 16KB   │        │
+│  │   (if log/antilog)     │                      │        │
+│  │ Control FSM            │ ~100 LUTs           │        │
+│  │ Counters               │ ~50 FFs             │        │
+│  └────────────────────────┴──────────────────────┘        │
+│                                                           │
+│  Trade-offs:                                              │
+│  • Serial (1 GF mult): ~1KB, k cycles/codeword           │
+│  • Parallel (2t GF mult): ~16-32KB, 1 cycle/symbol      │
+│                                                           │
+│  Typical FPGA: 500-2000 LUTs for full encoder            │
+└──────────────────────────────────────────────────────────┘
+
+
+Implementation Checklist
+
+
+┌──────────────────────────────────────────────────────┐
+│     DESIGN CHECKLIST                                  │
+│                                                       │
+│  □ Define parameters (m, n, k, t)                    │
+│  □ Choose GF multiplier architecture                 │
+│  □ Design LFSR structure                             │
+│  □ Create control FSM                                │
+│  □ Add input buffer/FIFO                             │
+│  □ Implement output multiplexer                      │
+│  □ Add handshake protocols                           │
+│  □ Generate/store generator polynomial               │
+│  □ Add reset logic                                   │
+│  □ Implement counters                                │
+│  □ Add debug/status outputs                          │
+│  □ Pipeline if needed for timing                     │
+│  □ Add assertions                                    │
+│  □ Create testbench                                  │
+│  □ Verify with known test vectors                    │
+│  □ Synthesize and check timing                       │
+│  □ Optimize critical paths                           │
+│  □ Add scan chains for DFT                           │
+└──────────────────────────────────────────────────────┘
