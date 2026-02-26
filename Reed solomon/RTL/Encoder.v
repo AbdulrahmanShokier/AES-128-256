@@ -35,8 +35,6 @@ wire        output_counter_enable;
 wire [7:0]  input_counter;
 wire [7:0]  output_counter;
 
-// Data buffer (optional exposure)
-wire [m-1:0] data_buffer [0:k-1];
 
 //========================= FSM Instantiation ====================================
 encoder_fsm #(
@@ -66,7 +64,7 @@ encoder_fsm #(
 );
 
 //========================= Datapath Instantiation ===============================
-encoder_datapath #(
+encoder_core #(
     .m(m),
     .k(k),
     .t(t)
@@ -86,8 +84,7 @@ encoder_datapath #(
     
     .input_counter          (input_counter),
     .output_counter         (output_counter),
-    .data_out               (data_out),
-    .data_buffer            (data_buffer)
-);
+    .data_out               (data_out)
+    );
 
 endmodule

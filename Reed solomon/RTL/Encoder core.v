@@ -24,13 +24,11 @@ module encoder_core
     output reg [7:0]   output_counter,
     
     // Data output
-    output reg [m-1:0] data_out,
-    
-    // Buffer output (optional, for debug)
-    output reg [m-1:0] data_buffer [0:k-1]
+    output reg [m-1:0] data_out
 );
 
 //========================= Internal Signals =====================================
+reg [m-1:0] data_buffer [0:k-1];
 reg [m-1:0] lfsr_regs [0:2*t-1];
 wire [m-1:0] feedback;
 wire [m-1:0] gf_mult_result [0:2*t-1];

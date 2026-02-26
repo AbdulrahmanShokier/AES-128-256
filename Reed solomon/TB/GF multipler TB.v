@@ -6,7 +6,7 @@ reg  [m-1:0] op_a;
 reg  [m-1:0] op_b;
 wire [m-1:0] result;
 
-gf_multiplier_comb #(.m(m)) dut (
+gf_multiplier #(.m(m)) dut (
     .op_a(op_a),
     .op_b(op_b),
     .result(result)
