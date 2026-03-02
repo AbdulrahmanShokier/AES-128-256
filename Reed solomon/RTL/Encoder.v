@@ -16,7 +16,6 @@ module encoder_top
     output             data_out_valid,
     output             encoding_done,
     output             ready_for_data,
-    output             buffer_is_full,
     output     [2:0]   current_state
 );
 
@@ -24,16 +23,13 @@ module encoder_top
 // FSM to Datapath
 wire        lfsr_clear;
 wire        lfsr_enable;
-wire        buffer_write_enable;
 wire        output_data_select;
-wire        input_counter_clear;
-wire        input_counter_enable;
-wire        output_counter_clear;
-wire        output_counter_enable;
+wire        counter_clear;
+wire        counter_enable;
 
 // Datapath to FSM
-wire [7:0]  input_counter;
-wire [7:0]  output_counter;
+wire [7:0]  counter;
+
 
 
 //========================= FSM Instantiation ====================================
@@ -45,22 +41,17 @@ encoder_fsm #(
     .rst                    (rst),
     .start_encode           (start_encode),
     .data_valid             (data_valid),
-    .input_counter          (input_counter),
-    .output_counter         (output_counter),
+    .counter                (counter),
     
     .current_state          (current_state),
     .lfsr_clear             (lfsr_clear),
     .lfsr_enable            (lfsr_enable),
-    .buffer_write_enable    (buffer_write_enable),
     .output_data_select     (output_data_select),
     .data_out_valid         (data_out_valid),
     .encoding_done          (encoding_done),
     .ready_for_data         (ready_for_data),
-    .buffer_is_full         (buffer_is_full),
-    .input_counter_clear    (input_counter_clear),
-    .input_counter_enable   (input_counter_enable),
-    .output_counter_clear   (output_counter_clear),
-    .output_counter_enable  (output_counter_enable)
+    .counter_clear          (counter_clear),
+    .counter_enable         (counter_enable)
 );
 
 //========================= Datapath Instantiation ===============================
@@ -72,18 +63,13 @@ encoder_core #(
     .clk                    (clk),
     .rst                    (rst),
     .data_in                (data_in),
-    
     .lfsr_clear             (lfsr_clear),
     .lfsr_enable            (lfsr_enable),
-    .buffer_write_enable    (buffer_write_enable),
     .output_data_select     (output_data_select),
-    .input_counter_clear    (input_counter_clear),
-    .input_counter_enable   (input_counter_enable),
-    .output_counter_clear   (output_counter_clear),
-    .output_counter_enable  (output_counter_enable),
+    .counter_clear          (counter_clear),
+    .counter_enable         (counter_enable),
     
-    .input_counter          (input_counter),
-    .output_counter         (output_counter),
+    .counter                (counter),
     .data_out               (data_out)
     );
 
