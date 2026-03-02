@@ -90,38 +90,38 @@ end
 // MATLAB expected parity for msg = [1, 0, 0, ..., 0]
 reg [m-1:0] expected_parity [0:2*t-1];
 initial begin
-    expected_parity[0]  = 8'd139;
-    expected_parity[1]  = 8'd27;
-    expected_parity[2]  = 8'd233;
-    expected_parity[3]  = 8'd163;
-    expected_parity[4]  = 8'd227;
-    expected_parity[5]  = 8'd203;
-    expected_parity[6]  = 8'd114;
-    expected_parity[7]  = 8'd27;
-    expected_parity[8]  = 8'd186;
-    expected_parity[9]  = 8'd28;
-    expected_parity[10] = 8'd46;
-    expected_parity[11] = 8'd92;
-    expected_parity[12] = 8'd6;
-    expected_parity[13] = 8'd139;
-    expected_parity[14] = 8'd147;
-    expected_parity[15] = 8'd177;
-    expected_parity[16] = 8'd3;
-    expected_parity[17] = 8'd147;
-    expected_parity[18] = 8'd55;
-    expected_parity[19] = 8'd231;
-    expected_parity[20] = 8'd183;
-    expected_parity[21] = 8'd212;
-    expected_parity[22] = 8'd202;
-    expected_parity[23] = 8'd227;
-    expected_parity[24] = 8'd97;
-    expected_parity[25] = 8'd156;
-    expected_parity[26] = 8'd244;
-    expected_parity[27] = 8'd225;
-    expected_parity[28] = 8'd222;
-    expected_parity[29] = 8'd116;
-    expected_parity[30] = 8'd141;
-    expected_parity[31] = 8'd243;
+    expected_parity[0]  = 8'd213;
+    expected_parity[1]  = 8'd252;   
+    expected_parity[2]  = 8'd145;
+    expected_parity[3]  = 8'd232;
+    expected_parity[4]  = 8'd217;
+    expected_parity[5]  = 8'd228;
+    expected_parity[6]  = 8'd15 ;
+    expected_parity[7]  = 8'd252;   
+    expected_parity[8]  = 8'd247;
+    expected_parity[9]  = 8'd59 ;   
+    expected_parity[10] = 8'd5  ;   
+    expected_parity[11] = 8'd10 ;   
+    expected_parity[12] = 8'd56 ;  
+    expected_parity[13] = 8'd213;
+    expected_parity[14] = 8'd53 ;
+    expected_parity[15] = 8'd64 ;
+    expected_parity[16] = 8'd28 ;  
+    expected_parity[17] = 8'd53 ;
+    expected_parity[18] = 8'd26 ;   
+    expected_parity[19] = 8'd2  ;
+    expected_parity[20] = 8'd120;
+    expected_parity[21] = 8'd195;
+    expected_parity[22] = 8'd27 ;
+    expected_parity[23] = 8'd217;
+    expected_parity[24] = 8'd88 ;   
+    expected_parity[25] = 8'd89 ;
+    expected_parity[26] = 8'd85 ;
+    expected_parity[27] = 8'd58 ;
+    expected_parity[28] = 8'd139;
+    expected_parity[29] = 8'd55 ;
+    expected_parity[30] = 8'd237;
+    expected_parity[31] = 8'd146;
 end
 
 //========================= Result Storage =========================
@@ -192,7 +192,7 @@ initial begin
     for (i = 0; i < k; i = i + 1) begin
         // First byte = 1, rest = 0
         if (i == 0)
-            data_in = 8'd1;
+            data_in = 8'd255;
         else
             data_in = 8'd0;
 
