@@ -1,4 +1,4 @@
-# AES-128-256
+# DVB
 
 بسم الله الرحمن الرحيم والحمد الله رب العالمين والصلاة والسلام على نبينا محمد وعلى آله وصحبه أجمعين
 
@@ -11,12 +11,14 @@
 
 # what is done :
 
-AES Pipelined encrypting / decrypting + key generation for 128 bit keys
+AES Pipelined encryption / decryption + key generation for 128 bit keys
 
 
 -----------------------------------------------
 
 
 # On progress:
+
+Signal chain (BPSK and 8-PSK)
 
 
