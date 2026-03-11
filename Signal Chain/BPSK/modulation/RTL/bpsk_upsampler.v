@@ -24,16 +24,18 @@ begin
 end
 
 // ── valid_window control ─────────────────────────────────────────
+
+// to save the valid in of the current symbol and put it in valid out till the next symbol arrival
 always @(posedge clk_sample) 
 begin
     if (!rst)
         valid_window <= 1'b0;
     else 
     begin
-        if (valid_in && counter == 0)          // new symbol arrives
-            valid_window <= 1'b1;              // start window
-        else if (counter == upsample_factor-1) // last cycle of window
-            valid_window <= 1'b0;              // close window
+        if (valid_in && counter == 0)          
+            valid_window <= 1'b1;              
+        else if (counter == upsample_factor-1) 
+            valid_window <= 1'b0;              
     end
 end
 
@@ -47,7 +49,7 @@ begin
     end
     else 
     begin
-        valid_out <= valid_window;             // ← follows window
+        valid_out <= valid_window;             
 
         if (valid_window) 
         begin
@@ -65,7 +67,7 @@ begin
     if (!rst)
         counter <= {Counter_WIDTH{1'b0}};
     else
-        counter <= counter + 1;                // natural overflow = modulo N
+        counter <= counter + 1;                
 end
 
 endmodule
