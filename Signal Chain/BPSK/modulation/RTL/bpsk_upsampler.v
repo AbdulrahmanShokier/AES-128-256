@@ -12,7 +12,7 @@ module bpsk_upsampler #(
     output reg                           valid_out
 );
 
-reg [Counter_WIDTH-1:0]   counter;
+reg [Counter_WIDTH-1:0]     counter;
 reg signed [DATA_WIDTH-1:0] data_in_reg;
 reg                         valid_window;  
 

@@ -1,8 +1,7 @@
 module bpsk_fir_filter #(
     parameter DATA_WIDTH  = 16,   // input/output width
     parameter COEFF_WIDTH = 16,   // coefficient width
-    parameter NUM_TAPS    = 33,   // number of taps
-    parameter ACC_WIDTH   = 40    // accumulator width (safe margin)
+    parameter NUM_TAPS    = 33   // number of taps
 )
 (
     input  wire                          clk_sample,
@@ -16,23 +15,23 @@ module bpsk_fir_filter #(
 ////////////////////////coeffients///////////////////////////
 
 
-localparam signed [DATA_WIDTH-1:0] coeff_0_32  =  16'sd306  ;
-localparam signed [DATA_WIDTH-1:0] coeff_1_31  =  16'sd144  ;
-localparam signed [DATA_WIDTH-1:0] coeff_2_30  = -16'sd268  ;
-localparam signed [DATA_WIDTH-1:0] coeff_3_29  = -16'sd629  ;
-localparam signed [DATA_WIDTH-1:0] coeff_4_28  = -16'sd556  ;
-localparam signed [DATA_WIDTH-1:0] coeff_5_27  =  16'sd90   ;
-localparam signed [DATA_WIDTH-1:0] coeff_6_26  =  16'sd978  ;
-localparam signed [DATA_WIDTH-1:0] coeff_7_25  =  16'sd1416 ;
-localparam signed [DATA_WIDTH-1:0] coeff_8_24  =  16'sd801  ;  
-localparam signed [DATA_WIDTH-1:0] coeff_9_23  = -16'sd834  ;
-localparam signed [DATA_WIDTH-1:0] coeff_10_22 = -16'sd2590 ;
-localparam signed [DATA_WIDTH-1:0] coeff_11_21 = -16'sd3030 ;
-localparam signed [DATA_WIDTH-1:0] coeff_12_20 = -16'sd981  ;
-localparam signed [DATA_WIDTH-1:0] coeff_13_19 =  16'sd3640 ;
-localparam signed [DATA_WIDTH-1:0] coeff_14_18 =  16'sd9527 ;
-localparam signed [DATA_WIDTH-1:0] coeff_15_17 =  16'sd14461;
-localparam signed [DATA_WIDTH-1:0] coeff_16    =  16'sd16384;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_0_32  =  16'sd306  ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_1_31  =  16'sd144  ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_2_30  = -16'sd268  ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_3_29  = -16'sd629  ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_4_28  = -16'sd556  ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_5_27  =  16'sd90   ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_6_26  =  16'sd978  ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_7_25  =  16'sd1416 ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_8_24  =  16'sd801  ;  
+localparam signed [COEFF_WIDTH-1 : 0] coeff_9_23  = -16'sd834  ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_10_22 = -16'sd2590 ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_11_21 = -16'sd3030 ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_12_20 = -16'sd981  ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_13_19 =  16'sd3640 ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_14_18 =  16'sd9527 ;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_15_17 =  16'sd14461;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_16    =  16'sd16384;
 
 
 /////////////////////////////////////////////////////////////
@@ -90,7 +89,7 @@ reg signed  [DATA_WIDTH + DATA_WIDTH +5 : 0] level5_add        ; // 38 bits -> a
             for (i = 0; i < NUM_TAPS; i = i + 1)
                 data_reg[i] <= {DATA_WIDTH{1'b0}};
         end
-        else 
+        else if (valid_in)
         begin
             data_reg[0] <= data_in;              // new sample enters
             for (i = 1; i < NUM_TAPS; i = i + 1)

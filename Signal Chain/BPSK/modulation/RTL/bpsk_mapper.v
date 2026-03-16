@@ -3,12 +3,12 @@ module bpsk_mapper #(
     parameter FRAC_WIDTH = 14
 )
 (
-    input  wire                     clk_symbol,
-    input  wire                     rst,
-    input  wire                     valid_in,
-    input  wire                     data_in,    
+    input  wire                         clk_symbol,
+    input  wire                         rst,
+    input  wire                         valid_in,
+    input  wire                         data_in,    
     output reg  signed [DATA_WIDTH-1:0] data_out,
-    output reg                      valid_out
+    output reg                          valid_out
 );
 
 
