@@ -85,13 +85,7 @@ task check_output;
     end
 endtask
 
-////////////////////////////////////////////////////////////
-// Waveform Dump
-////////////////////////////////////////////////////////////
-initial begin
-    $dumpfile("bpsk_mapper_tb.vcd");
-    $dumpvars(0, bpsk_mapper_tb);
-end
+
 
 ////////////////////////////////////////////////////////////
 // Main Test
@@ -124,7 +118,8 @@ initial begin
     $display("==========================================");
 
     send_bit(1'b0);
-    check_output(POS_ONE);
+    check_output(POS_ONE); 
+    
 
     //--------------------------------------------------
     // 3️⃣ Send bit = 1 → expect -1 (-16384)

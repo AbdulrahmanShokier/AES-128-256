@@ -12,30 +12,33 @@ module bpsk_upsampler #(
     output reg                           valid_out
 );
 
-reg [Counter_WIDTH-1:0]     counter;
-reg signed [DATA_WIDTH-1:0] data_in_reg;
-reg                         valid_window;  
+reg [Counter_WIDTH : 0]       counter;
+reg signed [DATA_WIDTH-1 : 0] data_in_reg;
+reg                           valid_window;  
 
 // ── Latch input symbol ───────────────────────────────────────────
-always @(posedge clk_sample) 
+always @(*) 
 begin
-    if (valid_in && counter == 0)
-        data_in_reg <= data_in;
+    if (counter == 0)
+        if(valid_in || valid_window)
+            data_in_reg = data_in;
+        else
+            data_in_reg = {DATA_WIDTH{1'b0}};
 end
 
 // ── valid_window control ─────────────────────────────────────────
 
 // to save the valid in of the current symbol and put it in valid out till the next symbol arrival
-always @(posedge clk_sample) 
+always @(*) 
 begin
     if (!rst)
-        valid_window <= 1'b0;
+        valid_window = 1'b0;
     else 
     begin
         if (valid_in && counter == 0)          
-            valid_window <= 1'b1;              
-        else if (counter == upsample_factor-1) 
-            valid_window <= 1'b0;              
+            valid_window = 1'b1;              
+        else if (counter == upsample_factor) // if the counter reach 4 (which is upsample factor) the window immidiatly return to zero  
+            valid_window = 1'b0;              
     end
 end
 
@@ -66,8 +69,18 @@ always @(posedge clk_sample)
 begin
     if (!rst)
         counter <= {Counter_WIDTH{1'b0}};
+
+    else if(valid_in || valid_window)
+    begin
+        if(counter <= upsample_factor - 1)
+            counter <= counter + 1;
+        
+        else
+            counter <= {Counter_WIDTH{1'b0}};
+    end
+
     else
-        counter <= counter + 1;                
+        counter <= {Counter_WIDTH{1'b0}};    
 end
 
 endmodule

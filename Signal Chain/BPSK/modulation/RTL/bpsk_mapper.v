@@ -3,7 +3,7 @@ module bpsk_mapper #(
     parameter FRAC_WIDTH = 14
 )
 (
-    input  wire                         clk_symbol,
+    input  wire                         clk_sample,
     input  wire                         rst,
     input  wire                         valid_in,
     input  wire                         data_in,    
@@ -12,7 +12,7 @@ module bpsk_mapper #(
 );
 
 
-localparam signed [DATA_WIDTH-1:0] one       = (1 << FRAC_WIDTH);
+localparam signed [DATA_WIDTH-1:0] one       =  (1 << FRAC_WIDTH);
 localparam signed [DATA_WIDTH-1:0] minus_one = -(1 << FRAC_WIDTH);
 
 
@@ -31,9 +31,9 @@ begin
         if (valid_in) 
         begin
             if (data_in)
-                data_out <= NEG_ONE;    // bit 1 → -1
+                data_out <= minus_one;          // bit 1 → -1
             else
-                data_out <= POS_ONE;    // bit 0 → +1
+                data_out <= one;    // bit 0 → +1
         end
 
         else 
