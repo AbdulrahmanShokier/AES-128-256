@@ -140,34 +140,37 @@ endtask
 ////////////////////////////////////////////////////////////
 // Task: Check DC Gain
 ////////////////////////////////////////////////////////////
-task check_dc_gain;
+task check_dc_gain_upsampled;
     integer k;
-    reg signed [31:0] sum;
+    reg signed [31:0] phase_sum [0:3];
+    reg signed [31:0] avg;
     begin
-        sum = 0;
-        for (k = 0; k < output_index; k = k + 1) begin
-            sum = sum + output_buffer[k];
-        end
-        $display("  DC Gain Sum = %0d", sum);
+        // Read the last 4 steady-state outputs (one per phase)
+        phase_sum[0] = output_buffer[output_index-4];
+        phase_sum[1] = output_buffer[output_index-3];
+        phase_sum[2] = output_buffer[output_index-2];
+        phase_sum[3] = output_buffer[output_index-1];
 
-        // For RRC filter, DC gain should be close to 1.0 (16384 in Q2.14)
-        if (sum > 14000 && sum < 18000) begin
+        avg = (phase_sum[0] + phase_sum[1] + 
+               phase_sum[2] + phase_sum[3]) / 4;
+
+        $display("  Phase 0 = %0d", phase_sum[0]);
+        $display("  Phase 1 = %0d", phase_sum[1]);
+        $display("  Phase 2 = %0d", phase_sum[2]);
+        $display("  Phase 3 = %0d", phase_sum[3]);
+        $display("  Average DC Gain = %0d (expected ~15334)", avg);
+
+        // Check average is close to 15334 (= 61334/4)
+        if (avg > 14000 && avg < 17000) begin
             $display("  PASS | DC gain within expected range");
             pass_count = pass_count + 1;
         end
         else begin
-            $display("  WARNING | DC gain = %0d (may need checking)", sum);
+            $display("  FAIL | DC gain = %0d", avg);
         end
     end
 endtask
 
-////////////////////////////////////////////////////////////
-// Waveform Dump
-////////////////////////////////////////////////////////////
-initial begin
-    $dumpfile("bpsk_fir_filter_tb.vcd");
-    $dumpvars(0, bpsk_fir_filter_tb);
-end
 
 ////////////////////////////////////////////////////////////
 // Main Test
@@ -217,7 +220,7 @@ initial begin
     send_sample(POS_ONE);
 
     // Send zeros to flush through filter
-    repeat(NUM_TAPS + 10) begin
+    repeat(NUM_TAPS - 1) begin
         send_sample(ZERO);
     end
 
@@ -252,16 +255,20 @@ initial begin
     output_index = 0;
 
     // Send many +1 samples
-    repeat(NUM_TAPS + 20) begin
-        send_sample(POS_ONE);
-    end
+   repeat(NUM_TAPS) 
+   begin
+    send_sample(POS_ONE);    // +1 symbol
+    send_sample(16'd0);      // zero-stuffed
+    send_sample(16'd0);      // zero-stuffed
+    send_sample(16'd0);      // zero-stuffed
+end
 
     wait_flush(20);
 
     // Check last few outputs should be near +16384
     $display("  Last output = %0d (expected ~16384)", output_buffer[output_index-1]);
 
-    check_dc_gain;
+    check_dc_gain_upsampled;
 
     //--------------------------------------------------
     // 5️⃣ Upsampled BPSK Test
@@ -286,7 +293,7 @@ initial begin
     send_upsampled_symbol(NEG_ONE);
 
     // Flush
-    repeat(NUM_TAPS + 20) begin
+    repeat(NUM_TAPS) begin
         send_sample(ZERO);
     end
 
