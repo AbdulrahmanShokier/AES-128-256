@@ -8,11 +8,46 @@ module bpsk_nco #(
 
 );
 
+
 reg signed [COS_WIDTH-1 : 0] cosine_lut [0:255];
 
-reg [7 : 0] phase_accumulator; // 8 bits for address in cos_lut 
 
-reg [1 : 0] quarter_detector;  // 2 bits for quarter detection
+
+reg [9:0] phase_counter;  // 10-bit: 0 to 1023 = exactly 1024 samples
+
+wire [1:0] quadrant  = phase_counter[9:8];
+wire [7:0] lut_index = phase_counter[7:0];
+
+// Reverse index in Q1 and Q3 for mirror symmetry
+wire [7:0] lut_addr = (quadrant[0]) ? (8'd255 - lut_index) : lut_index;
+
+// Negate in Q1 and Q2
+wire       negate   = quadrant[1] ^ quadrant[0]; 
+// Q0(00)=+, Q1(01)=-, Q2(10)=-, Q3(11)=+
+
+///////////// Phase Counter /////////////
+always @(posedge clk_sample) begin
+    if (!rst)
+        phase_counter <= 10'b0;
+    else
+        phase_counter <= phase_counter + 1;
+end
+
+///////////// Output Logic /////////////
+always @(posedge clk_sample) begin
+    if (!rst)
+        cos_value <= 16'b0;
+    else if (!negate)
+        cos_value <= cosine_lut[lut_addr];
+    else
+        cos_value <= -cosine_lut[lut_addr];
+end
+
+
+
+
+
+
 
 initial begin
     cosine_lut[0]   = 16'sd16384;  cosine_lut[1]   = 16'sd16383;  cosine_lut[2]   = 16'sd16381;
@@ -103,43 +138,6 @@ initial begin
     cosine_lut[255] = 16'sd0;
 end
 
-
-///////////////////////// output logic ////////////////////////////////
-always@(posedge clk_sample)
-begin
-    if(!rst)
-        cos_value <= 16'b0;
-    else if ((quarter_detector == 2'b00) || (quarter_detector == 2'b11))
-        cos_value <= cosine_lut[phase_accumulator];
-    else
-        cos_value <= -cosine_lut[phase_accumulator];
-end
-
-
-////////////////////// phase accumulator logic/////////////////////
-always@(posedge clk_sample)
-begin
-    if(!rst)
-    begin
-        phase_accumulator <= 8'b0;
-        quarter_detector  <= 2'b0;
-    end
-    else 
-    begin
-        if (quarter_detector == 2'b00 || quarter_detector == 2'b10) 
-        begin
-        phase_accumulator <= phase_accumulator + 1;
-            if (phase_accumulator == 8'd254)
-                quarter_detector <= quarter_detector + 1;
-        end
-        else if (quarter_detector == 2'b01 || quarter_detector == 2'b11 )
-        begin
-        phase_accumulator <= phase_accumulator - 1;
-            if (phase_accumulator == 8'd1)
-                quarter_detector <= quarter_detector + 1;
-        end
-    end
-end
 
 endmodule
 

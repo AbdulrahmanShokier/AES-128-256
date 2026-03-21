@@ -51,7 +51,7 @@ reg signed [COS_WIDTH-1:0] cos_buffer [0:2*FULL_CYCLE-1];
 integer capture_index;
 
 ////////////////////////////////////////////////////////////
-// Task: Capture N Samples
+// Task: Capture N Samples (FIXED)
 ////////////////////////////////////////////////////////////
 task capture_samples;
     input integer num_samples;
@@ -59,6 +59,7 @@ task capture_samples;
     begin
         for (k = 0; k < num_samples; k = k + 1) begin
             @(posedge clk);
+            #1;  // ← FIX 1: Let DUT outputs settle before reading
             cos_buffer[capture_index] = cos_value;
             capture_index = capture_index + 1;
             sample_count  = sample_count + 1;
@@ -87,7 +88,6 @@ task check_peak;
         $display("  Max value = %0d", max_val);
         $display("  Min value = %0d", min_val);
 
-        // Peak should be +16384 (Q2.14 = +1.0)
         if (max_val == 16384) begin
             $display("  PASS | Positive peak = +16384");
             pass_count = pass_count + 1;
@@ -97,7 +97,6 @@ task check_peak;
             fail_count = fail_count + 1;
         end
 
-        // Negative peak should be -16384
         if (min_val == -16384) begin
             $display("  PASS | Negative peak = -16384");
             pass_count = pass_count + 1;
@@ -118,7 +117,6 @@ task check_periodicity;
     begin
         period_pass = 1;
 
-        // Compare first cycle with second cycle
         for (k = 0; k < FULL_CYCLE; k = k + 1) begin
             if (cos_buffer[k] !== cos_buffer[k + FULL_CYCLE]) begin
                 $display("  FAIL | Sample[%0d]=%0d != Sample[%0d]=%0d",
@@ -145,13 +143,6 @@ task check_quarter_symmetry;
     begin
         sym_pass = 1;
 
-        // Quarter 1: samples 0..255   → cosine decreasing from +peak to 0
-        // Quarter 2: samples 256..511 → cosine decreasing from 0 to -peak
-
-        // Check: cos[k] should equal -cos[512-k] approximately
-        // (symmetry around zero crossing at sample 256)
-
-        // Simple check: sample 0 should be peak
         if (cos_buffer[0] == 16384) begin
             $display("  PASS | cos[0] = +16384 (start of cycle)");
             pass_count = pass_count + 1;
@@ -161,7 +152,6 @@ task check_quarter_symmetry;
             fail_count = fail_count + 1;
         end
 
-        // Check: around sample 256, should cross zero
         $display("  cos[255] = %0d", cos_buffer[255]);
         $display("  cos[256] = %0d", cos_buffer[256]);
 
@@ -173,7 +163,6 @@ task check_quarter_symmetry;
             $display("  WARNING | Expected near-zero at sample 255, got %0d", cos_buffer[255]);
         end
 
-        // Check: around sample 512, should be -peak
         $display("  cos[512] = %0d", cos_buffer[512]);
 
         if (cos_buffer[512] == -16384) begin
@@ -185,7 +174,6 @@ task check_quarter_symmetry;
             fail_count = fail_count + 1;
         end
 
-        // Check: around sample 768, should cross zero again
         $display("  cos[768] = %0d", cos_buffer[768]);
 
         if (cos_buffer[768] >= -200 && cos_buffer[768] <= 200) begin
@@ -207,7 +195,6 @@ task check_first_quarter_monotonic;
     begin
         mono_pass = 1;
 
-        // First quarter (0→255): cosine should decrease from +16384 toward 0
         for (k = 1; k < 256; k = k + 1) begin
             if (cos_buffer[k] > cos_buffer[k-1]) begin
                 $display("  FAIL | Not monotonic: cos[%0d]=%0d > cos[%0d]=%0d",
@@ -225,14 +212,6 @@ task check_first_quarter_monotonic;
 endtask
 
 ////////////////////////////////////////////////////////////
-// Waveform Dump
-////////////////////////////////////////////////////////////
-initial begin
-    $dumpfile("bpsk_nco_tb.vcd");
-    $dumpvars(0, bpsk_nco_tb);
-end
-
-////////////////////////////////////////////////////////////
 // Monitor (Print Every 64 Samples)
 ////////////////////////////////////////////////////////////
 integer mon_cnt;
@@ -244,7 +223,7 @@ always @(posedge clk) begin
         if (mon_cnt % 64 == 0)
             $display("  [MON] Time=%0t | Sample=%0d | cos=%0d | quarter=%0b | phase=%0d",
                      $time, mon_cnt, cos_value,
-                     dut.quarter_detector, dut.phase_accumulator);
+                     dut.quadrant, dut.lut_index);
     end
 end
 
@@ -270,6 +249,7 @@ initial begin
     repeat(5) @(posedge clk);
     rst = 1;
     repeat(2) @(posedge clk);
+    #1;  // ← FIX: Let DUT settle before reading
 
     if (cos_value >= 16000) begin
         $display("PASS | After reset, cos starts near +16384");
@@ -291,7 +271,12 @@ initial begin
     rst = 0;
     repeat(5) @(posedge clk);
     rst = 1;
-    repeat(2) @(posedge clk);
+    // ═══════════════════════════════════════════════
+    // FIX 2: REMOVED repeat(2) @(posedge clk);
+    //        That was skipping the first 2 valid samples!
+    //        Now capture_samples immediately catches
+    //        the FIRST posedge where DUT outputs lut[0]=16384
+    // ═══════════════════════════════════════════════
 
     capture_index = 0;
     capture_samples(2 * FULL_CYCLE);
@@ -347,6 +332,7 @@ initial begin
     // Hit reset
     rst = 0;
     repeat(5) @(posedge clk);
+    #1;  // ← FIX: Let DUT settle
 
     if (cos_value === 0) begin
         $display("PASS | Mid-reset clears cos_value");
@@ -360,8 +346,8 @@ initial begin
     // Release reset
     rst = 1;
     repeat(5) @(posedge clk);
+    #1;  // ← FIX: Let DUT settle
 
-    // Verify it restarts correctly
     if (cos_value >= 16000) begin
         $display("PASS | NCO restarts correctly after reset");
         pass_count = pass_count + 1;
@@ -381,19 +367,25 @@ initial begin
     rst = 0;
     repeat(5) @(posedge clk);
     rst = 1;
-    repeat(2) @(posedge clk);
+    // ═══════════════════════════════════════════════
+    // FIX 3: REMOVED repeat(2) @(posedge clk);
+    //        Extra 2 clocks caused phase_counter to be
+    //        off by 2 after 5 full cycles
+    //        5120 + 2 = 5122 → 5122 mod 1024 = 2 ≠ 0
+    // ═══════════════════════════════════════════════
 
-    // Run for 5 full cycles
+    // Run for exactly 5 full cycles
     repeat(5 * FULL_CYCLE) @(posedge clk);
+    #1;  // ← FIX: Let DUT settle before checking
 
     // Check phase accumulator returns to 0
-    if (dut.phase_accumulator === 0 && dut.quarter_detector === 0) begin
+    if (dut.lut_index === 0 && dut.quadrant === 0) begin
         $display("PASS | NCO stable after 5 cycles");
         pass_count = pass_count + 1;
     end
     else begin
         $display("WARNING | phase=%0d quarter=%0b after 5 cycles",
-                 dut.phase_accumulator, dut.quarter_detector);
+                 dut.lut_index, dut.quadrant);
     end
 
     //--------------------------------------------------
@@ -440,6 +432,8 @@ initial begin
 end
 
 endmodule
+
+
 
 
 
