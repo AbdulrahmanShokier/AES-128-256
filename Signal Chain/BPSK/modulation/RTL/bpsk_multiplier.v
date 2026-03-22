@@ -1,4 +1,4 @@
-module bpsk_multiplier  #(
+module bpsk_multiplier #(
     parameter DATA_WIDTH = 16,
     parameter FRACTION   = 14
 )
@@ -12,35 +12,53 @@ module bpsk_multiplier  #(
     output reg signed [DATA_WIDTH-1:0]     signal_modulated
 );
 
+// ═══════════════════════════════════════════════════════
 // Stage 1: Input Registers
-reg signed [DATA_WIDTH-1:0] a_reg, b_reg;
+// ═══════════════════════════════════════════════════════
+// FIR data: only latch when valid (hold otherwise)
+// NCO data: always latch (NCO is free-running, always valid)
+// ═══════════════════════════════════════════════════════
+
+reg signed [DATA_WIDTH-1:0] fir_reg;
+reg signed [DATA_WIDTH-1:0] nco_reg;
 reg                         valid_stage1;
 
 always @(posedge clk_sample)
 begin
     if (!rst)
     begin
-        a_reg        <= 0;
-        b_reg        <= 0;
+        fir_reg      <= 0;
+        nco_reg      <= 0;
         valid_stage1 <= 0;
     end
     else
     begin
-        a_reg        <= fir_data_in;
-        b_reg        <= nco_cos_in;
+        // NCO is free-running → always latch latest cosine
+        nco_reg      <= nco_cos_in;
+
+        // FIR data → only latch when valid
+        if (valid_in)
+            fir_reg <= fir_data_in;
+
+        // Pipeline valid signal
         valid_stage1 <= valid_in;
     end
 end
 
-
+// ═══════════════════════════════════════════════════════
 // Combinational Multiplier
+// ═══════════════════════════════════════════════════════
 
 wire signed [2*DATA_WIDTH-1:0] mult_comb;
 
-assign mult_comb = a_reg * b_reg;
+assign mult_comb = fir_reg * nco_reg;
 
-
-// Stage 2: Output Register (Scaling to Q2.14)
+// ═══════════════════════════════════════════════════════
+// Stage 2: Output Register (Scaling Q4.28 → Q2.14)
+// ═══════════════════════════════════════════════════════
+// Only update output when stage1 is valid
+// Hold previous value otherwise
+// ═══════════════════════════════════════════════════════
 
 always @(posedge clk_sample)
 begin
@@ -51,8 +69,12 @@ begin
     end
     else
     begin
-        signal_modulated <= mult_comb >>> FRACTION;  // Q4.28 → Q2.14
-        valid_out        <= valid_stage1;
+        // Only update output when there's valid data
+        if (valid_stage1)
+            signal_modulated <= mult_comb >>> FRACTION;
+
+        // Pipeline valid signal
+        valid_out <= valid_stage1;
     end
 end
 
