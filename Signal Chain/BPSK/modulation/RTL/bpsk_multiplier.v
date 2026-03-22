@@ -3,12 +3,12 @@ module bpsk_multiplier  #(
     parameter FRACTION   = 14
 )
 (
-    input                                 rst,
-    input                                 clk_sample,
-    input                                 valid_in,
+    input                                  rst,
+    input                                  clk_sample,
+    input                                  valid_in,
     input      signed [DATA_WIDTH-1:0]     fir_data_in,
     input      signed [DATA_WIDTH-1:0]     nco_cos_in,
-    output reg                            valid_out,
+    output reg                             valid_out,
     output reg signed [DATA_WIDTH-1:0]     signal_modulated
 );
 
