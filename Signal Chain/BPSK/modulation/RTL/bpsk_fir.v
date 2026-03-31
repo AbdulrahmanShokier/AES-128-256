@@ -1,5 +1,6 @@
 module bpsk_fir_filter #(
     parameter DATA_WIDTH  = 16,   // input/output width
+    parameter FRAC_WIDTH = 14,    // Q2.14
     parameter COEFF_WIDTH = 16,   // coefficient width
     parameter NUM_TAPS    = 33   // number of taps
 )
@@ -31,7 +32,7 @@ localparam signed [COEFF_WIDTH-1 : 0] coeff_12_20 = -16'sd981  ;
 localparam signed [COEFF_WIDTH-1 : 0] coeff_13_19 =  16'sd3640 ;
 localparam signed [COEFF_WIDTH-1 : 0] coeff_14_18 =  16'sd9527 ;
 localparam signed [COEFF_WIDTH-1 : 0] coeff_15_17 =  16'sd14461;
-localparam signed [COEFF_WIDTH-1 : 0] coeff_16    =  16'sd16384;
+localparam signed [COEFF_WIDTH-1 : 0] coeff_16    =  16'sd16384;    
 
 
 /////////////////////////////////////////////////////////////
@@ -127,7 +128,7 @@ reg signed  [DATA_WIDTH + DATA_WIDTH +5 : 0] level5_add        ; // 38 bits -> a
         pre_add[13] = data_reg[13] + data_reg[19];
         pre_add[14] = data_reg[14] + data_reg[18];
         pre_add[15] = data_reg[15] + data_reg[17];
-        pre_add[16] = {{1{data_reg[16][DATA_WIDTH-1]}}, data_reg[16]};       
+        pre_add[16] = {{1{data_reg[16][DATA_WIDTH-1]}}, data_reg[16]};   // Sign-extension to be 17 bits as pre_add array.    
         //end
     end
 
