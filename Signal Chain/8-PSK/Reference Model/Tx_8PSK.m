@@ -3,14 +3,12 @@ clear; clc; close all;
 %% ============ FIXED POINT PARAMETERS ============
 DATA_WIDTH   = 16;
 FRACTION     = 14;
-SCALE        = 2^FRACTION;      % 16384
-
+SCALE        = 2^FRACTION;
 COEFF_WIDTH  = 16;
 NUM_TAPS     = 33;
 upsample_factor = 4;
 
 %% ============ RRC COEFFICIENTS (from RTL) ============
-% Symmetric filter - mirror coeff_0_32 to coeff_16
 rrc_coeffs_fixed = [
      306;   % coeff_0
      144;   % coeff_1
@@ -47,11 +45,9 @@ rrc_coeffs_fixed = [
      306;   % coeff_32
 ];
 
-% Normalize to floating point
 rrc_coeffs_float = rrc_coeffs_fixed / SCALE;
 
 %% ============ COSINE LUT (from RTL) ============
-cosine_lut = zeros(1, 256);
 cosine_lut_fixed = [
     16384, 16383, 16381, 16379, 16376, 16373, 16369, 16364, ...
     16359, 16353, 16347, 16340, 16332, 16324, 16315, 16305, ...
@@ -87,31 +83,15 @@ cosine_lut_fixed = [
       704,   603,   503,   402,   302,   201,   101,     0  ...
 ];
 
-% cosine LUT covers 0 to 90 degrees (256 points = quarter wave)
-cosine_lut = cosine_lut_fixed / SCALE;   % normalized float
+cosine_lut = cosine_lut_fixed / SCALE;
 
 %% ============ 8PSK SYMBOL MAP ============
-% Gray coded 8PSK
-% 3 bits per symbol
-% Angles: k * 45 degrees, k = 0..7
-% Symbol mapping:
-%   000 -> 0°
-%   001 -> 45°
-%   011 -> 90°
-%   010 -> 135°
-%   110 -> 180°
-%   111 -> 225°
-%   101 -> 270°
-%   100 -> 315°
+gray_map   = [0, 1, 3, 2, 6, 7, 5, 4];
+angles_deg = (0:7) * 45;
 
-gray_map = [0, 1, 3, 2, 6, 7, 5, 4];   % Gray code order
-angles_deg = (0:7) * 45;               % 0,45,90,...,315 degrees
-
-% I and Q values for each symbol (floating point)
 I_map = cos(deg2rad(angles_deg));
 Q_map = sin(deg2rad(angles_deg));
 
-% Fixed point I/Q constellation points
 I_map_fixed = round(I_map * SCALE);
 Q_map_fixed = round(Q_map * SCALE);
 
@@ -128,42 +108,43 @@ fid = fopen('data_bits.txt', 'r');
 if fid == -1
     error('Cannot open data_bits.txt');
 end
-bits = fscanf(fid, '%d');
+
+bits = [];
+line = fgetl(fid);
+while ischar(line)
+    line = strtrim(line);
+    if length(line) == 3
+        for k = 1:3
+            bits(end+1) = str2double(line(k));
+        end
+    end
+    line = fgetl(fid);
+end
 fclose(fid);
-bits = bits(:)';   % make row vector
 
-fprintf('\nTotal bits read: %d\n', length(bits));
+bits   = bits(:)';
+N_bits = length(bits);
+N_sym  = N_bits / 3;
 
-% Pad to multiple of 3
-pad_len = mod(3 - mod(length(bits), 3), 3);
-bits    = [bits, zeros(1, pad_len)];
-N_bits  = length(bits);
-N_sym   = N_bits / 3;
-fprintf('Total symbols   : %d\n', N_sym);
+fprintf('\nTotal bits read : %d\n', N_bits);
+fprintf('Total symbols   : %d\n',  N_sym);
 
 %% ============ BIT TO SYMBOL MAPPING ============
-% Group into 3-bit words
-bits_matrix = reshape(bits, 3, N_sym)';   % N_sym x 3
+bits_matrix = reshape(bits, 3, N_sym)';
+sym_index   = bi2de(bits_matrix, 'left-msb');
 
-% Convert 3-bit groups to decimal index 0..7
-sym_index = bi2de(bits_matrix, 'left-msb');   % 0..7
-
-% Map through Gray code
 gray_index = zeros(1, N_sym);
 for k = 1:N_sym
     gray_index(k) = find(gray_map == sym_index(k)) - 1;
 end
 
-% Get I and Q values (floating point)
 I_symbols = I_map(gray_index + 1);
 Q_symbols = Q_map(gray_index + 1);
 
-% Fixed point symbols
 I_symbols_fixed = round(I_symbols * SCALE);
 Q_symbols_fixed = round(Q_symbols * SCALE);
 
 %% ============ UPSAMPLE by 4 ============
-% Insert 3 zeros between each symbol (upsample factor = 4)
 I_upsampled = zeros(1, N_sym * upsample_factor);
 Q_upsampled = zeros(1, N_sym * upsample_factor);
 
@@ -172,34 +153,7 @@ Q_upsampled(1:upsample_factor:end) = Q_symbols_fixed;
 
 fprintf('Upsampled length: %d\n', length(I_upsampled));
 
-%% ============ RRC FILTER (Fixed Point FIR) ============
-% Convolve with RRC coefficients
-% Replicate exact RTL fixed-point multiply-accumulate behavior
-
-function y_fixed = fir_fixed_point(x, coeffs, DATA_WIDTH, COEFF_WIDTH)
-% Fixed point FIR filter matching RTL behavior
-% x      - input signal (fixed point integers)
-% coeffs - filter coefficients (fixed point integers)
-% Accumulator width = DATA_WIDTH + COEFF_WIDTH = 32 bits
-% Output is truncated back to DATA_WIDTH after >> FRACTION
-
-    N      = length(x);
-    N_taps = length(coeffs);
-    y_fixed = zeros(1, N);
-
-    for n = 1:N
-        acc = int64(0);
-        for k = 1:N_taps
-            idx = n - k + 1;
-            if idx >= 1
-                acc = acc + int64(x(idx)) * int64(coeffs(k));
-            end
-        end
-        % Truncate: shift right by FRACTION bits (14)
-        y_fixed(n) = double(bitshift(acc, -14));
-    end
-end
-
+%% ============ RRC FILTER ============
 fprintf('\nApplying RRC filter to I channel...\n');
 I_filtered_fixed = fir_fixed_point(I_upsampled, rrc_coeffs_fixed', ...
                                     DATA_WIDTH, COEFF_WIDTH);
@@ -213,21 +167,18 @@ I_filtered_fixed = max(-32768, min(32767, I_filtered_fixed));
 Q_filtered_fixed = max(-32768, min(32767, Q_filtered_fixed));
 
 %% ============ WRITE OUTPUT FILES ============
-% Write I samples
 fid = fopen('I_samples_golden.txt', 'w');
 for k = 1:length(I_filtered_fixed)
     fprintf(fid, '%d\n', I_filtered_fixed(k));
 end
 fclose(fid);
 
-% Write Q samples
 fid = fopen('Q_samples_golden.txt', 'w');
 for k = 1:length(Q_filtered_fixed)
     fprintf(fid, '%d\n', Q_filtered_fixed(k));
 end
 fclose(fid);
 
-% Write combined I Q file
 fid = fopen('IQ_samples_golden.txt', 'w');
 for k = 1:length(I_filtered_fixed)
     fprintf(fid, '%d %d\n', I_filtered_fixed(k), Q_filtered_fixed(k));
@@ -239,93 +190,158 @@ fprintf('  I_samples_golden.txt\n');
 fprintf('  Q_samples_golden.txt\n');
 fprintf('  IQ_samples_golden.txt\n');
 
-%% ============ FIGURE 1: 8PSK Constellation (TX) ============
-figure(1)
-plot(I_map, Q_map, 'k--', 'LineWidth', 0.8)
-hold on
+%% ============ ALL FIGURES IN TABBED WINDOW ============
+fig = figure('Name', '8PSK Transmitter Analysis', ...
+             'NumberTitle', 'off', ...
+             'Units', 'normalized', ...
+             'OuterPosition', [0 0 1 1]);
+
+tabgp = uitabgroup(fig, 'Units', 'normalized', 'Position', [0 0 1 1]);
+
+% --------------------------------------------------------
+% TAB 1: 8PSK Constellation
+% --------------------------------------------------------
+tab1 = uitab(tabgp, 'Title', '8PSK Constellation');
+ax1  = axes('Parent', tab1);
+
+plot(ax1, I_map, Q_map, 'k--', 'LineWidth', 0.8)
+hold(ax1, 'on')
 for k = 1:8
-    plot(I_map(k), Q_map(k), 'b^', 'MarkerSize', 12, 'LineWidth', 2)
+    plot(ax1, I_map(k), Q_map(k), 'b^', 'MarkerSize', 12, 'LineWidth', 2)
     text(I_map(k)*1.15, Q_map(k)*1.15, ...
         sprintf('%s', dec2bin(gray_map(k),3)), ...
-        'FontSize', 10, 'HorizontalAlignment', 'center')
+        'FontSize', 10, 'HorizontalAlignment', 'center', 'Parent', ax1)
 end
-grid on
-xlabel('I', 'FontSize', 12)
-ylabel('Q', 'FontSize', 12)
-title('8PSK Constellation (Gray Coded)', 'FontSize', 13)
-xlim([-1.5 1.5]); ylim([-1.5 1.5])
-axis square
-hold off
+grid(ax1, 'on')
+xlabel(ax1, 'I', 'FontSize', 12)
+ylabel(ax1, 'Q', 'FontSize', 12)
+title(ax1, '8PSK Constellation (Gray Coded)', 'FontSize', 13)
+xlim(ax1, [-1.5 1.5])
+ylim(ax1, [-1.5 1.5])
+axis(ax1, 'square')
+hold(ax1, 'off')
 
-%% ============ FIGURE 2: I and Q after RRC ============
+% --------------------------------------------------------
+% TAB 2: I and Q after RRC
+% --------------------------------------------------------
+tab2     = uitab(tabgp, 'Title', 'I & Q after RRC');
 plot_len = min(500, length(I_filtered_fixed));
 
-figure(2)
-subplot(2,1,1)
-stem(1:plot_len, I_filtered_fixed(1:plot_len), 'b', 'MarkerSize', 3)
-grid on
-xlabel('Sample')
-ylabel('Amplitude (fixed point)')
-title('I Channel after RRC Filter')
+ax2a = subplot(2, 1, 1, 'Parent', tab2);
+stem(ax2a, 1:plot_len, I_filtered_fixed(1:plot_len), 'b', ...
+    'MarkerSize', 2, 'LineWidth', 0.5)
+grid(ax2a, 'on')
+xlabel(ax2a, 'Sample')
+ylabel(ax2a, 'Amplitude (fixed point)')
+title(ax2a, 'I Channel after RRC Filter')
 
-subplot(2,1,2)
-stem(1:plot_len, Q_filtered_fixed(1:plot_len), 'r', 'MarkerSize', 3)
-grid on
-xlabel('Sample')
-ylabel('Amplitude (fixed point)')
-title('Q Channel after RRC Filter')
+ax2b = subplot(2, 1, 2, 'Parent', tab2);
+stem(ax2b, 1:plot_len, Q_filtered_fixed(1:plot_len), 'r', ...
+    'MarkerSize', 2, 'LineWidth', 0.5)
+grid(ax2b, 'on')
+xlabel(ax2b, 'Sample')
+ylabel(ax2b, 'Amplitude (fixed point)')
+title(ax2b, 'Q Channel after RRC Filter')
 
-%% ============ FIGURE 3: Eye Diagram I channel ============
-sps        = upsample_factor;
-eye_len    = 2 * sps;
-n_traces   = floor(length(I_filtered_fixed) / eye_len) - 1;
+% --------------------------------------------------------
+% TAB 3: Eye Diagram I Channel
+% --------------------------------------------------------
+tab3     = uitab(tabgp, 'Title', 'Eye Diagram I');
+ax3      = axes('Parent', tab3);
+sps      = upsample_factor;
+eye_len  = 2 * sps;
+delay    = floor(NUM_TAPS / 2);
+I_eye    = I_filtered_fixed(delay+1:end) / SCALE;
+n_traces = floor(length(I_eye) / eye_len);
 
-figure(3)
-hold on
-for k = 1:min(100, n_traces)
-    seg = I_filtered_fixed((k-1)*eye_len+1 : k*eye_len);
-    plot(seg / SCALE, 'b', 'LineWidth', 0.5, 'Color', [0 0 1 0.2])
+hold(ax3, 'on')
+for k = 1:min(150, n_traces)
+    seg = I_eye((k-1)*eye_len+1 : k*eye_len);
+    plot(ax3, 0:eye_len-1, seg, 'Color', [0 0.4 1 0.15], 'LineWidth', 0.8)
 end
-grid on
-xlabel('Sample within 2-symbol window')
-ylabel('Normalized Amplitude')
-title('Eye Diagram - I Channel (after RRC)')
-hold off
+grid(ax3, 'on')
+xlabel(ax3, 'Sample within 2-symbol window')
+ylabel(ax3, 'Normalized Amplitude')
+title(ax3, 'Eye Diagram - I Channel (after RRC)')
+xlim(ax3, [0 eye_len-1])
+hold(ax3, 'off')
 
-%% ============ FIGURE 4: Upsampled vs Filtered ============
+% --------------------------------------------------------
+% TAB 4: Eye Diagram Q Channel
+% --------------------------------------------------------
+tab4  = uitab(tabgp, 'Title', 'Eye Diagram Q');
+ax4   = axes('Parent', tab4);
+Q_eye = Q_filtered_fixed(delay+1:end) / SCALE;
+
+hold(ax4, 'on')
+for k = 1:min(150, n_traces)
+    seg = Q_eye((k-1)*eye_len+1 : k*eye_len);
+    plot(ax4, 0:eye_len-1, seg, 'Color', [1 0.1 0.1 0.15], 'LineWidth', 0.8)
+end
+grid(ax4, 'on')
+xlabel(ax4, 'Sample within 2-symbol window')
+ylabel(ax4, 'Normalized Amplitude')
+title(ax4, 'Eye Diagram - Q Channel (after RRC)')
+xlim(ax4, [0 eye_len-1])
+hold(ax4, 'off')
+
+% --------------------------------------------------------
+% TAB 5: Upsampled vs Filtered
+% --------------------------------------------------------
+tab5      = uitab(tabgp, 'Title', 'Upsample vs RRC');
 plot_syms = min(20, N_sym);
 plot_samp = plot_syms * upsample_factor;
 
-figure(4)
-subplot(2,1,1)
-stem(1:plot_samp, I_upsampled(1:plot_samp), 'b', 'MarkerSize', 4)
-grid on
-xlabel('Sample')
-ylabel('Fixed Point Value')
-title('I Channel - After Upsampling (before RRC)')
+ax5a = subplot(2, 1, 1, 'Parent', tab5);
+stem(ax5a, 1:plot_samp, I_upsampled(1:plot_samp), 'b', 'MarkerSize', 4)
+grid(ax5a, 'on')
+xlabel(ax5a, 'Sample')
+ylabel(ax5a, 'Fixed Point Value')
+title(ax5a, 'I Channel - After Upsampling (before RRC)')
 
-subplot(2,1,2)
-plot(1:plot_samp, I_filtered_fixed(1:plot_samp), 'r', 'LineWidth', 1.5)
-grid on
-xlabel('Sample')
-ylabel('Fixed Point Value')
-title('I Channel - After RRC Filter')
+ax5b = subplot(2, 1, 2, 'Parent', tab5);
+plot(ax5b, 1:plot_samp, I_filtered_fixed(1:plot_samp), 'r', 'LineWidth', 1.5)
+grid(ax5b, 'on')
+xlabel(ax5b, 'Sample')
+ylabel(ax5b, 'Fixed Point Value')
+title(ax5b, 'I Channel - After RRC Filter')
 
-%% ============ FIGURE 5: Cosine LUT verification ============
+% --------------------------------------------------------
+% TAB 6: Cosine LUT Verification
+% --------------------------------------------------------
+tab6       = uitab(tabgp, 'Title', 'Cosine LUT');
+ax6        = axes('Parent', tab6);
 theta_deg  = linspace(0, 90, 256);
 cos_matlab = cos(deg2rad(theta_deg));
 
-figure(5)
-plot(theta_deg, cosine_lut, 'b-', 'LineWidth', 2, ...
+plot(ax6, theta_deg, cosine_lut, 'b-', 'LineWidth', 2, ...
     'DisplayName', 'RTL LUT (normalized)')
-hold on
-plot(theta_deg, cos_matlab, 'r--', 'LineWidth', 1.5, ...
+hold(ax6, 'on')
+plot(ax6, theta_deg, cos_matlab, 'r--', 'LineWidth', 1.5, ...
     'DisplayName', 'MATLAB cos()')
-grid on
-xlabel('Angle (degrees)')
-ylabel('Amplitude')
-title('Cosine LUT Verification')
-legend('Location', 'southwest')
-hold off
+grid(ax6, 'on')
+xlabel(ax6, 'Angle (degrees)')
+ylabel(ax6, 'Amplitude')
+title(ax6, 'Cosine LUT Verification')
+legend(ax6, 'Location', 'southwest')
+hold(ax6, 'off')
 
 fprintf('\nGolden reference complete.\n');
+
+%% ============ FUNCTION AT END OF SCRIPT ============  ← FIXED
+function y_fixed = fir_fixed_point(x, coeffs, DATA_WIDTH, COEFF_WIDTH)
+    N       = length(x);
+    N_taps  = length(coeffs);
+    y_fixed = zeros(1, N);
+
+    for n = 1:N
+        acc = int64(0);
+        for k = 1:N_taps
+            idx = n - k + 1;
+            if idx >= 1
+                acc = acc + int64(x(idx)) * int64(coeffs(k));
+            end
+        end
+        y_fixed(n) = double(bitshift(acc, -14));
+    end
+end
