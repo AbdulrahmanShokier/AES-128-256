@@ -1,4 +1,4 @@
-module bpsk_tx_top #(
+module bpsk_tx_pb_top #(
     parameter DATA_WIDTH  = 16,
     parameter FRAC_WIDTH  = 14,
     parameter COEFF_WIDTH = 16,
@@ -34,7 +34,7 @@ module bpsk_tx_top #(
 //                                                   └────────────┘         │
 //                                                                    ┌─────▼─────┐
 //                                                                    │    FIR    │
-//                                                                    │ valid_in  │──► fir_valid
+//                                                                    │ valid_in  │──► 
 //                                                                    └───────────┘        │
 //                                                                                    ┌────▼──────┐
 //  NCO (free-running, always valid) ──► nco_cos ─────────────────────►│ Multiplier  │
@@ -42,7 +42,6 @@ module bpsk_tx_top #(
 //                                                                     └─────────────┘
 //
 //  Multiplier behavior:
-//    - FIR data: only latched when fir_valid = 1 (held otherwise)
 //    - NCO data: ALWAYS latched (free-running carrier)
 //    - Output:   only updated when pipeline valid = 1
 //    - Pipeline: 2-cycle latency
@@ -76,7 +75,6 @@ wire signed [DATA_WIDTH-1:0] upsample_out;
 wire                         upsample_valid;
 
 wire signed [DATA_WIDTH-1:0] fir_out;
-wire                         fir_valid;
 
 wire signed [COS_WIDTH-1:0]  nco_cos;
 
@@ -148,10 +146,8 @@ bpsk_fir_filter #(
 ) fir_inst (
     .clk_sample (clk_sample),
     .rst        (rst),
-    .valid_in   (upsample_valid),
     .data_in    (upsample_out),
-    .data_out   (fir_out),
-    .valid_out  (fir_valid)
+    .data_out   (fir_out)
 );
 
 ////////////////////////////////////////////////////////////
@@ -183,11 +179,9 @@ bpsk_multiplier #(
 ) multiplier_inst (
     .rst              (rst),
     .clk_sample       (clk_sample),
-    .valid_in         (fir_valid),      // ← gated by FIR valid
     .fir_data_in      (fir_out),        // ← only latched when valid
     .nco_cos_in       (nco_cos),        // ← always latched
-    .signal_modulated (tx_out),         // ← updated only when valid
-    .valid_out        (tx_valid)        // ← 2-cycle delayed valid
+    .signal_modulated (tx_out)        // ← updated only when valid
 );
 
 endmodule

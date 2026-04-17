@@ -1,4 +1,4 @@
-module bpsk_fir_filter #(
+module bpsk_fir_filter_mf #(
     parameter DATA_WIDTH  = 16,   // input/output width
     parameter FRAC_WIDTH = 14,    // Q2.14
     parameter COEFF_WIDTH = 16,   // coefficient width
@@ -211,7 +211,7 @@ reg signed  [DATA_WIDTH + DATA_WIDTH +5 : 0] level5_add        ; // 38 bits -> a
     if (!rst)
         data_out <= {DATA_WIDTH{1'b0}};
     else
-        data_out <= level5_add[29:14];
+        data_out <= level5_add[31:16];
 end
 
 
