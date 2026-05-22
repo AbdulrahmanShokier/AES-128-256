@@ -1,6 +1,6 @@
 module encoder_core
 #(
-    parameter m = 8,
+    parameter m = 8, //GF(2^8)
     parameter k = 223,
     parameter t = 16
 )
@@ -39,8 +39,8 @@ generate
         gf_multiplier #(
             .m(m)
         ) mult_inst (
-            .op_a(feedback),
-            .op_b(g(g_idx)),
+            .op_a(feedback), // Feedback value from LFSR
+            .op_b(g(g_idx)), // Coefficients from generator polynomial g(X)
             .result(gf_mult_result[g_idx])
         );
     end
