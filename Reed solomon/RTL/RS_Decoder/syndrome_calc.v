@@ -130,7 +130,7 @@ module syndrome_calc #(
 
 
     // -------------------------------------------------------------------------
-    // Single assign: avoids generate partial-assign elaboration issue
+    // Single assign: avoids generate partial-assign elaboration issue(some syhtesize tool problem)
     // Bit ordering: syn_out[j*8+:8] = syn[j]
     //   → syn_out = {syn[31], syn[30], ..., syn[0]}
     // -------------------------------------------------------------------------
