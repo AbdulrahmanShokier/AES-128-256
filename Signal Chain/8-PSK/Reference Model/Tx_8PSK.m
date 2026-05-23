@@ -87,15 +87,53 @@ cosine_lut = cosine_lut_fixed / SCALE;
 
 %% ============ 8PSK SYMBOL MAP ============
 gray_map   = [0, 1, 3, 2, 6, 7, 5, 4];
-angles_deg = (0:7) * 45;
+angles_deg = 22.5 + (0:7) * 45;
 
-I_map = cos(deg2rad(angles_deg));
-Q_map = sin(deg2rad(angles_deg));
+N_LUT = length(cosine_lut_fixed);
 
-I_map_fixed = round(I_map * SCALE);
-Q_map_fixed = round(Q_map * SCALE);
+I_map_fixed = zeros(1, 8);
+Q_map_fixed = zeros(1, 8);
 
-fprintf('8PSK Constellation Points (Fixed Point):\n');
+for k = 1:8
+    angle = angles_deg(k);
+    a = mod(angle, 360);
+    
+    %cosine LUT has 256 has elements representing the degree range from  0 to 90
+    %index start from zero to 256, and at index 1 must be 0 and index 256 is 90 degree
+    %so (idx - 1)* (90/(256-1))=degree of the index
+    if a <= 90
+        idx = round((a / 90) * (N_LUT - 1)) + 1;
+        I_map_fixed(k) = cosine_lut_fixed(idx);
+    elseif a <= 180
+        idx = round((180 - a) / 90 * (N_LUT - 1)) + 1;
+        I_map_fixed(k) = -cosine_lut_fixed(idx);
+    elseif a <= 270
+        idx = round((a - 180) / 90 * (N_LUT - 1)) + 1;
+        I_map_fixed(k) = -cosine_lut_fixed(idx);
+    else
+        idx = round((360 - a) / 90 * (N_LUT - 1)) + 1;
+        I_map_fixed(k) = cosine_lut_fixed(idx);
+    end
+    
+    if a <= 90
+        idx = round((90 - a) / 90 * (N_LUT - 1)) + 1;
+        Q_map_fixed(k) = cosine_lut_fixed(idx);
+    elseif a <= 180
+        idx = round((a - 90) / 90 * (N_LUT - 1)) + 1;
+        Q_map_fixed(k) = cosine_lut_fixed(idx);
+    elseif a <= 270
+        idx = round((270 - a) / 90 * (N_LUT - 1)) + 1;
+        Q_map_fixed(k) = -cosine_lut_fixed(idx);
+    else
+        idx = round((a - 270) / 90 * (N_LUT - 1)) + 1;
+        Q_map_fixed(k) = -cosine_lut_fixed(idx);
+    end
+end
+
+I_map = I_map_fixed / SCALE;
+Q_map = Q_map_fixed / SCALE;
+
+fprintf('8PSK Constellation Points (from Cosine LUT):\n');
 fprintf('Symbol | Bits | Angle | I_fixed | Q_fixed\n');
 for k = 1:8
     fprintf('  %d    | %s  |  %3d° |  %6d  |  %6d\n', ...
@@ -153,42 +191,67 @@ Q_upsampled(1:upsample_factor:end) = Q_symbols_fixed;
 
 fprintf('Upsampled length: %d\n', length(I_upsampled));
 
-%% ============ RRC FILTER ============
-fprintf('\nApplying RRC filter to I channel...\n');
-I_filtered_fixed = fir_fixed_point(I_upsampled, rrc_coeffs_fixed', ...
-                                    DATA_WIDTH, COEFF_WIDTH);
+%% ============ RRC FILTER + I/Q COMBINE ============
+fprintf('\nApplying RRC filter to I and Q channels...\n');
 
-fprintf('Applying RRC filter to Q channel...\n');
-Q_filtered_fixed = fir_fixed_point(Q_upsampled, rrc_coeffs_fixed', ...
-                                    DATA_WIDTH, COEFF_WIDTH);
+[I_filtered_fixed, Q_filtered_fixed, IQ_combined_fixed] = ...
+    fir_fixed_point(I_upsampled, Q_upsampled, rrc_coeffs_fixed', ...
+                    DATA_WIDTH, COEFF_WIDTH);
 
-% Clip to 16-bit signed range
-I_filtered_fixed = max(-32768, min(32767, I_filtered_fixed));
-Q_filtered_fixed = max(-32768, min(32767, Q_filtered_fixed));
+fprintf('I output range : [%d, %d]\n', min(I_filtered_fixed), max(I_filtered_fixed));
+fprintf('Q output range : [%d, %d]\n', min(Q_filtered_fixed), max(Q_filtered_fixed));
+fprintf('I+Q range      : [%d, %d]\n', min(IQ_combined_fixed), max(IQ_combined_fixed));
 
 %% ============ WRITE OUTPUT FILES ============
-fid = fopen('I_samples_golden.txt', 'w');
-for k = 1:length(I_filtered_fixed)
-    fprintf(fid, '%d\n', I_filtered_fixed(k));
-end
-fclose(fid);
-
-fid = fopen('Q_samples_golden.txt', 'w');
-for k = 1:length(Q_filtered_fixed)
-    fprintf(fid, '%d\n', Q_filtered_fixed(k));
-end
-fclose(fid);
-
+% File 1: I and Q side by side
 fid = fopen('IQ_samples_golden.txt', 'w');
 for k = 1:length(I_filtered_fixed)
     fprintf(fid, '%d %d\n', I_filtered_fixed(k), Q_filtered_fixed(k));
 end
 fclose(fid);
 
+% File 2: I + Q combined
+fid = fopen('IQ_combined_golden.txt', 'w');
+for k = 1:length(IQ_combined_fixed)
+    fprintf(fid, '%d\n', IQ_combined_fixed(k));
+end
+fclose(fid);
+
 fprintf('\nOutput files written:\n');
-fprintf('  I_samples_golden.txt\n');
-fprintf('  Q_samples_golden.txt\n');
-fprintf('  IQ_samples_golden.txt\n');
+fprintf('  IQ_samples_golden.txt    (I and Q side by side)\n');
+fprintf('  IQ_combined_golden.txt   (I + Q sum in Q1.14)\n');
+
+%% ============ MATCHED FILTER (RX SIDE) FOR EYE DIAGRAM ============
+fprintf('\nApplying matched RRC filter (RX side) for eye diagram...\n');
+
+N_out   = length(I_filtered_fixed);
+N_taps  = NUM_TAPS;
+
+shift_reg_I = zeros(1, N_taps, 'int16');
+shift_reg_Q = zeros(1, N_taps, 'int16');
+
+I_matched = zeros(1, N_out);
+Q_matched = zeros(1, N_out);
+
+for n = 1:N_out
+    for k = N_taps:-1:2
+        shift_reg_I(k) = shift_reg_I(k-1);
+        shift_reg_Q(k) = shift_reg_Q(k-1);
+    end
+    
+    shift_reg_I(1) = int16(max(-32768, min(32767, I_filtered_fixed(n))));
+    shift_reg_Q(1) = int16(max(-32768, min(32767, Q_filtered_fixed(n))));
+    
+    acc_I = int64(0);
+    acc_Q = int64(0);
+    for k = 1:N_taps
+        acc_I = acc_I + int64(int32(shift_reg_I(k)) * int32(rrc_coeffs_fixed(k)));
+        acc_Q = acc_Q + int64(int32(shift_reg_Q(k)) * int32(rrc_coeffs_fixed(k)));
+    end
+    
+    I_matched(n) = double(bitshift(acc_I, -FRACTION));
+    Q_matched(n) = double(bitshift(acc_Q, -FRACTION));
+end
 
 %% ============ ALL FIGURES IN TABBED WINDOW ============
 fig = figure('Name', '8PSK Transmitter Analysis', ...
@@ -244,14 +307,14 @@ ylabel(ax2b, 'Amplitude (fixed point)')
 title(ax2b, 'Q Channel after RRC Filter')
 
 % --------------------------------------------------------
-% TAB 3: Eye Diagram I Channel
+% TAB 3: Eye Diagram I Channel (after matched filter)
 % --------------------------------------------------------
 tab3     = uitab(tabgp, 'Title', 'Eye Diagram I');
 ax3      = axes('Parent', tab3);
 sps      = upsample_factor;
 eye_len  = 2 * sps;
-delay    = floor(NUM_TAPS / 2);
-I_eye    = I_filtered_fixed(delay+1:end) / SCALE;
+delay    = NUM_TAPS - 1;
+I_eye    = I_matched(delay+1:end) / SCALE;
 n_traces = floor(length(I_eye) / eye_len);
 
 hold(ax3, 'on')
@@ -262,16 +325,16 @@ end
 grid(ax3, 'on')
 xlabel(ax3, 'Sample within 2-symbol window')
 ylabel(ax3, 'Normalized Amplitude')
-title(ax3, 'Eye Diagram - I Channel (after RRC)')
+title(ax3, 'Eye Diagram - I Channel (TX RRC + RX RRC)')
 xlim(ax3, [0 eye_len-1])
 hold(ax3, 'off')
 
 % --------------------------------------------------------
-% TAB 4: Eye Diagram Q Channel
+% TAB 4: Eye Diagram Q Channel (after matched filter)
 % --------------------------------------------------------
 tab4  = uitab(tabgp, 'Title', 'Eye Diagram Q');
 ax4   = axes('Parent', tab4);
-Q_eye = Q_filtered_fixed(delay+1:end) / SCALE;
+Q_eye = Q_matched(delay+1:end) / SCALE;
 
 hold(ax4, 'on')
 for k = 1:min(150, n_traces)
@@ -281,7 +344,7 @@ end
 grid(ax4, 'on')
 xlabel(ax4, 'Sample within 2-symbol window')
 ylabel(ax4, 'Normalized Amplitude')
-title(ax4, 'Eye Diagram - Q Channel (after RRC)')
+title(ax4, 'Eye Diagram - Q Channel (TX RRC + RX RRC)')
 xlim(ax4, [0 eye_len-1])
 hold(ax4, 'off')
 
@@ -307,41 +370,94 @@ ylabel(ax5b, 'Fixed Point Value')
 title(ax5b, 'I Channel - After RRC Filter')
 
 % --------------------------------------------------------
-% TAB 6: Cosine LUT Verification
+% TAB 6: I+Q Combined
 % --------------------------------------------------------
-tab6       = uitab(tabgp, 'Title', 'Cosine LUT');
-ax6        = axes('Parent', tab6);
+tab6     = uitab(tabgp, 'Title', 'I+Q Combined');
+ax6      = axes('Parent', tab6);
+plot_len = min(500, length(IQ_combined_fixed));
+
+plot(ax6, 1:plot_len, IQ_combined_fixed(1:plot_len), 'm', 'LineWidth', 1)
+grid(ax6, 'on')
+xlabel(ax6, 'Sample')
+ylabel(ax6, 'Amplitude (Q1.14)')
+title(ax6, 'I + Q Combined Signal (Q1.14)')
+
+% --------------------------------------------------------
+% TAB 7: Cosine LUT Verification
+% --------------------------------------------------------
+tab7       = uitab(tabgp, 'Title', 'Cosine LUT');
+ax7        = axes('Parent', tab7);
 theta_deg  = linspace(0, 90, 256);
 cos_matlab = cos(deg2rad(theta_deg));
 
-plot(ax6, theta_deg, cosine_lut, 'b-', 'LineWidth', 2, ...
+plot(ax7, theta_deg, cosine_lut, 'b-', 'LineWidth', 2, ...
     'DisplayName', 'RTL LUT (normalized)')
-hold(ax6, 'on')
-plot(ax6, theta_deg, cos_matlab, 'r--', 'LineWidth', 1.5, ...
+hold(ax7, 'on')
+plot(ax7, theta_deg, cos_matlab, 'r--', 'LineWidth', 1.5, ...
     'DisplayName', 'MATLAB cos()')
-grid(ax6, 'on')
-xlabel(ax6, 'Angle (degrees)')
-ylabel(ax6, 'Amplitude')
-title(ax6, 'Cosine LUT Verification')
-legend(ax6, 'Location', 'southwest')
-hold(ax6, 'off')
+grid(ax7, 'on')
+xlabel(ax7, 'Angle (degrees)')
+ylabel(ax7, 'Amplitude')
+title(ax7, 'Cosine LUT Verification')
+legend(ax7, 'Location', 'southwest')
+hold(ax7, 'off')
 
 fprintf('\nGolden reference complete.\n');
 
-%% ============ FUNCTION AT END OF SCRIPT ============  ← FIXED
-function y_fixed = fir_fixed_point(x, coeffs, DATA_WIDTH, COEFF_WIDTH)
-    N       = length(x);
-    N_taps  = length(coeffs);
-    y_fixed = zeros(1, N);
-
+%% ============ FIR FUNCTION ============
+function [y_I, y_Q, y_IQ] = fir_fixed_point(x_I, x_Q, coeffs, DATA_WIDTH, COEFF_WIDTH)
+    N      = length(x_I);
+    N_taps = length(coeffs);
+    y_I    = zeros(1, N);
+    y_Q    = zeros(1, N);
+    y_IQ   = zeros(1, N);
+    
+    FRACTION  = 14;
+    MAX_Q1_14 =  32767;
+    MIN_Q1_14 = -32768;
+    
+    % ---- Shift registers: Q1.14 stored as int16 ----
+    shift_reg_I = zeros(1, N_taps, 'int16');
+    shift_reg_Q = zeros(1, N_taps, 'int16');
+    
     for n = 1:N
-        acc = int64(0);
-        for k = 1:N_taps
-            idx = n - k + 1;
-            if idx >= 1
-                acc = acc + int64(x(idx)) * int64(coeffs(k));
-            end
+        % ---- STEP 1: Shift both registers ----
+        for k = N_taps:-1:2
+            shift_reg_I(k) = shift_reg_I(k-1);
+            shift_reg_Q(k) = shift_reg_Q(k-1);
         end
-        y_fixed(n) = double(bitshift(acc, -14));
+        
+        % ---- STEP 2: Load new samples as int16 Q1.14 ----
+        shift_reg_I(1) = int16(x_I(n));
+        shift_reg_Q(1) = int16(x_Q(n));
+        
+        % ---- STEP 3: MAC for I channel ----
+        acc_I = int64(0);
+        for k = 1:N_taps
+            acc_I = acc_I + int64(int32(shift_reg_I(k)) * int32(coeffs(k)));
+        end
+        
+        % ---- STEP 4: MAC for Q channel ----
+        acc_Q = int64(0);
+        for k = 1:N_taps
+            acc_Q = acc_Q + int64(int32(shift_reg_Q(k)) * int32(coeffs(k)));
+        end
+        
+        % ---- STEP 5: Convert Q2.28 → Q1.14 ----
+        I_out = double(bitshift(acc_I, -FRACTION));
+        Q_out = double(bitshift(acc_Q, -FRACTION));
+        
+        % Clamp to Q1.14 range
+        I_out = max(MIN_Q1_14, min(MAX_Q1_14, I_out));
+        Q_out = max(MIN_Q1_14, min(MAX_Q1_14, Q_out));
+        
+        y_I(n) = I_out;
+        y_Q(n) = Q_out;
+        
+        % ---- STEP 6: Add I + Q, keep in Q1.14 ----
+        sum_IQ = int32(I_out) + int32(Q_out);
+        sum_IQ = max(int32(MIN_Q1_14), min(int32(MAX_Q1_14), sum_IQ));
+        
+        y_IQ(n) = double(sum_IQ);
     end
 end
