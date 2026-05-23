@@ -61,6 +61,18 @@ endmodule
 //
 //  Returns 0x00 for input 0x00 (inverse of 0 is undefined; safe don't-care).
 // -----------------------------------------------------------------------------
+
+
+//=============================================================================
+// getting the inverse using Fermat's Little Theorem.
+// a^{p-1} = 1 mod p
+// a^{-1} = a^{p-2} mod p
+// then a^{-1} = a^{254} mod p(X)
+// p(X) = x^8 + x^4 + x^3 + x^2 + 1 which was the primative polynomial for GF(2^8)
+// we are doing thi rather than haivng a LUT for inverse of each alpha power  
+// 254 = 2 + 4 + 8 + 16 + 32 + 64 + 128
+// the order of opreation is based on square and multiply method.
+//=============================================================================
 module gf_inv (
     input  wire [7:0] a,
     output wire [7:0] inv
