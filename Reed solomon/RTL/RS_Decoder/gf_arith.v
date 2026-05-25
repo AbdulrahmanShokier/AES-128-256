@@ -16,7 +16,8 @@
 //
 //  Shift a left by one bit  =  multiply by alpha.
 //  If the discarded (degree-8) bit was 1, XOR with 0x1D  (= p(x) - x^8)
-//  to reduce back into the field.  Repeat for each bit of b.
+//  to reduce back into the field. 
+//  Repeat for each bit of b.
 // -----------------------------------------------------------------------------
 module gf_mult (
     input  wire [7:0] a,

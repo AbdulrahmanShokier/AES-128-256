@@ -7,6 +7,14 @@
 // Bit ordering: lambda[(k-1)*8 +: 8] = C[k]  for k=1..16
 //   → lambda = {C[16], C[15], ..., C[1]}
 // =============================================================================
+
+
+//============================================================================
+// Bberlekamp-Massey algorithm for RS(255,223) decoder. Computes the error locator polynomial
+// from the input syndrome. The output 'lambda' is the error locator polynomial)
+//============================================================================
+
+
 module berlekamp_massey #(
     parameter T2 = 32
 )(
@@ -19,6 +27,9 @@ module berlekamp_massey #(
     output reg          done
 );
 
+    / ================================GF multiplication computational=========================================
+    // gf_mul is the same as the gf_mult module in gf_arith.v
+    // =======================================================================================================
     function [7:0] gf_mul;
         input [7:0] a, b;
         reg   [7:0] p, aa;
@@ -33,6 +44,9 @@ module berlekamp_massey #(
         end
     endfunction
 
+/ ================================GF inverse computational=========================================
+    // gf_inv_f is the same as the gf_mult gf_inv module in gf_arith.v
+    // =======================================================================================================
     function [7:0] gf_inv_f;
         input [7:0] a;
         reg   [7:0] a2,a4,a8,a16,a32,a64,a128,t;
@@ -46,12 +60,14 @@ module berlekamp_massey #(
         end
     endfunction
 
+    // ================================Syndrome access function=========================================
     function [7:0] get_syn;
         input integer idx;
         begin
             get_syn = syn_in[idx*8 +: 8];
         end
     endfunction
+
 
     // =========================================================================
     // State registers

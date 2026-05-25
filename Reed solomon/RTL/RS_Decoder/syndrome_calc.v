@@ -34,7 +34,6 @@ module syndrome_calc #(
 
     // ================================GF multiplication computational=========================================
     // gf_mul is the same as the gf_mult module in gf_arith.v
-    // NOTE: This combinational function processes data on a byte-by-byte basis.
     // =======================================================================================================
     function [7:0] gf_mul;
         input [7:0] a, b;
