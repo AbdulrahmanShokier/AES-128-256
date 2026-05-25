@@ -27,7 +27,7 @@ module berlekamp_massey #(
     output reg          done
 );
 
-    / ================================GF multiplication computational=========================================
+    // ================================GF multiplication computational=========================================
     // gf_mul is the same as the gf_mult module in gf_arith.v
     // =======================================================================================================
     function [7:0] gf_mul;
@@ -44,7 +44,7 @@ module berlekamp_massey #(
         end
     endfunction
 
-/ ================================GF inverse computational=========================================
+    // ================================GF inverse computational=========================================
     // gf_inv_f is the same as the gf_mult gf_inv module in gf_arith.v
     // =======================================================================================================
     function [7:0] gf_inv_f;
@@ -72,13 +72,20 @@ module berlekamp_massey #(
     // =========================================================================
     // State registers
     // =========================================================================
-    reg [7:0] C [0:16];
-    reg [7:0] B [0:16];
-    reg [4:0] Llen;
-    reg [7:0] b_reg;
-    reg [5:0] x_reg;
-    reg [5:0] r_cnt;
-    reg       running;
+    reg [7:0] C [0:16]; // Coefficients of the error locator polynomial C(x) = C[0] + C[1]x + ... + C[16]x^16
+    // C[0] is always 1 and is not stored in the output 'lambda'. lambda = {C[16], C[15], ..., C[1]}.
+    //-------------------
+    reg [7:0] B [0:16]; // Copy of C from the last update step where Llen was updated
+     //-------------------
+    reg [4:0] Llen; // Current length of the error locator polynomial (degree of C(x))
+     //-------------------
+    reg [7:0] b_reg; // Copy of the discrepancy from the last update step where Llen was updated
+     //-------------------
+    reg [5:0] x_reg; // Number of iterations since the last update step where Llen was updated
+     //-------------------
+    reg [5:0] r_cnt; // Iteration counter for the main BM loop, also used to index the syndrome inputs
+     //-------------------
+    reg       running; 
 
     // =========================================================================
     // Module-level temporaries
@@ -87,8 +94,8 @@ module berlekamp_massey #(
     integer   disc_j;
     integer   disc_ridx;
 
-    reg [7:0] bm_d;
-    reg [7:0] bm_coeff;
+    reg [7:0] bm_d; // Discrepancy for the current iteration
+    reg [7:0] bm_coeff; 
     reg [7:0] bm_newC [0:16];
     integer   bm_j;
     integer   bm_shift;
@@ -132,10 +139,10 @@ module berlekamp_massey #(
                 running <= 1'b1;
             end else if (running) begin
                 bm_d     = disc_d;
-                bm_coeff = gf_mul(bm_d, gf_inv_f(b_reg));
-                for (bm_j = 0; bm_j <= 16; bm_j = bm_j + 1)
+                bm_coeff = gf_mul(bm_d, gf_inv_f(b_reg)); // bm_coeff = dμ * (dρ)^-1
+                for (bm_j = 0; bm_j <= 16; bm_j = bm_j + 1) 
                     bm_newC[bm_j] = C[bm_j];
-                if (bm_d != 8'h00) begin
+                if (bm_d != 8'h00) begin // chech if dμ is nonzero
                     for (bm_j = 0; bm_j <= 16; bm_j = bm_j + 1) begin
                         bm_shift = bm_j - x_reg;
                         if (bm_j >= x_reg && bm_shift <= 16)
