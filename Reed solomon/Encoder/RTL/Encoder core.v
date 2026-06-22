@@ -1,8 +1,8 @@
 module encoder_core
 #(
     parameter m = 8, //GF(2^8)
-    parameter k = 223,
-    parameter t = 16
+    parameter k = 192, //n=208
+    parameter t = 8
 )
 (
     input              clk,
@@ -107,57 +107,29 @@ always @(*) begin
 end
 
 
-// always @(posedge clk)
-// begin
-//     if (!rst)
-//         data_out <= 8'b0;
 
-//     else 
-//     begin
-//         if (output_data_select == 1'b0)
-//             data_out <= data_in;
-//         else
-//             data_out <= lfsr_regs[2*t - 1 - parity_index_reg];
-//     end
-// end
 
 //========================= Generator Polynomial Function ========================
 function [7:0] g;
-input [5:0] addr;
+input [4:0] addr;
 begin
     case(addr)
-        6'd0:  g = 8'd45;   // constant term x^0
-        6'd1:  g = 8'd216;
-        6'd2:  g = 8'd239;
-        6'd3:  g = 8'd24;
-        6'd4:  g = 8'd253;
-        6'd5:  g = 8'd104;
-        6'd6:  g = 8'd27;
-        6'd7:  g = 8'd40;
-        6'd8:  g = 8'd107;
-        6'd9:  g = 8'd50;
-        6'd10: g = 8'd163;
-        6'd11: g = 8'd210;
-        6'd12: g = 8'd227;
-        6'd13: g = 8'd134;
-        6'd14: g = 8'd224;
-        6'd15: g = 8'd158;
-        6'd16: g = 8'd119;
-        6'd17: g = 8'd13;
-        6'd18: g = 8'd158;
-        6'd19: g = 8'd1;
-        6'd20: g = 8'd238;
-        6'd21: g = 8'd164;
-        6'd22: g = 8'd82;
-        6'd23: g = 8'd43;
-        6'd24: g = 8'd15;
-        6'd25: g = 8'd232;
-        6'd26: g = 8'd246;
-        6'd27: g = 8'd142;
-        6'd28: g = 8'd50;
-        6'd29: g = 8'd189;
-        6'd30: g = 8'd29;
-        6'd31: g = 8'd232;  // x^31 coefficient
+        6'd0:  g = 8'd79;   // constant term x^0
+        6'd1:  g = 8'd44;
+        6'd2:  g = 8'd81;
+        6'd3:  g = 8'd100;
+        6'd4:  g = 8'd49;
+        6'd5:  g = 8'd183;
+        6'd6:  g = 8'd56;
+        6'd7:  g = 8'd17;
+        6'd8:  g = 8'd232;
+        6'd9:  g = 8'd187;
+        6'd10: g = 8'd126;
+        6'd11: g = 8'd104;
+        6'd12: g = 8'd31;
+        6'd13: g = 8'd103;
+        6'd14: g = 8'd52;
+        6'd15: g = 8'd118;
         default: g = 8'd0;
     endcase
 end

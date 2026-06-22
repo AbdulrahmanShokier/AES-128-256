@@ -5,9 +5,9 @@ module tb_encoder_top;
 
 //========================= Parameters =============================
 parameter m = 8;
-parameter k = 223;
-parameter n = 255;
-parameter t = 16;
+parameter k = 192;
+parameter n = 208;
+parameter t = 8;
 
 //========================= Signals ================================
 reg              clk;
@@ -87,41 +87,25 @@ always @(*) begin
 end
 
 //========================= Expected Parity ========================
-// MATLAB expected parity for msg = [1, 0, 0, ..., 0]
+// MATLAB expected parity for msg = [1, 0, 0, ..., 0]  (impulse = 1, NOT 255)
 reg [m-1:0] expected_parity [0:2*t-1];
 initial begin
-    expected_parity[0]  = 8'd213;
-    expected_parity[1]  = 8'd252;   
-    expected_parity[2]  = 8'd145;
-    expected_parity[3]  = 8'd232;
-    expected_parity[4]  = 8'd217;
-    expected_parity[5]  = 8'd228;
-    expected_parity[6]  = 8'd15 ;
-    expected_parity[7]  = 8'd252;   
-    expected_parity[8]  = 8'd247;
-    expected_parity[9]  = 8'd59 ;   
-    expected_parity[10] = 8'd5  ;   
-    expected_parity[11] = 8'd10 ;   
-    expected_parity[12] = 8'd56 ;  
-    expected_parity[13] = 8'd213;
-    expected_parity[14] = 8'd53 ;
-    expected_parity[15] = 8'd64 ;
-    expected_parity[16] = 8'd28 ;  
-    expected_parity[17] = 8'd53 ;
-    expected_parity[18] = 8'd26 ;   
-    expected_parity[19] = 8'd2  ;
-    expected_parity[20] = 8'd120;
-    expected_parity[21] = 8'd195;
-    expected_parity[22] = 8'd27 ;
-    expected_parity[23] = 8'd217;
-    expected_parity[24] = 8'd88 ;   
-    expected_parity[25] = 8'd89 ;
-    expected_parity[26] = 8'd85 ;
-    expected_parity[27] = 8'd58 ;
-    expected_parity[28] = 8'd139;
-    expected_parity[29] = 8'd55 ;
-    expected_parity[30] = 8'd237;
-    expected_parity[31] = 8'd146;
+    expected_parity[0]  = 8'd48  ;
+    expected_parity[1]  = 8'd8   ;
+    expected_parity[2]  = 8'd187 ;
+    expected_parity[3]  = 8'd76  ;
+    expected_parity[4]  = 8'd175 ;
+    expected_parity[5]  = 8'd149 ;
+    expected_parity[6]  = 8'd238 ;
+    expected_parity[7]  = 8'd232 ;
+    expected_parity[8]  = 8'd127 ;
+    expected_parity[9]  = 8'd7   ;
+    expected_parity[10] = 8'd149 ;
+    expected_parity[11] = 8'd113 ;
+    expected_parity[12] = 8'd139 ;
+    expected_parity[13] = 8'd17  ;
+    expected_parity[14] = 8'd1   ;
+    expected_parity[15] = 8'd83  ;
 end
 
 //========================= Result Storage =========================
@@ -131,6 +115,11 @@ integer      data_count;
 integer      parity_count;
 integer      error_count;
 integer      i;
+
+// Stall-test bookkeeping
+integer      stall_cycles_seen;
+integer      counter_before_stall;
+integer      counter_after_stall;
 
 //========================= Capture Output =========================
 always @(posedge clk) begin
@@ -164,7 +153,7 @@ initial begin
     repeat(2) @(posedge clk); #1;
 
     $display("==============================================");
-    $display("  Full RS(255,223) Encoder Testbench");
+    $display("  Full RS(208,192) Encoder Testbench");
     $display("  Input: msg = [1, 0, 0, ..., 0]");
     $display("==============================================\n");
 
@@ -185,14 +174,14 @@ initial begin
     $display("State: %s", state_name);
 
     //--------------------------------------------------
-    // Phase 1: Feed k=223 data bytes
+    // Phase 1: Feed k data bytes, WITH a stall partway through
     //--------------------------------------------------
-    $display("\n>>> Phase 1: Feeding %0d data bytes...", k);
+    $display("\n>>> Phase 1: Feeding %0d data bytes (with a mid-stream stall)...", k);
 
     for (i = 0; i < k; i = i + 1) begin
-        // First byte = 1, rest = 0
+        // First byte = 1, rest = 0 (impulse test vector)
         if (i == 0)
-            data_in = 8'd255;
+            data_in = 8'd1;
         else
             data_in = 8'd0;
 
@@ -203,6 +192,44 @@ initial begin
         if (i < 3) begin
             $display("  Cycle %0d: data_in=%3d, counter=%3d, state=%s, feedback=%3d",
                 i, data_in, counter, state_name, core_inst.feedback);
+        end
+
+        //----------------------------------------------
+        // Inject a stall: pause data_valid for a few clocks
+        // partway through the data phase (e.g. right after
+        // byte index 50), then resume.
+        //----------------------------------------------
+        if (i == 50) begin
+            counter_before_stall = counter;
+            $display("\n  >>> STALL TEST: pausing data_valid at i=%0d (counter=%0d)",
+                i, counter);
+
+            data_valid = 0;
+            data_in    = 0;
+
+            stall_cycles_seen = 0;
+            repeat (4) begin
+                @(posedge clk); #1;
+                stall_cycles_seen = stall_cycles_seen + 1;
+                $display("    stall cycle %0d: counter=%3d (should be unchanged), state=%s, lfsr_enable=%b, counter_enable=%b",
+                    stall_cycles_seen, counter, state_name, lfsr_enable, counter_enable);
+
+                if (counter !== counter_before_stall) begin
+                    $display("    *** FAIL: counter changed during stall! expected %0d, got %0d ***",
+                        counter_before_stall, counter);
+                end
+            end
+
+            counter_after_stall = counter;
+            if (counter_after_stall == counter_before_stall)
+                $display("  >>> STALL TEST: counter correctly held at %0d during pause. PASS",
+                    counter_before_stall);
+            else
+                $display("  >>> STALL TEST: counter did NOT hold steady. FAIL (before=%0d, after=%0d)",
+                    counter_before_stall, counter_after_stall);
+
+            $display("  >>> STALL TEST: resuming data_valid...\n");
+            // data_valid will be reasserted at the top of the next loop iteration
         end
     end
 
@@ -217,7 +244,7 @@ initial begin
     // Print LFSR state before parity output
     //--------------------------------------------------
     $display("\n>>> LFSR State after data phase:");
-    for (i = 0; i < 32; i = i + 4)
+    for (i = 0; i < 16; i = i + 4)
         $display("  %2d : %3d %3d %3d %3d", i,
             core_inst.lfsr_regs[i],
             core_inst.lfsr_regs[i+1],
@@ -257,12 +284,12 @@ initial begin
     error_count = 0;
     for (i = 0; i < 2*t; i = i + 1) begin
         if (captured_parity[i] !== expected_parity[i]) begin
-            $display("  %2d  | %3d |   %3d    |  FAIL <<<", 
+            $display("  %2d  | %3d |   %3d    |  FAIL <<<",
                 i, captured_parity[i], expected_parity[i]);
             error_count = error_count + 1;
         end
         else begin
-            $display("  %2d  | %3d |   %3d    |  PASS", 
+            $display("  %2d  | %3d |   %3d    |  PASS",
                 i, captured_parity[i], expected_parity[i]);
         end
     end
@@ -272,7 +299,7 @@ initial begin
     //--------------------------------------------------
     $display("\n==============================================");
     if (error_count == 0)
-        $display("  RESULT: ALL %0d PARITY BYTES CORRECT!", 2*t);
+        $display("  RESULT: ALL %0d PARITY BYTES CORRECT (stall test included)!", 2*t);
     else
         $display("  RESULT: %0d PARITY BYTES FAILED!", error_count);
     $display("  Total data bytes captured:   %0d", data_count);

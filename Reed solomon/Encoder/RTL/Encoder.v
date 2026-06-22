@@ -1,9 +1,9 @@
 module encoder_top
 #(
     parameter m = 8,
-    parameter k = 223,
-    parameter n = 255,
-    parameter t = 16
+    parameter k = 192,
+    parameter n = 208,
+    parameter t = 8
 )
 (
     input              clk,
