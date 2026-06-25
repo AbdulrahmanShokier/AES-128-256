@@ -20,7 +20,7 @@ module tb_AES_enc_single_in;
         .rst(rst),
         .IN(IN),
         .KEY(KEY),
-        .enable(enable),
+        .valid(valid),
         .fsm_en(fsm_en),
         .OUT(OUT)
     );

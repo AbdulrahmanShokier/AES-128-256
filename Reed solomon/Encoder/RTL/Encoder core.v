@@ -8,6 +8,7 @@ module encoder_core
     input              clk,
     input              rst,
     input      [m-1:0] data_in,
+    input              symbol_tick,
 
     // Control signals from FSM
     input              lfsr_clear,
@@ -59,13 +60,13 @@ end
 
 always @(posedge clk) 
 begin
-    if(!rst || lfsr_clear)
+    if(symbol_tick && !rst || lfsr_clear)
     begin
         for(i=0;i<2*t;i=i+1)
             lfsr_regs[i] <= 0;
     end
 
-    else if(lfsr_enable)
+    else if(symbol_tick && lfsr_enable)
     begin
         for(i=0;i<2*t;i=i+1)
             lfsr_regs[i] <= lfsr_next[i];
@@ -76,9 +77,9 @@ end
 //=========================  Counter =======================================
 always @(posedge clk)
 begin
-    if (!rst || counter_clear)
+    if (symbol_tick && !rst || counter_clear)
         counter <= 8'd0;
-    else if (counter_enable)
+    else if (symbol_tick && counter_enable)
         counter <= counter + 8'd1;
 end
 
@@ -92,10 +93,10 @@ reg [7:0] parity_index_reg;
 // Register parity_index one cycle ahead
 always @(posedge clk) 
 begin
-    if (!rst || counter_clear)
+    if (symbol_tick && !rst || counter_clear)
         parity_index_reg <= 8'd0;
 
-    else if (output_data_select && counter_enable)
+    else if (symbol_tick && output_data_select && counter_enable)
         parity_index_reg <= parity_index_reg + 8'd1;
 end
 

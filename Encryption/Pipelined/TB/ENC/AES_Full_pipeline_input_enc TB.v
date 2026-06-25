@@ -23,7 +23,7 @@ module tb_AES_enc_full_pipeline_in;
         .rst(rst),
         .IN(IN),
         .KEY(KEY),
-        .enable(enable),      // Connected to drive validity
+        .valid(valid),      // Connected to drive validity
         .fsm_en(fsm_en),
         .OUT(OUT),
         .valid_out(valid_out) // Connected to monitor validity

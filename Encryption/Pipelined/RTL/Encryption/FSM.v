@@ -2,6 +2,7 @@ module FSM(
     input            clk,
     input            rst,
     input            fsm_en,
+    input            symbol_tick,
     output reg       key_gene_en,
     output reg [3:0] Round_Count
 );
@@ -16,11 +17,11 @@ hold    = 2'b10;
 reg [1:0] current_state, next_state;
 
 
-always @(posedge clk ) 
+always @(posedge clk) 
 begin
-    if(!rst)
+    if(symbol_tick && !rst)
         current_state <= idle;
-    else
+    else if (symbol_tick)
         current_state <= next_state;
 end
 
@@ -28,16 +29,16 @@ end
 //////////////////////////////
 //   OUTPUT + COUNTER LOGIC
 //////////////////////////////
-always @(posedge clk ) 
+always @(posedge clk) 
 begin
-    if(!rst) 
+    if(symbol_tick && !rst) 
     begin
         counter_value <= 4'd0;
         Round_Count   <= 4'd0;
         key_gene_en   <= 1'b0;
     end 
     
-    else 
+    else if (symbol_tick)
     begin
         case(next_state)
             idle: 

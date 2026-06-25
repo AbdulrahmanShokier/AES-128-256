@@ -29,6 +29,7 @@ wire             output_data_select;
 wire             counter_clear;
 wire             counter_enable;
 wire [7:0]       counter;
+reg              start_parity;
 
 //========================= DUT: Encoder Core ======================
 encoder_core #(
@@ -59,6 +60,7 @@ encoder_fsm #(
     .start_encode      (start_encode),
     .data_valid        (data_valid),
     .counter           (counter),
+    .start_parity      (start_parity),
     .current_state     (current_state),
     .lfsr_clear        (lfsr_clear),
     .lfsr_enable       (lfsr_enable),
@@ -146,11 +148,12 @@ initial begin
     data_in      = 0;
     start_encode = 0;
     data_valid   = 0;
+    start_parity = 0;
 
     // Reset
-    repeat(5) @(posedge clk); #1;
+    repeat(5) @(posedge clk);  
     rst = 1;
-    repeat(2) @(posedge clk); #1;
+    repeat(2) @(posedge clk);  
 
     $display("==============================================");
     $display("  Full RS(208,192) Encoder Testbench");
@@ -162,15 +165,15 @@ initial begin
     //--------------------------------------------------
     $display(">>> Starting encoder...");
     start_encode = 1;
-    @(posedge clk); #1;
+    @(posedge clk);   
     start_encode = 0;
 
     // Wait for INIT state
-    @(posedge clk); #1;
+    @(posedge clk);   
     $display("State: %s", state_name);
 
     // Wait for OUTPUT_DATA state
-    @(posedge clk); #1;
+    @(posedge clk);   
     $display("State: %s", state_name);
 
     //--------------------------------------------------
@@ -186,7 +189,7 @@ initial begin
             data_in = 8'd0;
 
         data_valid = 1;
-        @(posedge clk); #1;
+        @(posedge clk);   
 
         // Print first few cycles
         if (i < 3) begin
@@ -209,7 +212,7 @@ initial begin
 
             stall_cycles_seen = 0;
             repeat (4) begin
-                @(posedge clk); #1;
+                @(posedge clk);   
                 stall_cycles_seen = stall_cycles_seen + 1;
                 $display("    stall cycle %0d: counter=%3d (should be unchanged), state=%s, lfsr_enable=%b, counter_enable=%b",
                     stall_cycles_seen, counter, state_name, lfsr_enable, counter_enable);
@@ -236,9 +239,15 @@ initial begin
     data_valid = 0;
     data_in    = 0;
 
+
     $display("  ... (data feeding complete)");
     $display("  Counter after data phase: %0d", counter);
     $display("  State: %s", state_name);
+
+    repeat (8) @(posedge clk); // after the data finishing tio check if the parity feeding
+                               // out will be stalled for 8+1 clock cycles or not
+                               // and the extra cycle is for state transition
+    start_parity = 1;    
 
     //--------------------------------------------------
     // Print LFSR state before parity output
@@ -258,11 +267,11 @@ initial begin
 
     // Wait for all parity bytes + encoding_done
     while (!encoding_done) begin
-        @(posedge clk); #1;
+        @(posedge clk);   
     end
 
     // Wait one more cycle for last capture
-    @(posedge clk); #1;
+    @(posedge clk);   
 
     //--------------------------------------------------
     // Print and verify captured data
