@@ -1,34 +1,28 @@
-module dvb_top #(
-    parameter BLOCK_LENGTH = 128,   // AES block size
-    parameter RS_M         = 8,     // RS symbol width (bits)
-    parameter RS_K         = 192,   // RS data symbols
-    parameter RS_N         = 208,   // RS codeword symbols
-    parameter RS_T         = 8      // RS error-correcting capability
+module dvb_data_top #(
+    parameter BLOCK_LENGTH = 128,
+    parameter RS_M         = 8,
+    parameter RS_K         = 192,
+    parameter RS_N         = 208,
+    parameter RS_T         = 8
 )
 (
-    input  wire                       clk_sample,   // fast clock; modulator's native rate (4x symbol rate)
+    input  wire                       clk_sample,
     input  wire                       rst,
 
-    // AES inputs - plaintext and key are expected to be held stable by
-    // whatever feeds this design (e.g. testbench / upstream source FIFO)
     input  wire [BLOCK_LENGTH-1:0]    plaintext_in,
     input  wire [BLOCK_LENGTH-1:0]    aes_key,
-    input  wire                       aes_fsm_en,   // one-time key-schedule trigger (testbench-driven per your plan)
+    input  wire                       aes_fsm_en,
 
-    // Modulator output
+    input  wire                       data_en,
+
     output wire signed [15:0]         I_out,
     output wire signed [15:0]         Q_out,
 
-    // Debug/monitoring
     output wire [3:0]                 period_count_o,
-    output wire [2:0]                 rs_current_state_o
+    output wire [2:0]                 rs_current_state_o,
+    output wire [4:0]                 cyc_o
 );
 
-    // ===================== Symbol-rate tick generator =====================
-    // clk_sample runs 4x faster than the "real" symbol cadence everything
-    // else (FSM, AES, RS, buffers) was designed around. symbol_tick pulses
-    // once every 4 clk_sample cycles and gates every other module's clocked
-    // logic so they effectively advance once per "real" cycle.
     reg [1:0] symbol_cnt;
 
     always @(posedge clk_sample) begin
@@ -40,7 +34,6 @@ module dvb_top #(
 
     wire symbol_tick = (symbol_cnt == 2'd0);
 
-    // ===================== Master FSM =====================
     wire aes_valid_w;
     wire aes_rs_load_w;
     wire start_encode_w;
@@ -49,10 +42,12 @@ module dvb_top #(
     wire rs_mod_wr_en_w;
     wire ready_for_data_w;
     wire [4:0] cyc;
+    assign cyc_o = cyc;
 
-    dvb_master_fsm fsm_inst (
+    dvb_data_master_fsm fsm_inst (
         .clk_sample      (clk_sample),
         .rst             (rst),
+        .data_en         (data_en),
         .symbol_tick     (symbol_tick),
         .ready_for_data  (ready_for_data_w),
         .aes_valid       (aes_valid_w),
@@ -65,10 +60,8 @@ module dvb_top #(
         .period_count_o  (period_count_o)
     );
 
-    // ===================== AES =====================
     wire [BLOCK_LENGTH-1:0] aes_out_w;
-    wire                    aes_valid_out_w;   // AES's own pipeline-valid (en_pipe[10]), NOT used for timing here -
-                                                 // dvb_master_fsm's open-loop cyc==11 already assumes this lines up.
+    wire                    aes_valid_out_w;
 
     AES_enc #(.BLOCK_LENGTH(BLOCK_LENGTH)) aes_inst (
         .clk         (clk_sample),
@@ -82,7 +75,6 @@ module dvb_top #(
         .valid_out   (aes_valid_out_w)
     );
 
-    // ===================== AES -> RS byte serializer =====================
     wire [7:0] aes_rs_byte_w;
 
     aes_rs_reg #(
@@ -99,9 +91,8 @@ module dvb_top #(
         .data_out    (aes_rs_byte_w)
     );
 
-    // ===================== RS encoder =====================
     wire [7:0] rs_data_out_w;
-    wire       rs_data_out_valid_w;   // exposed but not used for rs_mod_reg's wr_en per your decision
+    wire       rs_data_out_valid_w;
     wire       rs_encoding_done_w;
 
     encoder_top #(
@@ -121,9 +112,8 @@ module dvb_top #(
         .current_state   (rs_current_state_o)
     );
 
-    // ===================== RS -> modulator double buffer =====================
     wire [3:0] rs_mod_nibble_w;
-    wire       rs_mod_swap_w;   // exposed, currently unused by the master FSM per your decision
+    wire       rs_mod_swap_w;
 
     rs_mod_reg #(
         .IN_WIDTH     (8),
@@ -139,12 +129,8 @@ module dvb_top #(
         .data_in     (rs_data_out_w),
         .data_out    (rs_mod_nibble_w),
         .cyc         (cyc)
-//        .swap        (rs_mod_swap_w)
     );
 
-    // ===================== Modulator =====================
-    // Runs on clk_sample directly (its native rate, NOT gated by symbol_tick -
-    // the modulator handles its own internal 4x upsampling on its own).
     top_16psk_baseband #(
         .DATA_WIDTH    (16),
         .FRAC_WIDTH    (14),

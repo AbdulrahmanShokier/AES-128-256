@@ -19,7 +19,7 @@ reg [1:0] current_state, next_state;
 
 always @(posedge clk) 
 begin
-    if(symbol_tick && !rst)
+    if(!rst)
         current_state <= idle;
     else if (symbol_tick)
         current_state <= next_state;
@@ -31,7 +31,7 @@ end
 //////////////////////////////
 always @(posedge clk) 
 begin
-    if(symbol_tick && !rst) 
+    if(!rst) 
     begin
         counter_value <= 4'd0;
         Round_Count   <= 4'd0;

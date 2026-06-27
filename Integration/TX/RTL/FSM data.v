@@ -1,8 +1,9 @@
-module dvb_master_fsm (
+module dvb_data_master_fsm (
     input  wire        clk_sample,
     input  wire        rst,
     input  wire        symbol_tick,      // one real "cycle" every 4 clk_sample ticks
 
+    input  wire         data_en,         // 1 = preamble/control has handed off, start/continue data FSM
     input  wire         ready_for_data,
 
     output reg           aes_valid,
@@ -19,19 +20,23 @@ reg [3:0] period;
 
 wire in_rs_window;
 wire is_last_period;
+wire hold; // combined "don't advance / stay parked" condition
 
-assign in_rs_window  = (cyc >= 5'd12) && (cyc <= 5'd27);
+assign in_rs_window   = (cyc >= 5'd12) && (cyc <= 5'd27);
+
 assign is_last_period = (period == 4'd13);
 
+assign hold            = !rst || !data_en;
+
 always @(posedge clk_sample) begin
-    if (symbol_tick && !rst)
+    if (hold)
         cyc <= 5'd0;
     else if (symbol_tick)
         cyc <= cyc + 1'b1;
 end
 
 always @(posedge clk_sample) begin
-    if (symbol_tick && !rst)
+    if (hold)
         period <= 4'd1;
     else if (symbol_tick && cyc == 5'd31) begin
         if (period == 4'd13)
@@ -42,7 +47,7 @@ always @(posedge clk_sample) begin
 end
 
 always @(posedge clk_sample) begin
-    if (symbol_tick && !rst) begin
+    if (hold) begin
         aes_valid     <= 1'b0;
         aes_rs_load   <= 1'b0;
         start_encode  <= 1'b0;

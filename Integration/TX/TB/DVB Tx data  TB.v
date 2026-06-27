@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module dvb_top_tb;
+module dvb_data_top_tb;
 
     // ===================== Parameters =====================
     localparam BLOCK_LENGTH = 128;
@@ -17,9 +17,10 @@ module dvb_top_tb;
     wire signed [15:0]           Q_out;
     wire [3:0]                   period_count_o;
     wire [2:0]                   rs_current_state_o;
+    reg                          data_en;
 
     // ===================== DUT instantiation =====================
-    dvb_top #(
+    dvb_data_top #(
         .BLOCK_LENGTH (BLOCK_LENGTH),
         .RS_M (8), .RS_K (192), .RS_N (208), .RS_T (8)
     ) dut (
@@ -27,6 +28,7 @@ module dvb_top_tb;
         .rst                 (rst),
         .plaintext_in        (plaintext_in),
         .aes_key             (aes_key),
+        .data_en             (data_en),
         .aes_fsm_en          (aes_fsm_en),
         .I_out               (I_out),
         .Q_out               (Q_out),
@@ -53,6 +55,7 @@ module dvb_top_tb;
         plaintext_in = 128'h00112233445566778899AABBCCDDEEFF;
         aes_key      = 128'h000102030405060708090A0B0C0D0E0F;
         aes_fsm_en   = 1'b0;
+        data_en      = 1'b1;
 
         // Hold reset for a few clk_sample cycles
         repeat (8) @(posedge clk_sample);
@@ -99,7 +102,7 @@ module dvb_top_tb;
     // Dump waveforms for GTKWave / similar viewers
     initial begin
         $dumpfile("dvb_top_tb.vcd");
-        $dumpvars(0, dvb_top_tb);
+        $dumpvars(0, dvb_data_top_tb);
     end
 
 endmodule

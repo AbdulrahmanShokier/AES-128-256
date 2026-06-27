@@ -22,10 +22,10 @@ module AES_enc #(parameter BLOCK_LENGTH = 128)
     reg [10:0] en_pipe; // Pipeline to track data valid through rounds
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst) begin
+        if (!rst) begin
             en_pipe <= 11'b0;
         end 
-        else if (symbol_tick && valid) begin
+        else if (valid) begin
              // Shift valid left: LSB is input (Round 0), MSB is output (Round 10)
             en_pipe <= {en_pipe[9:0], valid};
         end
@@ -33,57 +33,57 @@ module AES_enc #(parameter BLOCK_LENGTH = 128)
 
     // ── Individual FF registers ──
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k0 <= 128'b0;
+        if (!rst)                                          k0 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd1)      k0 <= KEY;
     end
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k1 <= 128'b0;
+        if (!rst)                                          k1 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd2)      k1 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k2 <= 128'b0;
+        if (!rst)                                          k2 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd3)      k2 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k3 <= 128'b0;
+        if (!rst)                                          k3 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd4)      k3 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k4 <= 128'b0;
+        if (!rst)                                          k4 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd5)      k4 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k5 <= 128'b0;
+        if (!rst)                                          k5 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd6)      k5 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k6 <= 128'b0;
+        if (!rst)                                          k6 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd7)      k6 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k7 <= 128'b0;
+        if (!rst)                                          k7 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd8)      k7 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k8 <= 128'b0;
+        if (!rst)                                          k8 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd9)      k8 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k9 <= 128'b0;
+        if (!rst)                                          k9 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd10)     k9 <= current_key;
     end
 
     always @(posedge clk) begin
-        if (symbol_tick && !rst)                                          k10 <= 128'b0;
+        if (!rst)                                          k10 <= 128'b0;
         else if (symbol_tick && round_counter == 4'd11)     k10 <= current_key;
     end
 
