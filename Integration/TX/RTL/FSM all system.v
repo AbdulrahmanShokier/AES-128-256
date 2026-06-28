@@ -69,7 +69,7 @@ module DVB_all_tx_fsm #(
                 next_state = (control_counter == control_width - 1) ? Data : Control;
 
             Data:
-                next_state = (aes_word_counter == aes_word_count - 1) ? Crc : Data;
+                next_state = (aes_word_counter == aes_word_count ) ? Crc : Data;
 
             Crc:
                 next_state = (crc_counter == crc_width - 1) ? IDLE : Crc;
@@ -130,7 +130,7 @@ module DVB_all_tx_fsm #(
         end
         else if (symbol_tick) begin
             if (period13_end_pulse) begin
-                delay_cnt <= 4'd14;
+                delay_cnt <= 4'd15;
                 armed     <= 1'b1;
             end
             else if (armed) begin

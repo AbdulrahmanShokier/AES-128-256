@@ -10,6 +10,7 @@ module rs_mod_reg #(
     input  wire                   clk,
     input  wire                   rst,
     input  wire                   symbol_tick,
+    input  wire                   data_en,
 
     input  wire                   wr_en,       // outer FSM: RS has a byte ready
     input  wire [IN_WIDTH-1:0]    data_in,
@@ -30,7 +31,7 @@ reg [NIB_COUNT_W-1:0]  nib_cnt;
 
 // ---- Fill side: byte in, gated by wr_en (RS can stall) ----
 always @(posedge clk) begin
-    if (symbol_tick && !rst) begin
+    if (symbol_tick && !rst || !data_en ) begin
         buf_A    <= {REG_WIDTH{1'b0}};
 //        buf_B    <= {REG_WIDTH{1'b0}};
         byte_cnt <= {BYTE_COUNT_W{1'b0}};

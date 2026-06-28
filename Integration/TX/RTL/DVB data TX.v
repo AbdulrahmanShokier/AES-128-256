@@ -125,6 +125,7 @@ module dvb_data_top #(
         .clk         (clk_sample),
         .rst         (rst),
         .symbol_tick (symbol_tick),
+        .data_en     (data_en),
         .wr_en       (rs_mod_wr_en_w),
         .data_in     (rs_data_out_w),
         .data_out    (rs_mod_nibble_w),
