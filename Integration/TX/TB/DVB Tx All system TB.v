@@ -33,7 +33,7 @@ module tb_DVB_tx_top;
     localparam RS_N         = 208;
 
     localparam AES_WORD_COUNT = 4; // scaled down from 350 for fast sim
-    localparam CRC_WIDTH      = 4; // scaled down from 32 for fast sim
+    localparam CRC_WIDTH      = 32; // scaled down from 32 for fast sim
 
     // One RS(208,192) codeword spans 13 periods * 32 symbol_ticks = 416
     // symbol_ticks (12 periods load/encrypt one 128-bit AES word each,

@@ -85,7 +85,7 @@ always @(posedge clk) begin
     end
     else if (symbol_tick) begin
         data_out <= buf_A[nib_cnt*OUT_WIDTH +: OUT_WIDTH];   // always latch the CURRENT nibble
-        if (cyc == 5'd13)
+        if (cyc == 5'd14)
             nib_cnt <= {NIB_COUNT_W{1'b0}};                   // but then resync the counter
         else
             nib_cnt <= nib_cnt + 1'b1;

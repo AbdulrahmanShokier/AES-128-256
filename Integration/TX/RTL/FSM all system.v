@@ -1,10 +1,10 @@
 module DVB_all_tx_fsm #(
-    parameter peramble_width           = 255,
+    parameter preamble_width           = 255,
     parameter control_width            = 256,
     parameter aes_word_count           = 350,
     parameter crc_width                = 32,
     parameter BLOCK_LENGTH             = 128,  // AES block size
-    parameter peramble_counter_width   = 8,
+    parameter preamble_counter_width   = 8,
     parameter control_counter_width    = 8,
     parameter aes_word_counter_width   = 9,
     parameter crc_counter_width        = 5
@@ -21,7 +21,7 @@ module DVB_all_tx_fsm #(
     output reg                                   data_en,
     output reg                                   crc_en,
     output reg                                   aes_fsm_en,
-    output reg [peramble_counter_width - 1 : 0]  preamble_counter,
+    output reg [preamble_counter_width - 1 : 0]  preamble_counter,
     output reg [control_counter_width - 1 : 0]   control_counter,
     output reg [aes_word_counter_width - 1 : 0]  aes_word_counter,
     output reg [crc_counter_width - 1 : 0]       crc_counter
@@ -63,7 +63,7 @@ module DVB_all_tx_fsm #(
                 next_state = sof ? Preamble : IDLE;
 
             Preamble:
-                next_state = (preamble_counter == peramble_width - 1) ? Control : Preamble;
+                next_state = (preamble_counter == preamble_width - 1) ? Control : Preamble;
 
             Control:
                 next_state = (control_counter == control_width - 1) ? Data : Control;
@@ -130,7 +130,7 @@ module DVB_all_tx_fsm #(
         end
         else if (symbol_tick) begin
             if (period13_end_pulse) begin
-                delay_cnt <= 4'd13;
+                delay_cnt <= 4'd14;
                 armed     <= 1'b1;
             end
             else if (armed) begin

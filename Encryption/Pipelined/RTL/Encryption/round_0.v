@@ -19,7 +19,7 @@ key_add xor_with_k0 (.IN(IN), .KEY(KEY), .OUT(xor_out)); // first step
 always@(posedge clk)
 begin
 
-        if(symbol_tick && !rst)
+        if(!rst)
         begin
             OUT <= 128'b0;
         end

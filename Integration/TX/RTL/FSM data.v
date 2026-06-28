@@ -22,7 +22,7 @@ wire in_rs_window;
 wire is_last_period;
 wire hold; // combined "don't advance / stay parked" condition
 
-assign in_rs_window   = (cyc >= 5'd12) && (cyc <= 5'd27);
+assign in_rs_window   = (cyc >= 5'd13) && (cyc <= 5'd28);
 
 assign is_last_period = (period == 4'd13);
 
@@ -63,10 +63,10 @@ always @(posedge clk_sample) begin
         // modules need, since they are gated by the same symbol_tick and only
         // ever sample on that same edge.
         aes_valid     <= (cyc == 5'd0) && !is_last_period;
-        aes_rs_load   <= (cyc == 5'd11) && !is_last_period;
+        aes_rs_load   <= (cyc == 5'd12) && !is_last_period;
         start_encode  <= (cyc == 5'd9) && (period == 4'd1) && ready_for_data;
         rs_data_valid <= in_rs_window && !is_last_period;
-        start_parity  <= (cyc == 5'd11) && (period == 4'd13);
+        start_parity  <= (cyc == 5'd12) && (period == 4'd13);
         rs_mod_wr_en  <= in_rs_window;
     end
 end

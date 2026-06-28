@@ -96,10 +96,10 @@ module DVB_tx_top #(
     // Transmission FSM
     //----------------------------------------------------------------------
     DVB_all_tx_fsm #(
-        .peramble_width(PREAMBLE_WIDTH),
+        .preamble_width(PREAMBLE_WIDTH),
         .control_width(CONTROL_WIDTH),
         .BLOCK_LENGTH(BLOCK_LENGTH),
-        .peramble_counter_width(PREAMBLE_COUNTER_WIDTH),
+        .preamble_counter_width(PREAMBLE_COUNTER_WIDTH),
         .control_counter_width(CONTROL_COUNTER_WIDTH),
         .aes_word_count(aes_word_count),
         .crc_width(crc_width)
@@ -125,9 +125,9 @@ module DVB_tx_top #(
     // Preamble / Control Pattern Generator
     //----------------------------------------------------------------------
     preamb_cont_reg #(
-        .peramble_width(PREAMBLE_WIDTH),
+        .preamble_width(PREAMBLE_WIDTH),
         .control_width(CONTROL_WIDTH),
-        .peramble_counter_width(PREAMBLE_COUNTER_WIDTH),
+        .preamble_counter_width(PREAMBLE_COUNTER_WIDTH),
         .control_counter_width(CONTROL_COUNTER_WIDTH)
     ) u_pre_ctrl (
 
