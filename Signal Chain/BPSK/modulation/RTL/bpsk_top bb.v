@@ -79,26 +79,26 @@ wire signed [DATA_WIDTH-1:0] fir_out;
 // Symbol-rate Input Sampling
 ////////////////////////////////////////////////////////////
 
-reg bit_in_reg;
-reg bit_valid_reg;
+// reg bit_in_reg;
+// reg bit_valid_reg;
 
-always @(posedge clk_sample)
-begin
-    if (!rst)
-    begin
-        bit_in_reg    <= 1'b0;
-        bit_valid_reg <= 1'b0;
-    end
-    else if (symbol_tick)
-    begin
-        bit_in_reg    <= bit_in;
-        bit_valid_reg <= bit_valid;
-    end
-    else
-    begin
-        bit_valid_reg <= 1'b0;
-    end
-end
+// always @(posedge clk_sample)
+// begin
+//     if (!rst)
+//     begin
+//         bit_in_reg    <= 1'b0;
+//         bit_valid_reg <= 1'b0;
+//     end
+//     else if (symbol_tick)
+//     begin
+//         bit_in_reg    <= bit_in;
+//         bit_valid_reg <= bit_valid;
+//     end
+//     else
+//     begin
+//         bit_valid_reg <= 1'b0;
+//     end
+// end
 
 ////////////////////////////////////////////////////////////
 // Mapper
@@ -110,8 +110,8 @@ bpsk_mapper #(
 ) mapper_inst (
     .clk_symbol (clk_sample),
     .rst        (rst),
-    .valid_in   (bit_valid_reg),
-    .data_in    (bit_in_reg),
+    .valid_in   (bit_valid & symbol_tick),
+    .data_in    (bit_in),
     .data_out   (mapper_out),
     .valid_out  (mapper_valid)
 );

@@ -20,7 +20,11 @@ module DVB_tx_top #(
     // crc steps) - exposed here so testbenches can scale these down for
     // fast simulation instead of always paying the full 350/32 length.
     parameter aes_word_count           = 350,
-    parameter crc_width                = 32
+    parameter crc_width                = 32,
+
+    // Dummy phase (BPSK filter priming/flush) length, in symbol_ticks
+    parameter dummy_width              = 40,
+    parameter dummy_counter_width      = 6     // must hold up to dummy_width (40 -> 6 bits)
 )
 (
     input  wire clk_sample,
@@ -46,11 +50,13 @@ module DVB_tx_top #(
     //----------------------------------------------------------------------
     // FSM outputs
     //----------------------------------------------------------------------
+    wire dummy_en;
     wire preamble_en;
     wire control_en;
     wire data_en;
     wire crc_en;
     wire aes_fsm_en;
+    wire [dummy_counter_width-1:0]    dummy_counter;
     wire [PREAMBLE_COUNTER_WIDTH-1:0] preamble_counter;
     wire [CONTROL_COUNTER_WIDTH-1:0]  control_counter;
 
@@ -76,7 +82,7 @@ module DVB_tx_top #(
     //----------------------------------------------------------------------
     // BPSK baseband outputs
     //----------------------------------------------------------------------
-    wire   preamble_valid;
+    // wire   preamble_valid;
 
 
     reg [1:0] symbol_cnt;
@@ -102,7 +108,9 @@ module DVB_tx_top #(
         .preamble_counter_width(PREAMBLE_COUNTER_WIDTH),
         .control_counter_width(CONTROL_COUNTER_WIDTH),
         .aes_word_count(aes_word_count),
-        .crc_width(crc_width)
+        .crc_width(crc_width),
+        .dummy_width(dummy_width),
+        .dummy_counter_width(dummy_counter_width)
     ) u_fsm (
         .sof(sof),
         .clk_sample(clk_sample),
@@ -110,11 +118,13 @@ module DVB_tx_top #(
         .period_count_o(period_count_w),
         .cyc(cyc_w),
 
+        .dummy_en(dummy_en),
         .preamble_en(preamble_en),
         .control_en(control_en),
         .data_en(data_en),
         .crc_en(crc_en),              // Reserved for future use
         .aes_fsm_en(aes_fsm_en),
+        .dummy_counter(dummy_counter),
         .preamble_counter(preamble_counter),
         .control_counter(control_counter),
         .aes_word_counter(aes_word_counter),
@@ -145,6 +155,20 @@ module DVB_tx_top #(
     );
 
     //----------------------------------------------------------------------
+    // Dummy phase bit pattern (BPSK filter priming/flush)
+    //----------------------------------------------------------------------
+    // Alternating 0/1 pattern: dummy_counter increments once per
+    // symbol_tick while in the Dummy state, so its LSB toggles every
+    // symbol_tick -> 0,1,0,1,... for the full dummy_width-bit run.
+    wire dummy_bit = dummy_counter[0];
+
+    // Feed the dummy pattern into the BPSK modulator input during the
+    // Dummy phase, otherwise pass through the normal preamble/control bit.
+    wire bpsk_bit_in = dummy_en ? dummy_bit : bpsk_bit_pre_ctrl;
+
+
+    assign bpsk_en = preamble_en || dummy_en;
+    //----------------------------------------------------------------------
     // BPSK Transmitter for preamble/control
     //----------------------------------------------------------------------
     bpsk_tx_bb_top u_bpsk (
@@ -153,10 +177,10 @@ module DVB_tx_top #(
         .clk_sample(clk_sample),
 
         .bit_valid(symbol_tick),
-        .bit_in(bpsk_bit_pre_ctrl),
+        .bit_in(bpsk_bit_in),
 
         .tx_out(preamble_bb),
-        .tx_valid(preamble_valid)
+        .tx_valid(bpsk_en)
     );
 
     //----------------------------------------------------------------------

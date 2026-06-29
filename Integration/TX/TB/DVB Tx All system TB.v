@@ -88,6 +88,35 @@ module tb_DVB_tx_top;
     initial clk_sample = 0;
     always #5 clk_sample = ~clk_sample;
 
+    // ------------------------------------------------------------------
+    // CSV logging (Excel-readable) for preamble_bb, I_out, Q_out.
+    // One row per symbol_tick, which is the actual sample rate of these
+    // signals (they only update once every 4 clk_sample cycles).
+    // sample_idx is shared across both files so row N in preamble_bb.csv
+    // and row N in iq_out.csv refer to the exact same sample/time.
+    // ------------------------------------------------------------------
+    integer preamble_csv;
+    integer iq_csv;
+    integer sample_idx;
+
+    initial begin
+        sample_idx   = 0;
+        preamble_csv = $fopen("preamble_bb.csv", "w");
+        iq_csv       = $fopen("iq_out.csv", "w");
+        $fwrite(preamble_csv, "sample_idx,time_ns,preamble_bb\n");
+        $fwrite(iq_csv,       "sample_idx,time_ns,I_out,Q_out\n");
+    end
+
+    always @(posedge clk_sample) begin
+        if (rst) begin
+            $fwrite(preamble_csv, "%0d,%0t,%0d\n",
+                    sample_idx, $time, $signed(preamble_bb));
+            $fwrite(iq_csv, "%0d,%0t,%0d,%0d\n",
+                    sample_idx, $time, $signed(I_out), $signed(Q_out));
+            sample_idx <= sample_idx + 1;
+        end
+    end
+
     initial begin
         $dumpfile("tb_top.vcd");
         $dumpvars(0, tb_DVB_tx_top);
@@ -113,6 +142,8 @@ module tb_DVB_tx_top;
                       + CRC_WIDTH + 20)) @(posedge clk_sample);
 
         $display("TB done at %0t", $time);
+        $fclose(preamble_csv);
+        $fclose(iq_csv);
         $finish;
     end
 

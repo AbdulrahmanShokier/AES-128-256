@@ -3,11 +3,13 @@ module DVB_all_tx_fsm #(
     parameter control_width            = 256,
     parameter aes_word_count           = 350,
     parameter crc_width                = 32,
+    parameter dummy_width              = 40,   // BPSK filter priming/flush length
     parameter BLOCK_LENGTH             = 128,  // AES block size
     parameter preamble_counter_width   = 8,
     parameter control_counter_width    = 8,
     parameter aes_word_counter_width   = 9,
-    parameter crc_counter_width        = 5
+    parameter crc_counter_width        = 5,
+    parameter dummy_counter_width      = 6     // must hold up to dummy_width (40 -> 6 bits)
 )
 (
     input  wire                                  sof,          // start of frame
@@ -16,11 +18,13 @@ module DVB_all_tx_fsm #(
     input  wire [3 : 0]                          period_count_o,
     input  wire [4 : 0]                          cyc,
 
+    output reg                                   dummy_en,
     output reg                                   preamble_en,
     output reg                                   control_en,
     output reg                                   data_en,
     output reg                                   crc_en,
     output reg                                   aes_fsm_en,
+    output reg [dummy_counter_width - 1 : 0]     dummy_counter,
     output reg [preamble_counter_width - 1 : 0]  preamble_counter,
     output reg [control_counter_width - 1 : 0]   control_counter,
     output reg [aes_word_counter_width - 1 : 0]  aes_word_counter,
@@ -34,7 +38,8 @@ module DVB_all_tx_fsm #(
         Preamble  = 3'b001,
         Control   = 3'b010,
         Data      = 3'b011,
-        Crc       = 3'b100;
+        Crc       = 3'b100,
+        Dummy     = 3'b101;
 
     reg [1:0] symbol_cnt;
 
@@ -60,7 +65,10 @@ module DVB_all_tx_fsm #(
         next_state = current_state;
         case (current_state)
             IDLE:
-                next_state = sof ? Preamble : IDLE;
+                next_state = sof ? Dummy : IDLE;
+
+            Dummy:
+                next_state = (dummy_counter == dummy_width - 1) ? Preamble : Dummy;
 
             Preamble:
                 next_state = (preamble_counter == preamble_width - 1) ? Control : Preamble;
@@ -77,6 +85,17 @@ module DVB_all_tx_fsm #(
             default:
                 next_state = IDLE;
         endcase
+    end
+
+    always @(posedge clk_sample) begin
+        if (!rst)
+            dummy_counter <= 0;
+        else if (symbol_tick) begin
+            if (current_state == Dummy)
+                dummy_counter <= dummy_counter + 1'b1;
+            else
+                dummy_counter <= 0;
+        end
     end
 
     always @(posedge clk_sample) begin
@@ -166,6 +185,7 @@ module DVB_all_tx_fsm #(
 
     always @(posedge clk_sample) begin
         if (!rst) begin
+            dummy_en    <= 1'b0;
             preamble_en <= 1'b0;
             control_en  <= 1'b0;
             data_en     <= 1'b0;
@@ -173,11 +193,12 @@ module DVB_all_tx_fsm #(
             aes_fsm_en  <= 1'b0;
         end
         else if (symbol_tick) begin
+            dummy_en    <= (next_state == Dummy);
             preamble_en <= (next_state == Preamble);
             control_en  <= (next_state == Control);
-            data_en     <= (next_state == Data);
+            data_en     <= (next_state == Data) || (current_state == Control) && (control_counter >= 9'd239);
             crc_en      <= (next_state == Crc);
-            aes_fsm_en  <= (current_state == Control) && (control_counter == 9'd254);
+            aes_fsm_en  <= (current_state == Control) && (control_counter == 9'd237);
         end
     end
 

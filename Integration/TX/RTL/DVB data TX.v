@@ -143,7 +143,7 @@ module dvb_data_top #(
     ) modulator_inst (
         .clk_sample (clk_sample),
         .rst        (rst),
-        .valid_in   (1'b1),
+        .valid_in   (data_en),
         .data_in    (rs_mod_nibble_w),
         .I_out      (I_out),
         .Q_out      (Q_out)

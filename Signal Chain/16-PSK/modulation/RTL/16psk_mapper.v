@@ -65,6 +65,12 @@ begin
             4'b0001 : begin I_out <= cos22;             Q_out <= NEG_sin22;     end
             endcase
     end
+    
+    else 
+        begin
+            I_out <= {DATA_WIDTH{1'b0}};
+            Q_out <= {DATA_WIDTH{1'b0}};
+        end
     end
 end
 
