@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module bpsk_tx_top_tb;
+module bpsk_tx_top_pb_tb;
 
 ////////////////////////////////////////////////////////////
 // Parameters

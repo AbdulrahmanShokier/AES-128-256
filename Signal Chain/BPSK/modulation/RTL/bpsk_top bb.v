@@ -1,9 +1,8 @@
-module bpsk_tx_top #(
+module bpsk_tx_bb_top #(
     parameter DATA_WIDTH  = 16,
     parameter FRAC_WIDTH  = 14,
     parameter COEFF_WIDTH = 16,
     parameter NUM_TAPS    = 33,
-    parameter COS_WIDTH   = 16,
     parameter UPSAMPLE    = 4
 )
 (
@@ -18,7 +17,7 @@ module bpsk_tx_top #(
 );
 
 ////////////////////////////////////////////////////////////
-// Valid Signal Pipeline Flow:
+// Baseband Signal Pipeline Flow:
 //
 //  bit_valid ──► symbol_tick gate ──► bit_valid_reg
 //                                         │
@@ -34,18 +33,17 @@ module bpsk_tx_top #(
 //                                                   └────────────┘         │
 //                                                                    ┌─────▼─────┐
 //                                                                    │    FIR    │
-//                                                                    │ valid_in  │──► fir_valid
+//                                                                    │ valid_in  │──► 
 //                                                                    └───────────┘        │
 //                                                                                    ┌────▼──────┐
-//  NCO (free-running, always valid) ──► nco_cos ─────────────────────►│ Multiplier  │
-//                                                                     │  valid_in   │──► tx_valid
-//                                                                     └─────────────┘
+//                                                                                    │  tx_out   │
+//                                                                                    │  tx_valid │
+//                                                                                    └───────────┘
 //
-//  Multiplier behavior:
-//    - FIR data: only latched when fir_valid = 1 (held otherwise)
-//    - NCO data: ALWAYS latched (free-running carrier)
-//    - Output:   only updated when pipeline valid = 1
-//    - Pipeline: 2-cycle latency
+//  Baseband output:
+//    - tx_out   = pulse-shaped BPSK baseband signal (FIR output)
+//    - tx_valid = FIR valid output
+//    - No carrier multiplication — direct baseband
 ////////////////////////////////////////////////////////////
 
 
@@ -76,34 +74,31 @@ wire signed [DATA_WIDTH-1:0] upsample_out;
 wire                         upsample_valid;
 
 wire signed [DATA_WIDTH-1:0] fir_out;
-wire                         fir_valid;
-
-wire signed [COS_WIDTH-1:0]  nco_cos;
 
 ////////////////////////////////////////////////////////////
 // Symbol-rate Input Sampling
 ////////////////////////////////////////////////////////////
 
-reg bit_in_reg;
-reg bit_valid_reg;
+// reg bit_in_reg;
+// reg bit_valid_reg;
 
-always @(posedge clk_sample)
-begin
-    if (!rst)
-    begin
-        bit_in_reg    <= 1'b0;
-        bit_valid_reg <= 1'b0;
-    end
-    else if (symbol_tick)
-    begin
-        bit_in_reg    <= bit_in;
-        bit_valid_reg <= bit_valid;
-    end
-    else
-    begin
-        bit_valid_reg <= 1'b0;
-    end
-end
+// always @(posedge clk_sample)
+// begin
+//     if (!rst)
+//     begin
+//         bit_in_reg    <= 1'b0;
+//         bit_valid_reg <= 1'b0;
+//     end
+//     else if (symbol_tick)
+//     begin
+//         bit_in_reg    <= bit_in;
+//         bit_valid_reg <= bit_valid;
+//     end
+//     else
+//     begin
+//         bit_valid_reg <= 1'b0;
+//     end
+// end
 
 ////////////////////////////////////////////////////////////
 // Mapper
@@ -115,8 +110,8 @@ bpsk_mapper #(
 ) mapper_inst (
     .clk_symbol (clk_sample),
     .rst        (rst),
-    .valid_in   (bit_valid_reg),
-    .data_in    (bit_in_reg),
+    .valid_in   (bit_valid & symbol_tick),
+    .data_in    (bit_in),
     .data_out   (mapper_out),
     .valid_out  (mapper_valid)
 );
@@ -138,7 +133,7 @@ bpsk_upsampler #(
 );
 
 ////////////////////////////////////////////////////////////
-// FIR Filter
+// FIR Filter (Pulse Shaping)
 ////////////////////////////////////////////////////////////
 
 bpsk_fir_filter #(
@@ -148,46 +143,16 @@ bpsk_fir_filter #(
 ) fir_inst (
     .clk_sample (clk_sample),
     .rst        (rst),
-    .valid_in   (upsample_valid),
     .data_in    (upsample_out),
-    .data_out   (fir_out),
-    .valid_out  (fir_valid)
+    .data_out   (fir_out)
 );
 
 ////////////////////////////////////////////////////////////
-// NCO — FREE RUNNING (no valid gating)
-// Produces carrier cosine on EVERY clock cycle
-// Always has a valid cos value ready for multiplier
+// Baseband Output — Direct FIR output
+// No NCO, no carrier multiplication
 ////////////////////////////////////////////////////////////
 
-bpsk_nco #(
-    .COS_WIDTH(COS_WIDTH)
-) nco_inst (
-    .rst        (rst),
-    .clk_sample (clk_sample),
-    .cos_value  (nco_cos)
-    // NO valid_in — runs every clock cycle ✅
-);
-
-////////////////////////////////////////////////////////////
-// Multiplier — Valid-aware
-// - FIR data:  latched ONLY when fir_valid = 1
-// - NCO data:  ALWAYS latched (carrier is free-running)
-// - Output:    updated ONLY when pipeline valid = 1
-// - Latency:   2 clock cycles
-////////////////////////////////////////////////////////////
-
-bpsk_multiplier #(
-    .DATA_WIDTH(DATA_WIDTH),
-    .FRACTION  (FRAC_WIDTH)
-) multiplier_inst (
-    .rst              (rst),
-    .clk_sample       (clk_sample),
-    .valid_in         (fir_valid),      // ← gated by FIR valid
-    .fir_data_in      (fir_out),        // ← only latched when valid
-    .nco_cos_in       (nco_cos),        // ← always latched
-    .signal_modulated (tx_out),         // ← updated only when valid
-    .valid_out        (tx_valid)        // ← 2-cycle delayed valid
-);
+assign tx_out   = fir_out;
+assign tx_valid = upsample_valid;
 
 endmodule

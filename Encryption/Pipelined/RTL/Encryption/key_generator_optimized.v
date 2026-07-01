@@ -16,6 +16,8 @@ module key_generator #(
     input  wire                      en,            // Enable signal from FSM
     input  wire [BLOCK_LENGTH-1:0]   key,           // Initial cipher key (K0)
     input  wire [3:0]                Round_Count,   // Current round (0-10)
+    input  wire                      symbol_tick,
+    
     output reg  [BLOCK_LENGTH-1:0]   current_key   // Current round key
 //    output reg                       key_valid      // Key valid flag
 );
@@ -70,12 +72,12 @@ assign next_key = {w4, w5, w6, w7};
 
 
 always @(posedge clk) begin
-    if (!rst) begin
+    if (symbol_tick && !rst) begin
         prev_key    <= 128'b0;
         current_key <= 128'b0;
         //key_valid   <= 1'b0;
     end
-    else if (en) begin
+    else if (en && symbol_tick) begin
         //key_valid <= 1'b1;
         if (Round_Count == 4'd0) 
         begin

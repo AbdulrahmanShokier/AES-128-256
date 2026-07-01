@@ -4,7 +4,9 @@ module rounds_1_to_9 #(parameter BLOCK_LENGTH = 128)
     input                         rst,  
     input      [BLOCK_LENGTH-1:0] IN,
     input      [BLOCK_LENGTH-1:0] KEY,
-//    input                         enable, //to turn on/off the round
+    input                         valid, //to stops encryption if its low
+    input                         symbol_tick,
+
     output reg [BLOCK_LENGTH-1:0] OUT
 );
 
@@ -29,22 +31,17 @@ key_add     xor_with_k1_to_9 (.IN(mix_out), .KEY(KEY), .OUT(xor_out));
 
 
 
-always@(posedge clk )
+always@(posedge clk)
 begin
 
-        if(!rst)
+        if(symbol_tick && !rst)
         begin
             OUT <= 128'b0;
         end
 
-        else
-        OUT <= xor_out; 
-        // begin
-        //     if(enable)
-        //     begin   
-           
-        //     end 
-        // end
+        else if(valid && symbol_tick)
+            OUT <= xor_out; 
+
 end
 
 

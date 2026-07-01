@@ -1,16 +1,18 @@
 module encoder_top
 #(
     parameter m = 8,
-    parameter k = 223,
-    parameter n = 255,
-    parameter t = 16
+    parameter k = 192,
+    parameter n = 208,
+    parameter t = 8
 )
 (
     input              clk,
     input              rst,
+    input              symbol_tick,
     input      [m-1:0] data_in,
     input              data_valid,
     input              start_encode,
+    input              start_parity,    
     
     output     [m-1:0] data_out,
     output             data_out_valid,
@@ -39,9 +41,11 @@ encoder_fsm #(
 ) fsm_inst (
     .clk                    (clk),
     .rst                    (rst),
+    .symbol_tick            (symbol_tick),
     .start_encode           (start_encode),
     .data_valid             (data_valid),
     .counter                (counter),
+    .start_parity           (start_parity),
     
     .current_state          (current_state),
     .lfsr_clear             (lfsr_clear),
@@ -62,6 +66,7 @@ encoder_core #(
 ) datapath_inst (
     .clk                    (clk),
     .rst                    (rst),
+    .symbol_tick            (symbol_tick),
     .data_in                (data_in),
     .lfsr_clear             (lfsr_clear),
     .lfsr_enable            (lfsr_enable),

@@ -11,7 +11,7 @@ module tb_AES_enc_single_in;
     reg          fsm_en;
 
     wire [127:0] OUT;
-
+    reg symbol_tick ;
     // -------------------------------------------------
     // Instance of DUT
     // -------------------------------------------------
@@ -20,9 +20,10 @@ module tb_AES_enc_single_in;
         .rst(rst),
         .IN(IN),
         .KEY(KEY),
-        .enable(enable),
+        .valid(valid),
         .fsm_en(fsm_en),
-        .OUT(OUT)
+        .OUT(OUT),
+        .symbol_tick(symbol_tick)
     );
 
     // -------------------------------------------------
@@ -60,7 +61,7 @@ module tb_AES_enc_single_in;
         // ---------------------------------------
         // 2) Apply IN + enable on same cycle
         // ---------------------------------------
-        @(posedge clk);
+         @(posedge clk); // make a huge differnce between the fsm_en and data in
         IN = 128'h00112233445566778899AABBCCDDEEFF;
         enable = 1;
 

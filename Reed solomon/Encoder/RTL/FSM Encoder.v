@@ -1,15 +1,17 @@
 module encoder_fsm
 #(
-    parameter k = 223,
-    parameter n = 255,
-    parameter t = 16
+    parameter k = 192,
+    parameter n = 208,
+    parameter t = 8
 )
 (
     input              clk,
     input              rst,
+    input              symbol_tick,
     input              start_encode,
     input              data_valid,
     input      [7:0]   counter,
+    input              start_parity,
     
     output reg [2:0]   current_state,
     output reg         lfsr_clear,
@@ -24,46 +26,50 @@ module encoder_fsm
 
 //========================= State Definitions ====================================
 localparam [2:0] IDLE          = 3'b000;
-localparam [2:0] INIT          = 3'b011;  // NEW: Clear state
+localparam [2:0] INIT          = 3'b011;
 localparam [2:0] OUTPUT_DATA   = 3'b001;
+localparam [2:0] WAIT_PARITY   = 3'b100;
 localparam [2:0] OUTPUT_PARITY = 3'b010;
 
 reg [2:0] next_state;
 
-//========================= State Register =======================================
-always @(posedge clk)
-begin
-    if (!rst)
+always @(posedge clk) begin
+    if (symbol_tick && !rst)
         current_state <= IDLE;
-    else
+    else if (symbol_tick)
         current_state <= next_state;
 end
 
-//========================= Next State Logic =====================================
 always @(*) begin
     next_state = current_state;
-    
+
     case (current_state)
         IDLE: begin
             if (start_encode)
-                next_state = INIT;       // Go to INIT first
+                next_state = INIT;
         end
-        
+
         INIT: begin
-            next_state = OUTPUT_DATA;    // One cycle to clear LFSR/counter
+            next_state = OUTPUT_DATA;
         end
-        
+
         OUTPUT_DATA: begin
-            // Only transition when data actually processed
-            if (counter == k-1 && data_valid)
-                next_state = OUTPUT_PARITY;
+            if (counter == k-1 && data_valid) begin
+                next_state = WAIT_PARITY;
+            end        
         end
-        
+
+        WAIT_PARITY: begin
+            if (start_parity)
+                next_state = OUTPUT_PARITY;
+            // else: hold here indefinitely
+        end
+
         OUTPUT_PARITY: begin
             if (counter == k + 2*t - 1)
                 next_state = IDLE;
         end
-        
+
         default: next_state = IDLE;
     endcase
 end
@@ -100,6 +106,11 @@ always @(*) begin
                 counter_enable     = 1'b1;
                 output_data_select = 1'b0;
             end
+        end
+
+        WAIT_PARITY: begin
+            // nothing needs to be asserted here - just sit and wait for the signal to start feeding out th parity bits
+            // (all outputs already default to 0 from the top of the block)
         end
         
         OUTPUT_PARITY: 

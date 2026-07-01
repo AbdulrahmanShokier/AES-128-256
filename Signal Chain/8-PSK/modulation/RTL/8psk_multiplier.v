@@ -5,8 +5,10 @@ module bpsk_multiplier #(
 (
     input                                  rst,
     input                                  clk_sample,
+    input                                  valid_in,
     input      signed [DATA_WIDTH-1:0]     fir_data_in,
     input      signed [DATA_WIDTH-1:0]     nco_cos_in,
+    output reg                             valid_out,
     output reg signed [DATA_WIDTH-1:0]     signal_modulated
 );
 
@@ -19,6 +21,7 @@ module bpsk_multiplier #(
 
 reg signed [DATA_WIDTH-1:0] fir_reg;
 reg signed [DATA_WIDTH-1:0] nco_reg;
+reg                         valid_stage1;
 
 always @(posedge clk_sample)
 begin
@@ -26,6 +29,7 @@ begin
     begin
         fir_reg      <= 0;
         nco_reg      <= 0;
+        valid_stage1 <= 0;
     end
     else
     begin
@@ -33,11 +37,11 @@ begin
         nco_reg      <= nco_cos_in;
 
         // FIR data → only latch when valid
-        
+        if (valid_in)
             fir_reg <= fir_data_in;
 
         // Pipeline valid signal
-        
+        valid_stage1 <= valid_in;
     end
 end
 
@@ -52,18 +56,25 @@ assign mult_comb = fir_reg * nco_reg;
 // ═══════════════════════════════════════════════════════
 // Stage 2: Output Register (Scaling Q4.28 → Q2.14)
 // ═══════════════════════════════════════════════════════
+// Only update output when stage1 is valid
+// Hold previous value otherwise
+// ═══════════════════════════════════════════════════════
 
 always @(posedge clk_sample)
 begin
     if (!rst)
     begin
         signal_modulated <= 0;
+        valid_out        <= 0;
     end
     else
     begin
-        // update output 
+        // Only update output when there's valid data
+        if (valid_stage1)
             signal_modulated <= mult_comb >>> FRACTION;
 
+        // Pipeline valid signal
+        valid_out <= valid_stage1;
     end
 end
 
