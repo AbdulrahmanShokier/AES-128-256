@@ -26,7 +26,7 @@ module comparator_threshld					// compare the local peak with the threshold unti
 	
  
 
-	always@(posedge clk_sample, negedge rst)
+	always@(posedge clk_sample)
 	begin 
 	 if(!rst) 
 	  begin 

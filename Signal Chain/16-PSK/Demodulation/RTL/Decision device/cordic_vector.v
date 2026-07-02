@@ -78,7 +78,7 @@ reg signed [15:0] z_next;
 // CORDIC Pipeline Logic
 //////////////////////////////////////////////////////////////
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk ) begin
     if (rst) begin
         x1    <= 16'sd0;
         y1    <= 16'sd0;

@@ -17,7 +17,7 @@ module comparator_2in
 	
 	wire [DATA_WIDTH-1:0]		  bigger;
 
-	always@(posedge clk_sample, negedge rst)
+	always@(posedge clk_sample )
 	begin 
 	 if(!rst)
 	  begin 

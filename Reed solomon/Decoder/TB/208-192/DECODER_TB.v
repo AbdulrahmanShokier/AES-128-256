@@ -36,6 +36,14 @@ reg [7:0]  in_data;
 wire       DONE;
 wire [7:0] out_data;
 wire       decode_fail;
+wire       decode_failed;
+wire       input_symbol_tick;
+wire       output_symbol_tick;
+wire       decoder_ready;
+wire       frame_done;
+wire       decoder_step_tick_dbg;
+wire [1:0] decoder_4clk_phase_dbg;
+wire [15:0] decoder_step_count_dbg;
 
 parameter Period = 20;
 parameter N      = 208;
@@ -55,7 +63,7 @@ integer fail_count;
 // Simple waveform/debug indicators
 reg       corrected_error_valid;
 reg [8:0] corrected_error_index;
-reg [8:0] output_index_dbg; // aligned with out_data when DONE=1
+reg [8:0] output_index_dbg; // aligned with out_data when DONE=1 and output_symbol_tick=1
 reg [5:0] injected_error_count;
 reg       over_correction_limit;
 reg       uncorrectable_detected;
@@ -73,9 +81,17 @@ Top_decoder DUT (
     .reset           (rst),
     .enable          (enable),
     .received_symbol (in_data),
+    .input_symbol_tick(input_symbol_tick),
+    .output_symbol_tick(output_symbol_tick),
     .out_valid       (DONE),
     .Cx              (out_data),
-    .decode_fail     (decode_fail)
+    .decode_fail     (decode_fail),
+    .decode_failed   (decode_failed),
+    .decoder_ready  (decoder_ready),
+    .frame_done      (frame_done),
+    .decoder_step_tick_dbg  (decoder_step_tick_dbg),
+    .decoder_4clk_phase_dbg (decoder_4clk_phase_dbg),
+    .decoder_step_count_dbg (decoder_step_count_dbg)
 );
 
 // Clock stops naturally when tb_done = 1. No $finish is used.
@@ -116,6 +132,10 @@ initial begin
 
     build_reference_codeword();
 
+    // One global reset only. The tests below intentionally do NOT reset
+    // the RS decoder between frames.
+    reset_decoder(); // one global reset only
+
     // Test 1: no errors, must pass.
     copy_codeword_to_rx();
     clear_error_list();
@@ -145,6 +165,19 @@ initial begin
     rx_frame[150] = rx_frame[150] ^ 8'hA6; mark_error(150);
     run_one_test("FOUR_ERRORS", 1'b1);
 
+    // Test 4: eight symbol errors, maximum correction capability, must pass.
+    copy_codeword_to_rx();
+    clear_error_list();
+    rx_frame[0]   = rx_frame[0]   ^ 8'h5A; mark_error(0);
+    rx_frame[7]   = rx_frame[7]   ^ 8'h33; mark_error(7);
+    rx_frame[13]  = rx_frame[13]  ^ 8'hC7; mark_error(13);
+    rx_frame[25]  = rx_frame[25]  ^ 8'h81; mark_error(25);
+    rx_frame[38]  = rx_frame[38]  ^ 8'h0F; mark_error(38);
+    rx_frame[49]  = rx_frame[49]  ^ 8'hA6; mark_error(49);
+    rx_frame[63]  = rx_frame[63]  ^ 8'h71; mark_error(63);
+    rx_frame[191] = rx_frame[191] ^ 8'h4D; mark_error(191);
+    run_one_test("EIGHT_ERRORS_MAX_CAPABILITY", 1'b1);
+
     // Test 5: nine symbol errors, beyond correction capability.
     // This is expected to fail correction. The TB passes this test only if
     // mismatches are detected.
@@ -160,22 +193,6 @@ initial begin
     rx_frame[191] = rx_frame[191] ^ 8'h4D; mark_error(191);
     rx_frame[100] = rx_frame[100] ^ 8'h58; mark_error(100);
     run_one_test("NINE_ERRORS_EXPECTED_TO_FAIL", 1'b0);
-
-
-    // Test 4: eight symbol errors, maximum correction capability, must pass.
-    copy_codeword_to_rx();
-    clear_error_list();
-    rx_frame[0]   = rx_frame[0]   ^ 8'h5A; mark_error(0);
-    rx_frame[7]   = rx_frame[7]   ^ 8'h33; mark_error(7);
-    rx_frame[13]  = rx_frame[13]  ^ 8'hC7; mark_error(13);
-    rx_frame[25]  = rx_frame[25]  ^ 8'h81; mark_error(25);
-    rx_frame[38]  = rx_frame[38]  ^ 8'h0F; mark_error(38);
-    rx_frame[49]  = rx_frame[49]  ^ 8'hA6; mark_error(49);
-    rx_frame[63]  = rx_frame[63]  ^ 8'h71; mark_error(63);
-    rx_frame[191] = rx_frame[191] ^ 8'h4D; mark_error(191);
-    run_one_test("EIGHT_ERRORS_MAX_CAPABILITY", 1'b1);
-
-
 
     $display("------------------------------------------------------------");
     $display("TOTAL PASSED = %0d", pass_count);
@@ -481,50 +498,57 @@ task reset_decoder;
         first_output_seen      = 1'b0;
         input_done_dbg         = 1'b0;
 
-        // Minimal reset/startup delay.
-        // Old TB held reset for several time slots, which created a long empty
-        // region at the beginning of the waveform.
-        // New TB asserts active-low reset, waits only until the next negative
-        // edge for clean alignment, then immediately starts send_frame().
+        // Posedge-only clock alignment:
+        // The DUT and the testbench stimulus are both synchronized to posedge clk.
+        // Stimulus changes are made #1 after posedge to avoid simulation races.
         rst = 1'b0;
-        @(negedge clk);
+        @(posedge clk);
+        #1;
         rst = 1'b1;
+    end
+endtask
+
+task wait_for_decoder_ready;
+    integer ready_timeout;
+    begin
+        ready_timeout = 0;
+        while ((decoder_ready !== 1'b1) && (ready_timeout < 20000)) begin
+            @(posedge clk);
+            #1;
+            ready_timeout = ready_timeout + 1;
+        end
+
+        if (decoder_ready !== 1'b1) begin
+            $display("ERROR: timeout waiting for decoder_ready before starting next frame.");
+            fail_count = fail_count + 1;
+        end
     end
 endtask
 
 task send_frame;
     begin
-        // reset_decoder releases reset on a negative edge.
-        // Drive the first symbol immediately, so it is stable before the next
-        // positive edge where the DUT samples it.
-        //
-        // Important timing cleanup:
-        // The old version deasserted enable on a negative edge after the last
-        // input sample. Since DONE is generated on a positive edge, measuring
-        // from enable falling to DONE rising gave a half-cycle value such as
-        // 221.5 cycles.
-        //
-        // This version deasserts enable using nonblocking assignment on the
-        // SAME positive edge that samples the last input symbol. The DUT still
-        // sees enable=1 for the last symbol, then enable falls after that edge.
-        // Therefore the waveform measurement from IN_VALID falling / IN_DONE
-        // to OUT_VALID rising becomes an exact integer: 222 cycles.
+        // GitHub-style input pacing:
+        // enable stays high during the input frame.
+        // The DUT accepts one 8-bit byte only when input_symbol_tick=1.
+        // input_symbol_tick is generated by the two-stage counter structure:
+        //   symbol tick every 4 clocks, byte tick every 2 symbol ticks.
         input_done_dbg = 1'b0;
         enable = 1'b1;
         in_data = rx_frame[0];
 
         for (i = 0; i < N; i = i + 1) begin
+            wait (input_symbol_tick == 1'b1);
             @(posedge clk);
 
             if (i == N-1) begin
-                // Last input symbol has just been sampled by the DUT.
-                // Deassert after this same clock edge, avoiding a half-cycle
-                // measurement offset.
-                enable        <= 1'b0;
-                in_data       <= 8'h00;
-                input_done_dbg<= 1'b1;
+                enable         <= 1'b0;
+                in_data        <= 8'h00;
+                input_done_dbg <= 1'b1;
             end else begin
-                @(negedge clk);
+                // Change the next input byte shortly after the accepting posedge.
+                // This keeps the whole testbench posedge-clocked while avoiding
+                // a race with DUT sampling at the same posedge.
+                #1;
                 in_data = rx_frame[i+1];
             end
         end
@@ -548,14 +572,14 @@ task collect_and_check_output;
         first_output_seen      = 1'b0;
         input_done_dbg         = 1'b0;
 
-        while ((out_idx < K) && (timeout < 12000)) begin
+        while ((out_idx < K) && (timeout < 30000)) begin
             @(posedge clk);
             #1; // sample DUT registered outputs after nonblocking updates, so index matches out_data
             timeout = timeout + 1;
             cycle_ctr = cycle_ctr + 1;
             corrected_error_valid = 1'b0;
 
-            if (DONE) begin
+            if (DONE && output_symbol_tick) begin
                 if (!first_output_seen) begin
                     first_output_seen = 1'b1;
                     cycles_to_first_output = cycle_ctr[15:0];
@@ -581,10 +605,23 @@ task collect_and_check_output;
             end
         end
 
-        // Wait one extra clock to observe DONE returning low after the last valid output.
-        @(posedge clk);
-        #1;
-        cycle_ctr = cycle_ctr + 1;
+        // Wait for the decoder to internally finish and return to ready.
+        while ((frame_done !== 1'b1) && (timeout < 36000)) begin
+            @(posedge clk);
+            #1;
+            timeout = timeout + 1;
+            cycle_ctr = cycle_ctr + 1;
+        end
+
+        // frame_done is a one-clock pulse from the DUT. decoder_ready becomes
+        // high shortly after the top-level busy flag sees this pulse.
+        while ((decoder_ready !== 1'b1) && (timeout < 38000)) begin
+            @(posedge clk);
+            #1;
+            timeout = timeout + 1;
+            cycle_ctr = cycle_ctr + 1;
+        end
+
         cycles_to_done_low = cycle_ctr[15:0];
 
         if (out_idx != K) begin
@@ -611,13 +648,13 @@ task run_one_test;
         $display("Injected errors = %0d, correction limit = %0d, over_limit = %0d",
                  injected_error_count, T, over_correction_limit);
 
-        reset_decoder();
+        wait_for_decoder_ready();
         send_frame();
         collect_and_check_output();
 
-        $display("Measured post-input wait from IN_DONE to first DONE = %0d cycles", cycles_to_first_output);
-        $display("Measured full output completion wait from IN_DONE = %0d cycles", cycles_to_done_low);
-        $display("DUT decode_fail flag = %0b", decode_fail);
+        $display("Measured slowed post-input wait from IN_DONE to first output tick = %0d cycles", cycles_to_first_output);
+        $display("Measured wait from IN_DONE until decoder_ready again = %0d cycles", cycles_to_done_low);
+        $display("DUT decode_fail/decode_failed flag = %0b / %0b", decode_fail, decode_failed);
 
         if (expect_success) begin
             if (error_count == 0) begin

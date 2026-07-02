@@ -18,7 +18,7 @@ module bpskDecision
 	reg Out_c; 
 	
 	/* latch bit out */ 
-	always@(posedge clk or negedge rst)
+	always@(posedge clk)
 	begin 
 	 if(!rst)
 		Out <= 'd0; 
@@ -37,7 +37,7 @@ module bpskDecision
 	
 
 	/* paypass the valid signal (for Rb rate domain) */ 
-	always@(posedge clk or negedge rst)
+	always@(posedge clk )
 	begin 
 		Out_vld <= valid_in; 
 	end 

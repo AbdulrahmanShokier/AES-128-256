@@ -1,6 +1,6 @@
 `timescale 1us/1us
 
-module Rx_chainTop_tb();
+module Rx_bpsk_Top_tb();
 
 //////////////// Parameters ////////////////////
 parameter DATA_WIDTH  = 16;
@@ -90,7 +90,7 @@ always begin #(CLK_PER/2); clk_tb = ~clk_tb; end
 
 
 ////////////// DUT Instantiation ///////////////
-Rx_chainTop DUT(
+Rx_bpsk_Top DUT(
 .clk(clk_tb),
 .rst(rst_tb),
 .RxInBpsk(RxInBpsk_tb),

@@ -1,5 +1,4 @@
-
-module Rx_chainTop		// integration (sampler + preamb_detector)
+module Rx_bpsk_Top		// integration (sampler + preamb_detector)
 #(
 	parameter DATA_WIDTH = 16,
 	parameter Control_Length = 256
@@ -15,11 +14,12 @@ module Rx_chainTop		// integration (sampler + preamb_detector)
 	input wire signed [DATA_WIDTH-1:0] 		RxIn16pskQ, 			// quadrature of payload 
 	
 	output wire 	  [Control_Length-1:0] 	Control_register,
-	output wire 							Control_complete
-	
-	
-	
-			
+	output wire 							Control_complete,
+
+	output wire signed [DATA_WIDTH-1:0] 	sample16pskI_buffered,
+	output wire signed [DATA_WIDTH-1:0] 	sample16pskQ_buffered,
+	output wire 							payload_valid		// synchronous with both sample16pskI_buffered & sample16pskQ_buffered
+
 );
 
 	/* internal */ 
@@ -28,18 +28,15 @@ module Rx_chainTop		// integration (sampler + preamb_detector)
 	wire signed [DATA_WIDTH-1:0]	MF_Out_16pskQ;
 	
 	wire signed [DATA_WIDTH-1:0] 	sampleBPSK_buffered;
-	wire signed [DATA_WIDTH-1:0] 	sample16pskI_buffered;
-	wire signed [DATA_WIDTH-1:0] 	sample16pskQ_buffered;
 	
 	/* samplerBPSK output */
 	wire signed [DATA_WIDTH-1:0] 	bpsk_sample_valid; 	// beginning from first bit of "Control field" until end of "payload"
 	wire 							bpsk_valid;
 	wire 							control_valid;
-	wire							payload_valid;		// synchronous with both sample16pskI_buffered & sample16pskQ_buffered
 		
 	/* bpskDecision sginals */
 	wire bitDecided; 
-	wire bitValid; 
+	wire bitValid;
 	
 	/* Payload detection signals */ 
 	

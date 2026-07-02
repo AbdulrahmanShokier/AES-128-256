@@ -10,11 +10,13 @@
 module B_M_Algorithm (
     input              clk,
     input              reset,
+    input              clk_en,
     input              start,
     input      [127:0] syndromes,
     output reg [71:0]  lambda,
     output reg [5:0]   L,
-    output reg         done
+    output reg         done,
+    output reg         uncorrectable
 );
 
 parameter NSYM = 16;
@@ -80,15 +82,18 @@ function [7:0] gf_inverse;
     end
 endfunction
 
-always @(posedge clk or negedge reset) begin
+always @(posedge clk) begin
     if (!reset) begin
-        lambda <= 72'd0;
-        L      <= 6'd0;
-        done   <= 1'b0;
+        lambda        <= 72'd0;
+        L             <= 6'd0;
+        done          <= 1'b0;
+        uncorrectable <= 1'b0;
     end else begin
-        done <= 1'b0;
+        if (clk_en) begin
+            done <= 1'b0;
 
-        if (start) begin
+            if (start) begin
+            uncorrectable <= 1'b0;
             for (i = 0; i < NSYM; i = i + 1)
                 S_arr[i] = syndromes[8*i +: 8];
 
@@ -140,12 +145,16 @@ always @(posedge clk or negedge reset) begin
             for (i = 0; i <= T; i = i + 1)
                 lambda[8*i +: 8] <= C[i];
 
-            if (L_int > T)
-                L <= 6'd8;
-            else
-                L <= L_int[5:0];
+            if (L_int > T) begin
+                L             <= 6'd8;
+                uncorrectable <= 1'b1;
+            end else begin
+                L             <= L_int[5:0];
+                uncorrectable <= 1'b0;
+            end
 
-            done <= 1'b1;
+                done <= 1'b1;
+            end
         end
     end
 end

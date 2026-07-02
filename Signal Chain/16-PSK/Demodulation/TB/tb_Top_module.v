@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_Top_module;
+module tb_psk16_demod_top;
 
 reg clk;
 reg rst;
@@ -17,7 +17,7 @@ wire valid_out;
 // DUT
 //==========================================================
 
-Top_module DUT
+psk16_demod_top DUT
 (
     .clk(clk),
     .rst(rst),

@@ -15,6 +15,7 @@
 module Chien_Search (
     input              clk,
     input              reset,
+    input              clk_en,
     input              start,
     input      [71:0]  lambda,
     input      [5:0]   L,
@@ -90,7 +91,7 @@ function [7:0] lambda_eval;
     end
 endfunction
 
-always @(posedge clk or negedge reset) begin
+always @(posedge clk) begin
     if (!reset) begin
         scanning     <= 1'b0;
         done_pending <= 1'b0;
@@ -101,10 +102,11 @@ always @(posedge clk or negedge reset) begin
         error_count  <= 6'd0;
         done         <= 1'b0;
     end else begin
-        error_found <= 1'b0;
-        done        <= 1'b0;
+        if (clk_en) begin
+            error_found <= 1'b0;
+            done        <= 1'b0;
 
-        if (start) begin
+            if (start) begin
             scanning     <= 1'b1;
             done_pending <= 1'b0;
             scan_pos     <= 9'd0;
@@ -127,6 +129,7 @@ always @(posedge clk or negedge reset) begin
                 done_pending <= 1'b1;
             end else begin
                 scan_pos <= scan_pos + 1'b1;
+            end
             end
         end
     end

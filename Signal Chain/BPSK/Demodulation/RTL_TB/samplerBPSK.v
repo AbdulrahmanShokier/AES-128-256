@@ -26,7 +26,7 @@ module samplerBPSK
 	reg									Frame_flag; 
 	
 	/* logic for downsampler */
-	always@(posedge clk or negedge rst)
+	always@(posedge clk)
 	begin 
 	 if(!rst)
 		samplerOut <= 'd0; 
@@ -36,7 +36,7 @@ module samplerBPSK
 		end 
 	end 
 	
-	always@(posedge clk or negedge rst)
+	always@(posedge clk)
 	begin 
 	 if(!rst)
 		sample_valid <= 1'b0; 
@@ -49,7 +49,7 @@ module samplerBPSK
 	
 	
 	/* logic for counter4 */
-	always@(posedge clk or negedge rst)
+	always@(posedge clk)
 	begin 
 	 if(!rst)
 		counter4 <= 'd0; 
@@ -61,7 +61,7 @@ module samplerBPSK
 
 	
 	/* logic to keep the effect of the one-pule valid_frame (until the frame ends) */ 
-	always@(posedge clk or negedge rst)
+	always@(posedge clk)
 	begin 
 	 if(!rst)
 	  Frame_flag <= 'b0; 
@@ -72,7 +72,7 @@ module samplerBPSK
 	end 
 	
 	/* logic for control_valid & payload_valid */ 
-	always@(posedge clk or negedge rst)
+	always@(posedge clk)
 	begin 
 	 if(!rst)
 	  begin 
@@ -94,7 +94,7 @@ module samplerBPSK
 	
 	
 	/* logic for frame counter: count for preamble + payload */
-	always@(posedge clk or negedge rst)
+	always@(posedge clk)
 	begin 
 	 if(!rst)
 	  FrameCounter <= 'd0; 

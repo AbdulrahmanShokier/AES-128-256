@@ -1,9 +1,9 @@
 
-module bufferDelay12
+module bufferDelay14
 #(
 	parameter DATA_WIDTH = 16,
 	parameter NO_OFFSETS = 4,		// OSR = 4
-	parameter FRAMEVALID_LATENCY = 12
+	parameter FRAMEVALID_LATENCY = 14
 )
 (
 	input wire 							clk,
@@ -16,7 +16,7 @@ module bufferDelay12
 	reg signed [DATA_WIDTH-1:0] buffer [FRAMEVALID_LATENCY-1:0]; 
 	
 	integer i; 
-	always@(posedge clk, negedge rst)
+	always@(posedge clk )
 	begin 
 	 if(!rst)
 	  begin 
