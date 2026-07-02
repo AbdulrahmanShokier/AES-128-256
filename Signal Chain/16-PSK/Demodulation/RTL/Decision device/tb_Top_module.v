@@ -1,77 +1,127 @@
-`timescale 1ns / 1ps
+`timescale 1ns/1ps
 
-module psk16_psk16_DecisionDevice_tb;
+module tb_Top_module;
 
-    // Inputs
-    reg clk;
-    reg rst;
-    reg signed [15:0] I;
-    reg signed [15:0] Q;
+reg clk;
+reg rst;
+reg valid_in;
 
-    // Outputs
-    wire [3:0] symbol;
-    wire [15:0] angle_wave;
+reg signed [15:0] I;
+reg signed [15:0] Q;
 
-    // Instantiate the Unit Under Test (UUT)
-    psk16_psk16_DecisionDevice uut (
-        .clk(clk),
-        .rst(rst),
-        .I(I),
-        .Q(Q),
-        .symbol(symbol),
-        .angle_wave(angle_wave)  // angle_wave is not used in the testbench
-    );
+wire [3:0] symbol;
+wire [15:0] angle_wave;
+wire valid_out;
 
-    // Clock generation (100 MHz)
-    always #5 clk = ~clk;
+//==========================================================
+// DUT
+//==========================================================
 
-    // File handling variables
-    integer file_handle;
-    integer status;
-    reg signed [15:0] i_val;
-    reg signed [15:0] q_val;
+Top_module DUT
+(
+    .clk(clk),
+    .rst(rst),
+    .valid_in(valid_in),
+    .I(I),
+    .Q(Q),
+    .symbol(symbol),
+    .angle_wave(angle_wave),
+    .valid_out(valid_out)
+);
 
-    initial begin
-        // Initialize inputs
-        clk = 0;
-        rst = 1;
-        I = 0;
-        Q = 0;
+//==========================================================
+// Clock
+//==========================================================
 
-        // Apply reset
-        #20;
-        rst = 0;
-        @(posedge clk);
+initial
+    clk = 0;
 
-        // Open the test vector file
-        file_handle = $fopen("iq_vectors.txt", "r");
-        if (file_handle == 0) begin
-            $display("Error: Could not open iq_vectors.txt");
-            $finish;
-        end
+always #5 clk = ~clk;
 
-        // Read and apply vectors sequentially
-        while (!$feof(file_handle)) begin
-            status = $fscanf(file_handle, "%d %d\n", i_val, q_val);
-            if (status == 2) begin
-                I = i_val;
-                Q = q_val;
-                @(posedge clk);
-            end
-        end
+//==========================================================
+// Memory
+//==========================================================
 
-        // Wait for the final pipeline stages to complete
-        #100;
+reg signed [15:0] I_mem [0:47];
+reg signed [15:0] Q_mem [0:47];
 
-        // Close the file and end simulation
-        $fclose(file_handle);
-        $display("Simulation finished successfully.");
+integer infile;
+integer i;
+
+//==========================================================
+// Read IQ vectors
+//==========================================================
+
+initial
+begin
+
+    infile = $fopen("iq_vectors.txt","r");
+
+    if(infile == 0)
+    begin
+        $display("Cannot open iq_vectors.txt");
         $finish;
     end
 
-    // Monitor outputs in the console
-    initial begin
-        $monitor("Time = %0t | I = %d, Q = %d | Symbol = %b", $time, I, Q, symbol);
+    for(i=0;i<48;i=i+1)
+        $fscanf(infile,"%d %d\n",I_mem[i],Q_mem[i]);
+
+    $fclose(infile);
+
+end
+
+//==========================================================
+// Stimulus
+//==========================================================
+
+initial
+begin
+
+    rst = 1;
+    valid_in = 0;
+    I = 0;
+    Q = 0;
+
+    repeat(4) @(posedge clk);
+
+    rst = 0;
+
+    for(i=0;i<48;i=i+1)
+    begin
+
+        @(posedge clk);
+
+        I <= I_mem[i];
+        Q <= Q_mem[i];
+
+        // Assert valid_in only once
+        if(i == 2)
+            valid_in <= 1'b1;
+        else
+            valid_in <= 1'b0;
+
     end
+
+    repeat(20) @(posedge clk);
+
+    $finish;
+
+end
+
+//==========================================================
+// Monitor
+//==========================================================
+
+always @(posedge clk)
+begin
+    $display("Time=%0t  valid_in=%b  valid_out=%b  I=%6d  Q=%6d  Angle=%5d  Symbol=%d",
+              $time,
+              valid_in,
+              valid_out,
+              I,
+              Q,
+              angle_wave,
+              symbol);
+end
 
 endmodule
