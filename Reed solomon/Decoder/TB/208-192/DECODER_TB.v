@@ -3,16 +3,29 @@
 // -----------------------------------------------------------------------------
 // Self-checking testbench for RS(208,192) decoder.
 // Code convention:
-//   data   = 00, 01, 02, ... , BF  (192 data symbols)
-//   parity = 16 generated symbols
+//   data   = ASCII "hello world" followed by zeros up to 192 data symbols
+//   parity = BA C7 E3 CA ED E8 B8 C6 B8 56 09 3F 6E 09 53 B5
 //   total  = 208 symbols
 //
 // Decoder capability:
 //   parity symbols = 16
 //   t = 8 correctable symbol errors
 //
-// This TB also includes the user-supplied corrupted codeword case and a 9-error expected-fail case.
+// This TB includes a user corrupted 4-error case and a 9-error expected-fail case.
+//
+// CONSTANT-LATENCY VERSION:
+// The DUT now uses a fixed 8-slot correction phase. Therefore 0-error,
+// 4-error and 8-error correctable frames should all finish with the same
+// decoder timing as the old 8-error worst-case path.
 // reset is active-low.
+//
+// TB cleanup version:
+//   - Minimal reset/startup delay: input begins immediately after the required
+//     reset alignment, with no long empty waveform region before the first frame.
+//   - The waveform do-file now shows fewer, clearer, labeled signals.
+//   - Enable is deasserted exactly on the clock edge that samples the last
+//     input symbol. This makes the post-input latency measurement an exact
+//     integer number of clock cycles: 222 cycles from input-done to first DONE.
 // -----------------------------------------------------------------------------
 module ch_decoder_TB;
 
@@ -22,6 +35,7 @@ reg        enable;
 reg [7:0]  in_data;
 wire       DONE;
 wire [7:0] out_data;
+wire       decode_fail;
 
 parameter Period = 20;
 parameter N      = 208;
@@ -46,6 +60,10 @@ reg [5:0] injected_error_count;
 reg       over_correction_limit;
 reg       uncorrectable_detected;
 reg       test_expected_to_pass;
+reg [15:0] cycles_to_first_output;
+reg [15:0] cycles_to_done_low;
+reg        first_output_seen;
+reg        input_done_dbg; // rises exactly when the last input symbol is sampled
 reg [8:0] marked_error_pos [0:8];
 integer mark_idx;
 reg       tb_done = 1'b0;
@@ -56,14 +74,17 @@ Top_decoder DUT (
     .enable          (enable),
     .received_symbol (in_data),
     .out_valid       (DONE),
-    .Cx              (out_data)
+    .Cx              (out_data),
+    .decode_fail     (decode_fail)
 );
 
 // Clock stops naturally when tb_done = 1. No $finish is used.
 // IMPORTANT: tb_done is initialized before the loop, otherwise ModelSim may see X
 // at time 0 and the clock loop may never start.
 initial begin
-    clk     = 1'b0;
+    // Start high so the first negative edge appears after only half a period.
+    // This reduces the empty time at the beginning of the waveform.
+    clk     = 1'b1;
     tb_done = 1'b0;
     while (tb_done == 1'b0) begin
         #(Period/2) clk = ~clk;
@@ -88,6 +109,10 @@ initial begin
     over_correction_limit = 1'b0;
     uncorrectable_detected= 1'b0;
     test_expected_to_pass = 1'b1;
+    cycles_to_first_output = 16'd0;
+    cycles_to_done_low     = 16'd0;
+    first_output_seen      = 1'b0;
+    input_done_dbg         = 1'b0;
 
     build_reference_codeword();
 
@@ -120,19 +145,6 @@ initial begin
     rx_frame[150] = rx_frame[150] ^ 8'hA6; mark_error(150);
     run_one_test("FOUR_ERRORS", 1'b1);
 
-    // Test 4: eight symbol errors, maximum correction capability, must pass.
-    copy_codeword_to_rx();
-    clear_error_list();
-    rx_frame[0]   = rx_frame[0]   ^ 8'h5A; mark_error(0);
-    rx_frame[7]   = rx_frame[7]   ^ 8'h33; mark_error(7);
-    rx_frame[13]  = rx_frame[13]  ^ 8'hC7; mark_error(13);
-    rx_frame[25]  = rx_frame[25]  ^ 8'h81; mark_error(25);
-    rx_frame[38]  = rx_frame[38]  ^ 8'h0F; mark_error(38);
-    rx_frame[49]  = rx_frame[49]  ^ 8'hA6; mark_error(49);
-    rx_frame[63]  = rx_frame[63]  ^ 8'h71; mark_error(63);
-    rx_frame[191] = rx_frame[191] ^ 8'h4D; mark_error(191);
-    run_one_test("EIGHT_ERRORS_MAX_CAPABILITY", 1'b1);
-
     // Test 5: nine symbol errors, beyond correction capability.
     // This is expected to fail correction. The TB passes this test only if
     // mismatches are detected.
@@ -148,6 +160,22 @@ initial begin
     rx_frame[191] = rx_frame[191] ^ 8'h4D; mark_error(191);
     rx_frame[100] = rx_frame[100] ^ 8'h58; mark_error(100);
     run_one_test("NINE_ERRORS_EXPECTED_TO_FAIL", 1'b0);
+
+
+    // Test 4: eight symbol errors, maximum correction capability, must pass.
+    copy_codeword_to_rx();
+    clear_error_list();
+    rx_frame[0]   = rx_frame[0]   ^ 8'h5A; mark_error(0);
+    rx_frame[7]   = rx_frame[7]   ^ 8'h33; mark_error(7);
+    rx_frame[13]  = rx_frame[13]  ^ 8'hC7; mark_error(13);
+    rx_frame[25]  = rx_frame[25]  ^ 8'h81; mark_error(25);
+    rx_frame[38]  = rx_frame[38]  ^ 8'h0F; mark_error(38);
+    rx_frame[49]  = rx_frame[49]  ^ 8'hA6; mark_error(49);
+    rx_frame[63]  = rx_frame[63]  ^ 8'h71; mark_error(63);
+    rx_frame[191] = rx_frame[191] ^ 8'h4D; mark_error(191);
+    run_one_test("EIGHT_ERRORS_MAX_CAPABILITY", 1'b1);
+
+
 
     $display("------------------------------------------------------------");
     $display("TOTAL PASSED = %0d", pass_count);
@@ -433,7 +461,7 @@ task mark_error;
 
             injected_error_count = injected_error_count + 1'b1;
 
-            // After increment: raise over limit only when actual count is greater than T.
+            // Raise only when the actual injected error count is greater than T.
             if (injected_error_count > T)
                 over_correction_limit = 1'b1;
         end
@@ -448,28 +476,58 @@ task reset_decoder;
         corrected_error_valid = 1'b0;
         corrected_error_index = 9'd0;
         output_index_dbg      = 9'd0;
+        cycles_to_first_output = 16'd0;
+        cycles_to_done_low     = 16'd0;
+        first_output_seen      = 1'b0;
+        input_done_dbg         = 1'b0;
 
-        rst = 1'b1;
-        #(Period);
+        // Minimal reset/startup delay.
+        // Old TB held reset for several time slots, which created a long empty
+        // region at the beginning of the waveform.
+        // New TB asserts active-low reset, waits only until the next negative
+        // edge for clean alignment, then immediately starts send_frame().
         rst = 1'b0;
-        #(2*Period);
+        @(negedge clk);
         rst = 1'b1;
-        #(2*Period);
     end
 endtask
 
 task send_frame;
     begin
-        @(negedge clk);
+        // reset_decoder releases reset on a negative edge.
+        // Drive the first symbol immediately, so it is stable before the next
+        // positive edge where the DUT samples it.
+        //
+        // Important timing cleanup:
+        // The old version deasserted enable on a negative edge after the last
+        // input sample. Since DONE is generated on a positive edge, measuring
+        // from enable falling to DONE rising gave a half-cycle value such as
+        // 221.5 cycles.
+        //
+        // This version deasserts enable using nonblocking assignment on the
+        // SAME positive edge that samples the last input symbol. The DUT still
+        // sees enable=1 for the last symbol, then enable falls after that edge.
+        // Therefore the waveform measurement from IN_VALID falling / IN_DONE
+        // to OUT_VALID rising becomes an exact integer: 222 cycles.
+        input_done_dbg = 1'b0;
         enable = 1'b1;
+        in_data = rx_frame[0];
 
         for (i = 0; i < N; i = i + 1) begin
-            in_data = rx_frame[i];
-            @(negedge clk);
-        end
+            @(posedge clk);
 
-        enable  = 1'b0;
-        in_data = 8'h00;
+            if (i == N-1) begin
+                // Last input symbol has just been sampled by the DUT.
+                // Deassert after this same clock edge, avoiding a half-cycle
+                // measurement offset.
+                enable        <= 1'b0;
+                in_data       <= 8'h00;
+                input_done_dbg<= 1'b1;
+            end else begin
+                @(negedge clk);
+                in_data = rx_frame[i+1];
+            end
+        end
     end
 endtask
 
@@ -477,20 +535,32 @@ task collect_and_check_output;
     integer out_idx;
     integer timeout;
     integer local_errors;
+    integer cycle_ctr;
     begin
         out_idx = 0;
         timeout = 0;
         local_errors = 0;
+        cycle_ctr = 0;
         error_count = 0;
         uncorrectable_detected = 1'b0;
+        cycles_to_first_output = 16'd0;
+        cycles_to_done_low     = 16'd0;
+        first_output_seen      = 1'b0;
+        input_done_dbg         = 1'b0;
 
         while ((out_idx < K) && (timeout < 12000)) begin
             @(posedge clk);
             #1; // sample DUT registered outputs after nonblocking updates, so index matches out_data
             timeout = timeout + 1;
+            cycle_ctr = cycle_ctr + 1;
             corrected_error_valid = 1'b0;
 
             if (DONE) begin
+                if (!first_output_seen) begin
+                    first_output_seen = 1'b1;
+                    cycles_to_first_output = cycle_ctr[15:0];
+                end
+
                 dec_data_o[out_idx] = out_data;
                 output_index_dbg = out_idx[8:0];
 
@@ -510,6 +580,12 @@ task collect_and_check_output;
                 out_idx = out_idx + 1;
             end
         end
+
+        // Wait one extra clock to observe DONE returning low after the last valid output.
+        @(posedge clk);
+        #1;
+        cycle_ctr = cycle_ctr + 1;
+        cycles_to_done_low = cycle_ctr[15:0];
 
         if (out_idx != K) begin
             $display("ERROR: timeout before receiving all %0d decoded symbols. Received %0d only.", K, out_idx);
@@ -539,6 +615,10 @@ task run_one_test;
         send_frame();
         collect_and_check_output();
 
+        $display("Measured post-input wait from IN_DONE to first DONE = %0d cycles", cycles_to_first_output);
+        $display("Measured full output completion wait from IN_DONE = %0d cycles", cycles_to_done_low);
+        $display("DUT decode_fail flag = %0b", decode_fail);
+
         if (expect_success) begin
             if (error_count == 0) begin
                 $display("PASS: %0s", test_name);
@@ -548,11 +628,11 @@ task run_one_test;
                 fail_count = fail_count + 1;
             end
         end else begin
-            if (error_count != 0) begin
-                $display("PASS: %0s failed as expected because errors > 8", test_name);
+            if ((error_count != 0) || decode_fail) begin
+                $display("PASS: %0s flagged/detected an uncorrectable frame as expected because errors > 8", test_name);
                 pass_count = pass_count + 1;
             end else begin
-                $display("FAIL: %0s unexpectedly passed, but it has 9 errors", test_name);
+                $display("FAIL: %0s unexpectedly passed, but it has more than 8 errors", test_name);
                 fail_count = fail_count + 1;
             end
         end

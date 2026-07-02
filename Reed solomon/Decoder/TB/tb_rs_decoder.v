@@ -1,291 +1,562 @@
-`timescale 1ns / 1ps
-// =============================================================================
-// tb_rs_decoder.v  —  Testbench for RS(255,223) Decoder
+`timescale 1ns/1ps
+
+// -----------------------------------------------------------------------------
+// Self-checking testbench for RS(208,192) decoder.
+// Code convention:
+//   data   = 00, 01, 02, ... , BF  (192 data symbols)
+//   parity = 16 generated symbols
+//   total  = 208 symbols
 //
-// RS(255,223): n=255, k=223, t=16  (corrects up to 16 symbol errors)
+// Decoder capability:
+//   parity symbols = 16
+//   t = 8 correctable symbol errors
 //
-// Test scenarios:
-//   TEST 1 : All-zero codeword, 0 errors  →  clean pass, no decode_fail
-//   TEST 2 : All-zero codeword, 5 errors  →  corrected, no decode_fail
-//   TEST 3 : All-zero codeword, 16 errors →  corrected, no decode_fail (limit)
-//   TEST 4 : All-zero codeword, 17 errors →  decode_fail expected
-//
-// The all-zero word is a valid RS codeword (linear code property).
-// Injected errors are non-zero XOR masks at chosen byte positions.
-// =============================================================================
+// This TB also includes the user-supplied corrupted codeword case and a 9-error expected-fail case.
+// reset is active-low.
+// -----------------------------------------------------------------------------
+module ch_decoder_TB;
 
-module tb_rs_decoder;
+reg        clk;
+reg        rst;
+reg        enable;
+reg [7:0]  in_data;
+wire       DONE;
+wire [7:0] out_data;
 
-    // =========================================================================
-    // Parameters
-    // =========================================================================
-    localparam N   = 255;
-    localparam K   = 223;
-    localparam T   = 16;
-    localparam CLK = 10;   // 10 ns  (100 MHz)
+parameter Period = 20;
+parameter N      = 208;
+parameter K      = 192;
+parameter PARITY = 16;
+parameter T      = 8;
 
-    // =========================================================================
-    // DUT signals
-    // =========================================================================
-    reg        clk;
-    reg        rst_n;
-    reg  [7:0] rx_data;
-    reg        rx_valid;
-    wire [7:0] tx_data;
-    wire       tx_valid;
-    wire       decode_fail;
-    wire       frame_done;
+reg [7:0] codeword [0:207];
+reg [7:0] rx_frame [0:207];
+reg [7:0] dec_data_o [0:191];
 
-    // =========================================================================
-    // DUT instantiation
-    // =========================================================================
-    rs_decoder_top #(.N(N), .K(K), .T(T), .T2(T*2)) dut (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .rx_data    (rx_data),
-        .rx_valid   (rx_valid),
-        .tx_data    (tx_data),
-        .tx_valid   (tx_valid),
-        .decode_fail(decode_fail),
-        .frame_done (frame_done)
-    );
+integer i;
+integer error_count;
+integer pass_count;
+integer fail_count;
 
-    // =========================================================================
-    // Clock
-    // =========================================================================
-    initial clk = 1'b0;
-    always  #(CLK/2) clk = ~clk;
+// Simple waveform/debug indicators
+reg       corrected_error_valid;
+reg [8:0] corrected_error_index;
+reg [8:0] output_index_dbg; // aligned with out_data when DONE=1
+reg [5:0] injected_error_count;
+reg       over_correction_limit;
+reg       uncorrectable_detected;
+reg       test_expected_to_pass;
+reg [8:0] marked_error_pos [0:8];
+integer mark_idx;
+reg       tb_done = 1'b0;
 
-    // =========================================================================
-    // Test infrastructure
-    // =========================================================================
-    integer pass_count, fail_count;
+Top_decoder DUT (
+    .clock           (clk),
+    .reset           (rst),
+    .enable          (enable),
+    .received_symbol (in_data),
+    .out_valid       (DONE),
+    .Cx              (out_data)
+);
 
-    reg [7:0] codeword [0:N-1];
-    reg [7:0] expected [0:N-1];
-    reg [7:0] received [0:N-1];
+// Clock stops naturally when tb_done = 1. No $finish is used.
+// IMPORTANT: tb_done is initialized before the loop, otherwise ModelSim may see X
+// at time 0 and the clock loop may never start.
+initial begin
+    clk     = 1'b0;
+    tb_done = 1'b0;
+    while (tb_done == 1'b0) begin
+        #(Period/2) clk = ~clk;
+    end
+end
 
-    // ---- Build all-zero codeword ----
-    task build_zero_codeword;
-        integer k;
-        begin
-            for (k = 0; k < N; k = k + 1) begin
-                codeword[k] = 8'h00;
-                expected[k] = 8'h00;
-            end
+initial begin
+    $dumpfile("rs_208_192_decoder_fixed.vcd");
+    $dumpvars(0, ch_decoder_TB);
+
+    rst        = 1'b1;
+    enable     = 1'b0;
+    in_data    = 8'h00;
+    pass_count = 0;
+    fail_count = 0;
+    tb_done    = 1'b0;
+
+    corrected_error_valid = 1'b0;
+    corrected_error_index = 9'd0;
+    output_index_dbg      = 9'd0;
+    injected_error_count  = 6'd0;
+    over_correction_limit = 1'b0;
+    uncorrectable_detected= 1'b0;
+    test_expected_to_pass = 1'b1;
+
+    build_reference_codeword();
+
+    // Test 1: no errors, must pass.
+    copy_codeword_to_rx();
+    clear_error_list();
+    run_one_test("NO_ERROR", 1'b1);
+
+    // Test 2: user-supplied corrupted codeword, must be corrected.
+    // Correct codeword is unchanged in codeword[].
+    // Corrupted received frame changes 4 data symbols:
+    // index 1: 65 -> 6F
+    // index 2: 6C -> 6E
+    // index 13: 00 -> FF
+    // index 17: 00 -> BB
+    build_user_corrupted_rx_frame();
+    clear_error_list();
+    mark_error(1);
+    mark_error(2);
+    mark_error(13);
+    mark_error(17);
+    run_one_test("USER_CORRUPTED_CODEWORD_4_ERRORS", 1'b1);
+
+    // Test 3: four symbol errors generated by XOR masks, must pass.
+    copy_codeword_to_rx();
+    clear_error_list();
+    rx_frame[20]  = rx_frame[20]  ^ 8'h19; mark_error(20);
+    rx_frame[24]  = rx_frame[24]  ^ 8'h15; mark_error(24);
+    rx_frame[30]  = rx_frame[30]  ^ 8'h87; mark_error(30);
+    rx_frame[150] = rx_frame[150] ^ 8'hA6; mark_error(150);
+    run_one_test("FOUR_ERRORS", 1'b1);
+
+    // Test 4: eight symbol errors, maximum correction capability, must pass.
+    copy_codeword_to_rx();
+    clear_error_list();
+    rx_frame[0]   = rx_frame[0]   ^ 8'h5A; mark_error(0);
+    rx_frame[7]   = rx_frame[7]   ^ 8'h33; mark_error(7);
+    rx_frame[13]  = rx_frame[13]  ^ 8'hC7; mark_error(13);
+    rx_frame[25]  = rx_frame[25]  ^ 8'h81; mark_error(25);
+    rx_frame[38]  = rx_frame[38]  ^ 8'h0F; mark_error(38);
+    rx_frame[49]  = rx_frame[49]  ^ 8'hA6; mark_error(49);
+    rx_frame[63]  = rx_frame[63]  ^ 8'h71; mark_error(63);
+    rx_frame[191] = rx_frame[191] ^ 8'h4D; mark_error(191);
+    run_one_test("EIGHT_ERRORS_MAX_CAPABILITY", 1'b1);
+
+    // Test 5: nine symbol errors, beyond correction capability.
+    // This is expected to fail correction. The TB passes this test only if
+    // mismatches are detected.
+    copy_codeword_to_rx();
+    clear_error_list();
+    rx_frame[0]   = rx_frame[0]   ^ 8'h5A; mark_error(0);
+    rx_frame[7]   = rx_frame[7]   ^ 8'h33; mark_error(7);
+    rx_frame[13]  = rx_frame[13]  ^ 8'hC7; mark_error(13);
+    rx_frame[25]  = rx_frame[25]  ^ 8'h81; mark_error(25);
+    rx_frame[38]  = rx_frame[38]  ^ 8'h0F; mark_error(38);
+    rx_frame[49]  = rx_frame[49]  ^ 8'hA6; mark_error(49);
+    rx_frame[63]  = rx_frame[63]  ^ 8'h71; mark_error(63);
+    rx_frame[191] = rx_frame[191] ^ 8'h4D; mark_error(191);
+    rx_frame[100] = rx_frame[100] ^ 8'h58; mark_error(100);
+    run_one_test("NINE_ERRORS_EXPECTED_TO_FAIL", 1'b0);
+
+    $display("------------------------------------------------------------");
+    $display("TOTAL PASSED = %0d", pass_count);
+    $display("TOTAL FAILED = %0d", fail_count);
+    $display("------------------------------------------------------------");
+
+    if (fail_count == 0)
+        $display("FINAL RESULT: ALL RS(208,192) DECODER TESTS PASSED");
+    else
+        $display("FINAL RESULT: SOME RS(208,192) DECODER TESTS FAILED");
+
+    #(10*Period);
+    tb_done = 1'b1;
+end
+
+task build_reference_codeword;
+    begin
+        // User codeword: ASCII "hello world" padded with zeros to 192 data symbols.
+        // Last 16 symbols are the user-supplied RS parity.
+        // RS(208,192): codeword[0:191] = data, codeword[192:207] = parity.
+        // Convention verified: GF(2^8), primitive polynomial 0x11D, alpha=0x02, roots alpha^1..alpha^16.
+        // Parity: BA C7 E3 CA ED E8 B8 C6 B8 56 09 3F 6E 09 53 B5
+        // Syndromes S1..S16 verified as all zero.
+        codeword[  0] = 8'h68;
+        codeword[  1] = 8'h65;
+        codeword[  2] = 8'h6C;
+        codeword[  3] = 8'h6C;
+        codeword[  4] = 8'h6F;
+        codeword[  5] = 8'h20;
+        codeword[  6] = 8'h77;
+        codeword[  7] = 8'h6F;
+        codeword[  8] = 8'h72;
+        codeword[  9] = 8'h6C;
+        codeword[ 10] = 8'h64;
+        codeword[ 11] = 8'h00;
+        codeword[ 12] = 8'h00;
+        codeword[ 13] = 8'h00;
+        codeword[ 14] = 8'h00;
+        codeword[ 15] = 8'h00;
+        codeword[ 16] = 8'h00;
+        codeword[ 17] = 8'h00;
+        codeword[ 18] = 8'h00;
+        codeword[ 19] = 8'h00;
+        codeword[ 20] = 8'h00;
+        codeword[ 21] = 8'h00;
+        codeword[ 22] = 8'h00;
+        codeword[ 23] = 8'h00;
+        codeword[ 24] = 8'h00;
+        codeword[ 25] = 8'h00;
+        codeword[ 26] = 8'h00;
+        codeword[ 27] = 8'h00;
+        codeword[ 28] = 8'h00;
+        codeword[ 29] = 8'h00;
+        codeword[ 30] = 8'h00;
+        codeword[ 31] = 8'h00;
+        codeword[ 32] = 8'h00;
+        codeword[ 33] = 8'h00;
+        codeword[ 34] = 8'h00;
+        codeword[ 35] = 8'h00;
+        codeword[ 36] = 8'h00;
+        codeword[ 37] = 8'h00;
+        codeword[ 38] = 8'h00;
+        codeword[ 39] = 8'h00;
+        codeword[ 40] = 8'h00;
+        codeword[ 41] = 8'h00;
+        codeword[ 42] = 8'h00;
+        codeword[ 43] = 8'h00;
+        codeword[ 44] = 8'h00;
+        codeword[ 45] = 8'h00;
+        codeword[ 46] = 8'h00;
+        codeword[ 47] = 8'h00;
+        codeword[ 48] = 8'h00;
+        codeword[ 49] = 8'h00;
+        codeword[ 50] = 8'h00;
+        codeword[ 51] = 8'h00;
+        codeword[ 52] = 8'h00;
+        codeword[ 53] = 8'h00;
+        codeword[ 54] = 8'h00;
+        codeword[ 55] = 8'h00;
+        codeword[ 56] = 8'h00;
+        codeword[ 57] = 8'h00;
+        codeword[ 58] = 8'h00;
+        codeword[ 59] = 8'h00;
+        codeword[ 60] = 8'h00;
+        codeword[ 61] = 8'h00;
+        codeword[ 62] = 8'h00;
+        codeword[ 63] = 8'h00;
+        codeword[ 64] = 8'h00;
+        codeword[ 65] = 8'h00;
+        codeword[ 66] = 8'h00;
+        codeword[ 67] = 8'h00;
+        codeword[ 68] = 8'h00;
+        codeword[ 69] = 8'h00;
+        codeword[ 70] = 8'h00;
+        codeword[ 71] = 8'h00;
+        codeword[ 72] = 8'h00;
+        codeword[ 73] = 8'h00;
+        codeword[ 74] = 8'h00;
+        codeword[ 75] = 8'h00;
+        codeword[ 76] = 8'h00;
+        codeword[ 77] = 8'h00;
+        codeword[ 78] = 8'h00;
+        codeword[ 79] = 8'h00;
+        codeword[ 80] = 8'h00;
+        codeword[ 81] = 8'h00;
+        codeword[ 82] = 8'h00;
+        codeword[ 83] = 8'h00;
+        codeword[ 84] = 8'h00;
+        codeword[ 85] = 8'h00;
+        codeword[ 86] = 8'h00;
+        codeword[ 87] = 8'h00;
+        codeword[ 88] = 8'h00;
+        codeword[ 89] = 8'h00;
+        codeword[ 90] = 8'h00;
+        codeword[ 91] = 8'h00;
+        codeword[ 92] = 8'h00;
+        codeword[ 93] = 8'h00;
+        codeword[ 94] = 8'h00;
+        codeword[ 95] = 8'h00;
+        codeword[ 96] = 8'h00;
+        codeword[ 97] = 8'h00;
+        codeword[ 98] = 8'h00;
+        codeword[ 99] = 8'h00;
+        codeword[100] = 8'h00;
+        codeword[101] = 8'h00;
+        codeword[102] = 8'h00;
+        codeword[103] = 8'h00;
+        codeword[104] = 8'h00;
+        codeword[105] = 8'h00;
+        codeword[106] = 8'h00;
+        codeword[107] = 8'h00;
+        codeword[108] = 8'h00;
+        codeword[109] = 8'h00;
+        codeword[110] = 8'h00;
+        codeword[111] = 8'h00;
+        codeword[112] = 8'h00;
+        codeword[113] = 8'h00;
+        codeword[114] = 8'h00;
+        codeword[115] = 8'h00;
+        codeword[116] = 8'h00;
+        codeword[117] = 8'h00;
+        codeword[118] = 8'h00;
+        codeword[119] = 8'h00;
+        codeword[120] = 8'h00;
+        codeword[121] = 8'h00;
+        codeword[122] = 8'h00;
+        codeword[123] = 8'h00;
+        codeword[124] = 8'h00;
+        codeword[125] = 8'h00;
+        codeword[126] = 8'h00;
+        codeword[127] = 8'h00;
+        codeword[128] = 8'h00;
+        codeword[129] = 8'h00;
+        codeword[130] = 8'h00;
+        codeword[131] = 8'h00;
+        codeword[132] = 8'h00;
+        codeword[133] = 8'h00;
+        codeword[134] = 8'h00;
+        codeword[135] = 8'h00;
+        codeword[136] = 8'h00;
+        codeword[137] = 8'h00;
+        codeword[138] = 8'h00;
+        codeword[139] = 8'h00;
+        codeword[140] = 8'h00;
+        codeword[141] = 8'h00;
+        codeword[142] = 8'h00;
+        codeword[143] = 8'h00;
+        codeword[144] = 8'h00;
+        codeword[145] = 8'h00;
+        codeword[146] = 8'h00;
+        codeword[147] = 8'h00;
+        codeword[148] = 8'h00;
+        codeword[149] = 8'h00;
+        codeword[150] = 8'h00;
+        codeword[151] = 8'h00;
+        codeword[152] = 8'h00;
+        codeword[153] = 8'h00;
+        codeword[154] = 8'h00;
+        codeword[155] = 8'h00;
+        codeword[156] = 8'h00;
+        codeword[157] = 8'h00;
+        codeword[158] = 8'h00;
+        codeword[159] = 8'h00;
+        codeword[160] = 8'h00;
+        codeword[161] = 8'h00;
+        codeword[162] = 8'h00;
+        codeword[163] = 8'h00;
+        codeword[164] = 8'h00;
+        codeword[165] = 8'h00;
+        codeword[166] = 8'h00;
+        codeword[167] = 8'h00;
+        codeword[168] = 8'h00;
+        codeword[169] = 8'h00;
+        codeword[170] = 8'h00;
+        codeword[171] = 8'h00;
+        codeword[172] = 8'h00;
+        codeword[173] = 8'h00;
+        codeword[174] = 8'h00;
+        codeword[175] = 8'h00;
+        codeword[176] = 8'h00;
+        codeword[177] = 8'h00;
+        codeword[178] = 8'h00;
+        codeword[179] = 8'h00;
+        codeword[180] = 8'h00;
+        codeword[181] = 8'h00;
+        codeword[182] = 8'h00;
+        codeword[183] = 8'h00;
+        codeword[184] = 8'h00;
+        codeword[185] = 8'h00;
+        codeword[186] = 8'h00;
+        codeword[187] = 8'h00;
+        codeword[188] = 8'h00;
+        codeword[189] = 8'h00;
+        codeword[190] = 8'h00;
+        codeword[191] = 8'h00;
+        codeword[192] = 8'hBA;
+        codeword[193] = 8'hC7;
+        codeword[194] = 8'hE3;
+        codeword[195] = 8'hCA;
+        codeword[196] = 8'hED;
+        codeword[197] = 8'hE8;
+        codeword[198] = 8'hB8;
+        codeword[199] = 8'hC6;
+        codeword[200] = 8'hB8;
+        codeword[201] = 8'h56;
+        codeword[202] = 8'h09;
+        codeword[203] = 8'h3F;
+        codeword[204] = 8'h6E;
+        codeword[205] = 8'h09;
+        codeword[206] = 8'h53;
+        codeword[207] = 8'hB5;
+    end
+endtask
+
+task copy_codeword_to_rx;
+    begin
+        for (i = 0; i < N; i = i + 1)
+            rx_frame[i] = codeword[i];
+    end
+endtask
+
+task build_user_corrupted_rx_frame;
+    begin
+        // Start from the correct reference codeword, then apply the exact
+        // user-supplied corrupted values. Parity remains unchanged.
+        copy_codeword_to_rx();
+
+        rx_frame[  1] = 8'h6F; // correct 65
+        rx_frame[  2] = 8'h6E; // correct 6C
+        rx_frame[ 13] = 8'hFF; // correct 00
+        rx_frame[ 17] = 8'hBB; // correct 00
+    end
+endtask
+
+task clear_error_list;
+    begin
+        for (mark_idx = 0; mark_idx < 9; mark_idx = mark_idx + 1)
+            marked_error_pos[mark_idx] = 9'h1FF;
+
+        injected_error_count  = 6'd0;
+        over_correction_limit = 1'b0;
+    end
+endtask
+
+function is_marked_error;
+    input integer pos;
+    integer j;
+    begin
+        is_marked_error = 1'b0;
+        for (j = 0; j < 9; j = j + 1) begin
+            if (marked_error_pos[j] == pos[8:0])
+                is_marked_error = 1'b1;
         end
-    endtask
+    end
+endfunction
 
-    // ---- Inject a single-byte error ----
-    task inject_error;
-        input [7:0] pos;
-        input [7:0] mask;
-        begin
-            codeword[pos] = codeword[pos] ^ mask;
-            // expected output remains 8'h00 (decoder should correct it)
+task mark_error;
+    input integer pos;
+    begin
+        if (!is_marked_error(pos)) begin
+            if (injected_error_count < 9)
+                marked_error_pos[injected_error_count] = pos[8:0];
+
+            injected_error_count = injected_error_count + 1'b1;
+
+            // After increment: raise over limit only when actual count is greater than T.
+            if (injected_error_count > T)
+                over_correction_limit = 1'b1;
         end
-    endtask
+    end
+endtask
 
-    // ---- Clock in all N bytes ----
-    task send_frame;
-        integer k;
-        begin
-            @(posedge clk);
-            for (k = 0; k < N; k = k + 1) begin
-                @(negedge clk);
-                rx_data  = codeword[k];
-                rx_valid = 1'b1;
-                @(posedge clk);
-            end
+task reset_decoder;
+    begin
+        enable  = 1'b0;
+        in_data = 8'h00;
+
+        corrected_error_valid = 1'b0;
+        corrected_error_index = 9'd0;
+        output_index_dbg      = 9'd0;
+
+        rst = 1'b1;
+        #(Period);
+        rst = 1'b0;
+        #(2*Period);
+        rst = 1'b1;
+        #(2*Period);
+    end
+endtask
+
+task send_frame;
+    begin
+        @(negedge clk);
+        enable = 1'b1;
+
+        for (i = 0; i < N; i = i + 1) begin
+            in_data = rx_frame[i];
             @(negedge clk);
-            rx_valid = 1'b0;
-            rx_data  = 8'h00;
         end
-    endtask
 
-    // ---- Collect N output bytes ----
-    task collect_output;
-        integer k;
-        begin
-            k = 0;
-            while (k < N) begin
-                @(posedge clk);
-                if (tx_valid) begin
-                    received[k] = tx_data;
-                    k = k + 1;
-                end
-            end
-        end
-    endtask
+        enable  = 1'b0;
+        in_data = 8'h00;
+    end
+endtask
 
-    // ---- Wait for frame_done ----
-    task wait_frame_done;
-        begin
-            // Check if it's already high before waiting!
-            if (!frame_done) @(posedge frame_done);
-            
+task collect_and_check_output;
+    integer out_idx;
+    integer timeout;
+    integer local_errors;
+    begin
+        out_idx = 0;
+        timeout = 0;
+        local_errors = 0;
+        error_count = 0;
+        uncorrectable_detected = 1'b0;
+
+        while ((out_idx < K) && (timeout < 12000)) begin
             @(posedge clk);
-        end
-    endtask
+            #1; // sample DUT registered outputs after nonblocking updates, so index matches out_data
+            timeout = timeout + 1;
+            corrected_error_valid = 1'b0;
 
-    // ---- Check and report ----
-    task check_result;
-        input [255:0] tname;
-        input         expect_fail;
-        integer       k, mismatches;
-        begin
-            mismatches = 0;
-            if (expect_fail) begin
-                if (decode_fail) begin
-                    $display("[PASS] %s  decode_fail correctly asserted.", tname);
-                    pass_count = pass_count + 1;
-                end else begin
-                    $display("[FAIL] %s  decode_fail NOT asserted (expected).", tname);
-                    fail_count = fail_count + 1;
+            if (DONE) begin
+                dec_data_o[out_idx] = out_data;
+                output_index_dbg = out_idx[8:0];
+
+                if (out_data !== codeword[out_idx]) begin
+                    $display("ERROR: output[%0d] expected %02h, got %02h", out_idx, codeword[out_idx], out_data);
+                    local_errors = local_errors + 1;
+                    error_count = local_errors;
+                    uncorrectable_detected = 1'b1;
                 end
-            end else begin
-                if (decode_fail) begin
-                    $display("[FAIL] %s  unexpected decode_fail.", tname);
-                    fail_count = fail_count + 1;
-                end else begin
-                    for (k = 0; k < N; k = k + 1) begin
-                        if (received[k] !== expected[k]) begin
-                            $display("       byte[%3d] : got 0x%02h, expected 0x%02h",
-                                     k, received[k], expected[k]);
-                            mismatches = mismatches + 1;
-                        end
-                    end
-                    if (mismatches == 0) begin
-                        $display("[PASS] %s  all %0d bytes correct.", tname, N);
-                        pass_count = pass_count + 1;
-                    end else begin
-                        $display("[FAIL] %s  %0d byte mismatch(es).", tname, mismatches);
-                        fail_count = fail_count + 1;
-                    end
+
+                if (is_marked_error(out_idx) && (out_data === codeword[out_idx])) begin
+                    corrected_error_valid = 1'b1;
+                    corrected_error_index = out_idx[8:0];
+                    $display("CORRECTED ERROR AT INDEX %0d", out_idx);
                 end
+
+                out_idx = out_idx + 1;
             end
         end
-    endtask
 
-    // ---- Full test runner ----
-    task run_test;
-        input [255:0] tname;
-        input         expect_fail;
-        begin
-            $display("\n--- %s ---", tname);
-            @(negedge clk); rst_n = 1'b0;
-            repeat(4) @(posedge clk);
-            @(negedge clk); rst_n = 1'b1;
-            repeat(2) @(posedge clk);
-
-            fork
-                send_frame;
-                collect_output;
-                wait_frame_done;
-            join
-
-            check_result(tname, expect_fail);
+        if (out_idx != K) begin
+            $display("ERROR: timeout before receiving all %0d decoded symbols. Received %0d only.", K, out_idx);
+            local_errors = local_errors + 1;
+            error_count = local_errors;
+            uncorrectable_detected = 1'b1;
         end
-    endtask
 
-    // =========================================================================
-    // Test sequence
-    // =========================================================================
-    initial begin
-        clk      = 1'b0;
-        rst_n    = 1'b0;
-        rx_data  = 8'h00;
-        rx_valid = 1'b0;
-        pass_count = 0;
-        fail_count = 0;
-
-        repeat(4) @(posedge clk);
-        rst_n = 1'b1;
-        repeat(4) @(posedge clk);
-
-        // =====================================================================
-        // TEST 1 : zero errors
-        // =====================================================================
-        build_zero_codeword;
-        run_test("TEST1: no errors                      ", 1'b0);
-
-        // =====================================================================
-        // TEST 2 : 5 errors (well within t=16)
-        // =====================================================================
-        build_zero_codeword;
-        inject_error(8'd7,   8'hAB);
-        inject_error(8'd33,  8'h5C);
-        inject_error(8'd99,  8'hFF);
-        inject_error(8'd180, 8'h12);
-        inject_error(8'd250, 8'hE3);
-        run_test("TEST2: 5 errors (pos 7,33,99,180,250) ", 1'b0);
-
-        // =====================================================================
-        // TEST 3 : 16 errors (exactly at the t=16 limit)
-        // =====================================================================
-        build_zero_codeword;
-        inject_error(8'd0,   8'h11);
-        inject_error(8'd15,  8'h22);
-        inject_error(8'd30,  8'h33);
-        inject_error(8'd45,  8'h44);
-        inject_error(8'd60,  8'h55);
-        inject_error(8'd75,  8'h66);
-        inject_error(8'd90,  8'h77);
-        inject_error(8'd105, 8'h88);
-        inject_error(8'd120, 8'h99);
-        inject_error(8'd135, 8'hAA);
-        inject_error(8'd150, 8'hBB);
-        inject_error(8'd165, 8'hCC);
-        inject_error(8'd180, 8'hDD);
-        inject_error(8'd195, 8'hEE);
-        inject_error(8'd210, 8'hA5);
-        inject_error(8'd254, 8'h5A);
-        run_test("TEST3: 16 errors (limit t=16)         ", 1'b0);
-
-        // =====================================================================
-        // TEST 4 : 17 errors (exceeds t=16; decode_fail expected)
-        // =====================================================================
-        build_zero_codeword;
-        inject_error(8'd1,   8'h01);  inject_error(8'd2,  8'h02);
-        inject_error(8'd3,   8'h03);  inject_error(8'd4,  8'h04);
-        inject_error(8'd5,   8'h05);  inject_error(8'd6,  8'h06);
-        inject_error(8'd7,   8'h07);  inject_error(8'd8,  8'h08);
-        inject_error(8'd9,   8'h09);  inject_error(8'd10, 8'h0A);
-        inject_error(8'd11,  8'h0B);  inject_error(8'd12, 8'h0C);
-        inject_error(8'd13,  8'h0D);  inject_error(8'd14, 8'h0E);
-        inject_error(8'd15,  8'h0F);  inject_error(8'd16, 8'h10);
-        inject_error(8'd17,  8'h11);  // 17th error
-        run_test("TEST4: 17 errors (>t=16, expect fail) ", 1'b1);
-
-        // =====================================================================
-        // Summary
-        // =====================================================================
-        $display("\n============================================");
-        $display("  RS(255,223)  Results: %0d PASSED / %0d FAILED",
-                 pass_count, fail_count);
-        $display("============================================\n");
-
-        if (fail_count == 0) $display("ALL TESTS PASSED");
-        else                 $display("SOME TESTS FAILED — inspect waveforms");
-
-        $finish;
+        error_count = local_errors;
     end
+endtask
 
-    // =========================================================================
-    // Watchdog
-    // =========================================================================
-    initial begin
-        #(CLK * 150_000);
-        $display("[TIMEOUT] Simulation exceeded 150 000 cycles.");
-        $finish;
+task run_one_test;
+    input [8*64-1:0] test_name;
+    input expect_success;
+    begin
+        test_expected_to_pass = expect_success;
+        error_count = 0;
+        uncorrectable_detected = 1'b0;
+
+        $display("------------------------------------------------------------");
+        $display("Running test: %0s", test_name);
+        $display("Injected errors = %0d, correction limit = %0d, over_limit = %0d",
+                 injected_error_count, T, over_correction_limit);
+
+        reset_decoder();
+        send_frame();
+        collect_and_check_output();
+
+        if (expect_success) begin
+            if (error_count == 0) begin
+                $display("PASS: %0s", test_name);
+                pass_count = pass_count + 1;
+            end else begin
+                $display("FAIL: %0s, mismatches = %0d", test_name, error_count);
+                fail_count = fail_count + 1;
+            end
+        end else begin
+            if (error_count != 0) begin
+                $display("PASS: %0s failed as expected because errors > 8", test_name);
+                pass_count = pass_count + 1;
+            end else begin
+                $display("FAIL: %0s unexpectedly passed, but it has 9 errors", test_name);
+                fail_count = fail_count + 1;
+            end
+        end
     end
+endtask
 
-    // =========================================================================
-    // Waveform dump
-    // =========================================================================
-    initial begin
-        $dumpfile("rs_decoder_255_223.vcd");
-        $dumpvars(0, tb_rs_decoder);
-    end
-
-endmodule
+endmodule 

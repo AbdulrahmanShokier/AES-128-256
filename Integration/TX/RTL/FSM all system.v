@@ -196,9 +196,9 @@ module DVB_all_tx_fsm #(
             dummy_en    <= (next_state == Dummy);
             preamble_en <= (next_state == Preamble);
             control_en  <= (next_state == Control);
-            data_en     <= (next_state == Data) || (current_state == Control) && (control_counter >= 9'd239);
+            data_en     <= (next_state == Data) || (current_state == Control) && (control_counter >= 9'd234);
             crc_en      <= (next_state == Crc);
-            aes_fsm_en  <= (current_state == Control) && (control_counter == 9'd237);
+            aes_fsm_en  <= (current_state == Control) && (control_counter == 9'd232);
         end
     end
 

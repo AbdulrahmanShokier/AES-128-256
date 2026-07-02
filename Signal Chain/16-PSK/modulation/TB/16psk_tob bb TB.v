@@ -8,7 +8,7 @@ module psk16_tx_top_bb_tb;
 parameter DATA_WIDTH  = 16;
 parameter FRAC_WIDTH  = 14;
 parameter COEFF_WIDTH = 16;
-parameter NUM_TAPS    = 65;
+parameter NUM_TAPS    = 33;
 parameter UPSAMPLE    = 4;
 parameter CLK_PERIOD  = 10;
 
@@ -243,10 +243,14 @@ initial begin
     capture_en  = 1;
     capture_idx = 0;
 
-    send_symbol(4'b0001);   // 
-    send_symbol(4'b1110);   // 
-    send_symbol(4'b0111);   // 
-    send_symbol(4'b1111);   // 
+    send_symbol(4'b0000);
+    send_symbol(4'b0000);
+    send_symbol(4'b0000);
+    send_symbol(4'b0000);
+    send_symbol(4'b1010);   // 
+    send_symbol(4'b0101);   // 
+    send_symbol(4'b0101);   // 
+    send_symbol(4'b1100);   // 
 
     check_valid_output(PIPELINE_FLUSH);
 
