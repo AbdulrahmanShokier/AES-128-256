@@ -28,7 +28,7 @@ reg [1:0] counter;
 
 always @(posedge clk)
 begin
-    if(rst)
+    if(!rst)
     begin
         started   <= 1'b0;
         counter   <= 2'd0;
