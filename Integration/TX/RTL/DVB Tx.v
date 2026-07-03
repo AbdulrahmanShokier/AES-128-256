@@ -144,6 +144,7 @@ module DVB_tx_top #(
         .clk_sample(clk_sample),
         .rst(rst),
         .symbol_tick(symbol_tick),
+        .aes_key(aes_key),
 
         .preamble_en(preamble_en),
         .control_en(control_en),

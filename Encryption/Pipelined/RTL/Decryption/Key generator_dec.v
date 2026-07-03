@@ -14,6 +14,7 @@ module key_generator_dec #(
     input  wire                      clk,
     input  wire                      rst,           // Active low reset
     input  wire                      en,            // Enable signal from FSM
+    input  wire                      symbol_tick,
     input  wire [BLOCK_LENGTH-1:0]   key,           // Initial key (K0)
     input  wire [3:0]                Round_Count,   // Current round (0-10)
     output reg  [BLOCK_LENGTH-1:0]   current_key   // Current round key
@@ -33,26 +34,22 @@ wire [127:0] next_key;              // Computed next key
 //==============================================================================
 // Key Expansion Logic
 //==============================================================================
-// Extract 32-bit words from previous key
 assign w0 = prev_key[127:96];
 assign w1 = prev_key[95:64];
 assign w2 = prev_key[63:32];
 assign w3 = prev_key[31:0];
 
-// G-function instantiation
 g_function g_func (
     .word_3(w3),
     .round_number(round_const),
     .word_3_substituted(g_out)
 );
 
-// Key expansion XOR chain
 assign w4 = w0 ^ g_out;
 assign w5 = w1 ^ w4;
 assign w6 = w2 ^ w5;
 assign w7 = w3 ^ w6;
 
-// Assemble next round key
 assign next_key = {w4, w5, w6, w7};
 
 //==============================================================================
@@ -64,15 +61,13 @@ always @(posedge clk) begin
         current_key <= 128'b0;
         //key_valid   <= 1'b0;
     end
-    else if (en) begin
+    else if (en && symbol_tick) begin
         //key_valid <= 1'b1;
         if (Round_Count == 4'd0) begin
-            // Load initial key
             prev_key    <= key;
             current_key <= key;
         end
         else if (Round_Count <= 4'd10) begin
-            // Generate and output next round key
             prev_key    <= next_key;
             current_key <= next_key;
         end
@@ -85,8 +80,6 @@ end
 //==============================================================================
 // Round Constant Generation (Optimized LUT-based)
 //==============================================================================
-
-
 function [7:0] get_round_constant;
     input [3:0] round;
     begin

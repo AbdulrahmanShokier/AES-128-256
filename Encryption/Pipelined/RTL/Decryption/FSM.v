@@ -1,7 +1,8 @@
-module FSM(
+module FSM_decryption(
     input            clk,
     input            rst,
     input            fsm_en,
+    input            symbol_tick,
     output reg       key_gene_en,
     output reg [3:0] Round_Count
 );
@@ -16,7 +17,7 @@ hold    = 2'b10;
 reg [1:0] current_state, next_state;
 
 
-always @(posedge clk or negedge rst) 
+always @(posedge clk) 
 begin
     if(!rst)
         current_state <= idle;
@@ -28,7 +29,7 @@ end
 //////////////////////////////
 //   OUTPUT + COUNTER LOGIC
 //////////////////////////////
-always @(posedge clk or negedge rst) 
+always @(posedge clk) 
 begin
     if(!rst) 
     begin
@@ -49,19 +50,20 @@ begin
 
             counter: 
             begin
+                key_gene_en <= 1'b1;
+
                 if(current_state != counter) 
                 begin
                     counter_value <= 4'd0;
                     Round_Count   <= 4'd0;
-                    key_gene_en   <= 1'b1;
                 end
 
-                else 
+                else if (symbol_tick)
                 begin
                     counter_value <= counter_value + 1'b1;
                     Round_Count   <= counter_value + 1'b1;
-                    key_gene_en   <= 1'b1;
                 end
+                // else: hold counter_value/Round_Count until symbol_tick arrives
             end
 
             hold:

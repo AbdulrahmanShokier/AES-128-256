@@ -6,6 +6,8 @@ module AES_dec #(parameter BLOCK_LENGTH = 128)
     input      [BLOCK_LENGTH-1:0] KEY,
     input                         enable,     
     input                         fsm_en,
+    input                         symbol_tick,
+
     output     [BLOCK_LENGTH-1:0] OUT,
     output                        valid_out   //valid output data
 );
@@ -31,7 +33,8 @@ module AES_dec #(parameter BLOCK_LENGTH = 128)
         if (!rst) begin
             en_pipe <= 11'b0;
         end 
-        else begin
+        else if(symbol_tick)
+        begin
              // Shift enable left: LSB is input (Round 0), MSB is output (Round 10)
             en_pipe <= {en_pipe[9:0], enable};
         end
@@ -42,57 +45,57 @@ module AES_dec #(parameter BLOCK_LENGTH = 128)
 // ── Individual FF registers ──
     always @(posedge clk) begin
         if (!rst)                       k0 <= 128'b0;
-        else if (round_counter == 4'd1) k0 <= KEY;
+        else if (symbol_tick && round_counter == 4'd1) k0 <= KEY;
     end
 
     always @(posedge clk) begin
         if (!rst)                       k1 <= 128'b0;
-        else if (round_counter == 4'd2) k1 <= current_key;
+        else if (symbol_tick && round_counter == 4'd2) k1 <= current_key;
     end
 
     always @(posedge clk) begin
         if (!rst)                       k2 <= 128'b0;
-        else if (round_counter == 4'd3) k2 <= current_key;
+        else if (symbol_tick && round_counter == 4'd3) k2 <= current_key;
     end
 
     always @(posedge clk) begin
         if (!rst)                       k3 <= 128'b0;
-        else if (round_counter == 4'd4) k3 <= current_key;
+        else if (symbol_tick && round_counter == 4'd4) k3 <= current_key;
     end
 
     always @(posedge clk) begin
         if (!rst)                       k4 <= 128'b0;
-        else if (round_counter == 4'd5) k4 <= current_key;
+        else if (symbol_tick && round_counter == 4'd5) k4 <= current_key;
     end
 
     always @(posedge clk) begin
         if (!rst)                       k5 <= 128'b0;
-        else if (round_counter == 4'd6) k5 <= current_key;
+        else if (symbol_tick && round_counter == 4'd6) k5 <= current_key;
     end
 
     always @(posedge clk) begin
         if (!rst)                       k6 <= 128'b0;
-        else if (round_counter == 4'd7) k6 <= current_key;
+        else if (symbol_tick && round_counter == 4'd7) k6 <= current_key;
     end
 
     always @(posedge clk) begin
         if (!rst)                       k7 <= 128'b0;
-        else if (round_counter == 4'd8) k7 <= current_key;
+        else if (symbol_tick && round_counter == 4'd8) k7 <= current_key;
     end
 
     always @(posedge clk) begin
         if (!rst)                       k8 <= 128'b0;
-        else if (round_counter == 4'd9) k8 <= current_key;
+        else if (symbol_tick && round_counter == 4'd9) k8 <= current_key;
     end
 
     always @(posedge clk) begin
         if (!rst)                       k9 <= 128'b0;
-        else if (round_counter == 4'd10) k9 <= current_key;
+        else if (symbol_tick && round_counter == 4'd10) k9 <= current_key;
     end
 
     always @(posedge clk) begin
         if (!rst)                        k10 <= 128'b0;
-        else if (round_counter == 4'd11) k10 <= current_key;
+        else if (symbol_tick && round_counter == 4'd11) k10 <= current_key;
     end
 
 
@@ -107,17 +110,16 @@ key_generator_dec  key_round (.key(KEY), .Round_Count(round_counter),
 
 
 
-round_10_dec       round10(.clk(clk), .rst(rst), .IN(IN), .KEY(k10), .OUT(r10_out));
-rounds_9_to_2_dec  round9 (.clk(clk), .rst(rst), .IN(r10_out), .KEY(k9), .OUT(r9_out));
-rounds_9_to_2_dec  round8 (.clk(clk), .rst(rst), .IN(r9_out), .KEY(k8), .OUT(r8_out));
-rounds_9_to_2_dec  round7 (.clk(clk), .rst(rst), .IN(r8_out), .KEY(k7), .OUT(r7_out));
-rounds_9_to_2_dec  round6 (.clk(clk), .rst(rst), .IN(r7_out), .KEY(k6), .OUT(r6_out));
-rounds_9_to_2_dec  round5 (.clk(clk), .rst(rst), .IN(r6_out), .KEY(k5), .OUT(r5_out));
-rounds_9_to_2_dec  round4 (.clk(clk), .rst(rst), .IN(r5_out), .KEY(k4), .OUT(r4_out));
-rounds_9_to_2_dec  round3 (.clk(clk), .rst(rst), .IN(r4_out), .KEY(k3), .OUT(r3_out));
-rounds_9_to_2_dec  round2 (.clk(clk), .rst(rst), .IN(r3_out), .KEY(k2), .OUT(r2_out));
-round_1_dec        round1 (.clk(clk), .rst(rst), .IN(r2_out), .KEY1(k1), .KEY0(k0), .OUT(r1_out));
-
+round_10_dec       round10(.clk(clk), .rst(rst), .enable(enable),      .symbol_tick(symbol_tick), .IN(IN),      .KEY(k10), .OUT(r10_out));
+rounds_9_to_2_dec  round9 (.clk(clk), .rst(rst), .enable(en_pipe[0]),  .symbol_tick(symbol_tick), .IN(r10_out), .KEY(k9),  .OUT(r9_out));
+rounds_9_to_2_dec  round8 (.clk(clk), .rst(rst), .enable(en_pipe[1]),  .symbol_tick(symbol_tick), .IN(r9_out),  .KEY(k8),  .OUT(r8_out));
+rounds_9_to_2_dec  round7 (.clk(clk), .rst(rst), .enable(en_pipe[2]),  .symbol_tick(symbol_tick), .IN(r8_out),  .KEY(k7),  .OUT(r7_out));
+rounds_9_to_2_dec  round6 (.clk(clk), .rst(rst), .enable(en_pipe[3]),  .symbol_tick(symbol_tick), .IN(r7_out),  .KEY(k6),  .OUT(r6_out));
+rounds_9_to_2_dec  round5 (.clk(clk), .rst(rst), .enable(en_pipe[4]),  .symbol_tick(symbol_tick), .IN(r6_out),  .KEY(k5),  .OUT(r5_out));
+rounds_9_to_2_dec  round4 (.clk(clk), .rst(rst), .enable(en_pipe[5]),  .symbol_tick(symbol_tick), .IN(r5_out),  .KEY(k4),  .OUT(r4_out));
+rounds_9_to_2_dec  round3 (.clk(clk), .rst(rst), .enable(en_pipe[6]),  .symbol_tick(symbol_tick), .IN(r4_out),  .KEY(k3),  .OUT(r3_out));
+rounds_9_to_2_dec  round2 (.clk(clk), .rst(rst), .enable(en_pipe[7]),  .symbol_tick(symbol_tick), .IN(r3_out),  .KEY(k2),  .OUT(r2_out));
+round_1_dec        round1 (.clk(clk), .rst(rst), .enable(en_pipe[8]),  .symbol_tick(symbol_tick), .IN(r2_out),  .KEY1(k1), .KEY0(k0), .OUT(r1_out));
 
 
     // Outputs 

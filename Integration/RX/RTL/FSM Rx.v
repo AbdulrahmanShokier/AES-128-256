@@ -21,7 +21,8 @@ module Rx_ctrl_fsm #(
     output       enable_B,
     output reg   load,
     output reg   aes_valid,
-    output       nibble_batch_done_o
+    output       nibble_batch_done_o,
+    output       sel                // 0 = decoderA is outputting, 1 = decoderB is outputting
 );
 
 localparam IDLE  = 2'd0;
@@ -111,6 +112,8 @@ end
 // ---------------- which decoder is currently outputting (covers DRAIN too) ----------------
 wire outputting_is_A = (state == DEC_B) || (state == DRAIN &&  drain_src_is_A);
 wire outputting_is_B = (state == DEC_A) || (state == DRAIN && !drain_src_is_A);
+
+assign sel = outputting_is_B;   // 0 = A outputting, 1 = B outputting
 
 // ---------------- latch fail flag once, right when output starts ----------------
 reg fail_latched;

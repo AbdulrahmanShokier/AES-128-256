@@ -1,7 +1,9 @@
 module round_1_dec #(parameter BLOCK_LENGTH = 128)
 (
     input                         clk,
-    input                         rst,  
+    input                         rst,
+    input                         enable,
+    input                         symbol_tick,
     input      [BLOCK_LENGTH-1:0] IN,
     input      [BLOCK_LENGTH-1:0] KEY1,
     input      [BLOCK_LENGTH-1:0] KEY0,
@@ -35,7 +37,7 @@ begin
             OUT <= 128'b0;
         end
 
-        else 
+        else if (enable && symbol_tick)
         OUT <= xor_out10;
 end
 

@@ -1,7 +1,9 @@
 module round_10_dec #(parameter BLOCK_LENGTH = 128)
 (
     input                         clk,
-    input                         rst,  
+    input                         rst,
+    input                         enable,
+    input                         symbol_tick,
     input      [BLOCK_LENGTH-1:0] IN,
     input      [BLOCK_LENGTH-1:0] KEY,
     output reg [BLOCK_LENGTH-1:0] OUT
@@ -30,12 +32,9 @@ begin
             OUT <= 128'b0;
         end
 
-        else
+        else if (enable && symbol_tick)
         OUT <= sub_out;
 end
-
-
-
 
 
 endmodule

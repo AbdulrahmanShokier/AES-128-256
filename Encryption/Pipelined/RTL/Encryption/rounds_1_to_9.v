@@ -34,7 +34,7 @@ key_add     xor_with_k1_to_9 (.IN(mix_out), .KEY(KEY), .OUT(xor_out));
 always@(posedge clk)
 begin
 
-        if(symbol_tick && !rst)
+        if(!rst)
         begin
             OUT <= 128'b0;
         end
