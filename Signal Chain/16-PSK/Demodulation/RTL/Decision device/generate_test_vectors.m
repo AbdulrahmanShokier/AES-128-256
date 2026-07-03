@@ -9,7 +9,7 @@ close all;
 M = 16;
 scale = 2^14;
 
-shifts = [0 1 5];      % degrees
+shifts = [0 1 20];      % degrees
 
 fid = fopen('iq_vectors.txt','w');
 

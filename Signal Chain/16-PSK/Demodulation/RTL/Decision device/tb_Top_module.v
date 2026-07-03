@@ -77,14 +77,14 @@ end
 initial
 begin
 
-    rst = 1;
+    rst = 0;
     valid_in = 0;
     I = 0;
     Q = 0;
 
     repeat(4) @(posedge clk);
 
-    rst = 0;
+    rst = 1;
 
     for(i=0;i<48;i=i+1)
     begin
