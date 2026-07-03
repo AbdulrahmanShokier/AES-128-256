@@ -1,4 +1,4 @@
-module psk16_demod_top
+module 16PSK_Decision_device_top
 (
     input               clk,
     input               rst,
