@@ -35,7 +35,7 @@ module Correlation_calc
 	integer i; 
 
 	///////////////////// shift samples in data register /////////////// 
-	always@(posedge clk_sample, negedge rst)
+	always@(posedge clk_sample)
 	begin 
 	 if(!rst)
 	  begin 
@@ -52,7 +52,7 @@ module Correlation_calc
 	
 	///////////// multiplication //////////// 
 
-	always @(posedge clk_sample or negedge rst)
+	always @(posedge clk_sample)
 	begin
 	 if (!rst)
  	  begin
@@ -70,7 +70,7 @@ module Correlation_calc
 	/* Optimize collecting up all products through levels of addition */ 
 	
 	//////////////////// level 1 addition /////////////////	
-	always @(posedge clk_sample or negedge rst) begin
+	always @(posedge clk_sample) begin
 	 if (!rst) begin
 	 	for (i=0; i<128; i=i+1)
 	 		level1_add[i] <= 'd0;
@@ -83,7 +83,7 @@ module Correlation_calc
 	end
 	
 	//////////////////// level 2 addition /////////////////	
-	always @(posedge clk_sample or negedge rst) begin
+	always @(posedge clk_sample) begin
 	 if (!rst) begin
 	 	for (i=0; i<64; i=i+1)
 	 		level2_add[i] <= 'd0;
@@ -95,7 +95,7 @@ module Correlation_calc
 	end
 	
 	//////////////////// level 3 addition /////////////////	
-	always @(posedge clk_sample or negedge rst) begin
+	always @(posedge clk_sample) begin
 	 if (!rst) begin
 	 	for (i=0; i<32; i=i+1)
 	 		level3_add[i] <= 'd0;
@@ -107,7 +107,7 @@ module Correlation_calc
 	end
 	
 	//////////////////// level 4 addition /////////////////	
-	always @(posedge clk_sample or negedge rst) begin
+	always @(posedge clk_sample) begin
 	 if (!rst) begin
 	 	for (i=0; i<16; i=i+1)
 	 		level4_add[i] <= 'd0;
@@ -119,7 +119,7 @@ module Correlation_calc
 	end
 	
 	//////////////////// level 5 addition /////////////////	
-	always @(posedge clk_sample or negedge rst) begin
+	always @(posedge clk_sample) begin
 	 if (!rst) begin
 	 	for (i=0; i<8; i=i+1)
 	 		level5_add[i] <= 'd0;
@@ -131,7 +131,7 @@ module Correlation_calc
 	end
 	
 	//////////////////// level 6 addition /////////////////	
-	always @(posedge clk_sample or negedge rst) begin
+	always @(posedge clk_sample) begin
      if (!rst) begin
          for (i=0; i<4; i=i+1)
              level6_add[i] <= 'd0;
@@ -143,7 +143,7 @@ module Correlation_calc
 	end
 
 	//////////////////// level 7 addition /////////////////	
-	always @(posedge clk_sample or negedge rst) begin
+	always @(posedge clk_sample) begin
      if (!rst) begin
 		for(i=0; i<2; i=i+1)
              level7_add[i] <= 'd0;
@@ -156,7 +156,7 @@ module Correlation_calc
 	
 	//////////////////// Correlation sum (level 8) /////////////////	
 	
-	always@(posedge clk_sample or negedge rst)
+	always@(posedge clk_sample)
 	begin 
 	 if(!rst)
 		corr_sum <= 'd0; 

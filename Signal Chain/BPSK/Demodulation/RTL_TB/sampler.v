@@ -26,7 +26,7 @@ module Sampler
 	
 	/* DownSampler */ 
 	/* sample one out of 4 */ 
-	always @(posedge clk_sample, negedge rst)
+	always @(posedge clk_sample)
 	begin 
 	 if(!rst)
 	  begin 
@@ -56,7 +56,7 @@ module Sampler
 	/* ----------------------------------------------------------------------------*/ 
 	
 	/* counter for the symbols window: each 4 sample for a symbol */ 
-	always @(posedge clk_sample, negedge rst)
+	always @(posedge clk_sample)
 	begin 
 	 if(!rst)
 		Counter_SymbolWindow <='d0; 

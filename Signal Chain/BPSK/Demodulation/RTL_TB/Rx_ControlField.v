@@ -22,7 +22,7 @@ module Rx_ControlField
 
 	
 	/* maintain control_valid for more 4 cycles */ 
-	always@(posedge clk or negedge rst)
+	always@(posedge clk)
 	begin 
 	 if(!rst)
 		controlValid_pipe <= 'd0; 
@@ -34,7 +34,7 @@ module Rx_ControlField
 	end 
 	
 	
-	always@(posedge clk, negedge rst)
+	always@(posedge clk)
 	begin 
 	 if(!rst)
 		Control_register <= 'd0; 
@@ -47,7 +47,7 @@ module Rx_ControlField
 	end 
 	
 	/* count for control */ 
-	always@(posedge clk, negedge rst)
+	always@(posedge clk)
 	begin
 	 if(!rst)
 	  counter_control <= 'd0; 
@@ -57,7 +57,7 @@ module Rx_ControlField
 	  counter_control <= 'd0; 
 	end 
 	
-	always@(posedge clk or negedge rst) 
+	always@(posedge clk) 
 	begin
 	 if(!rst)
 	  Control_complete <= 'd0; 

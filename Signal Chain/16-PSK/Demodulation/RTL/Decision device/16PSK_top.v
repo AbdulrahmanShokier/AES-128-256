@@ -1,4 +1,4 @@
-module Top_module
+module psk16_demod_top
 (
     input               clk,
     input               rst,
