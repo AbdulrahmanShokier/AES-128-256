@@ -1,4 +1,4 @@
-module 16PSK_Decision_device_top
+module Decision_device_16PSK_top
 (
     input               clk,
     input               rst,

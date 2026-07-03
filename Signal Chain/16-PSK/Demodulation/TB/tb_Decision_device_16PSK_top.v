@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_psk16_demod_top;
+module tb_Decision_device_16PSK_top;
 
 reg clk;
 reg rst;
