@@ -32,7 +32,7 @@ module tb_DVB_tx_top;
     localparam CCW          = 8;   // CONTROL_COUNTER_WIDTH  (must hold P_CTRL)
     localparam RS_N         = 208;
 
-    localparam AES_WORD_COUNT = 4; // scaled down from 350 for fast sim
+    localparam AES_WORD_COUNT = 1; // scaled down from 350 for fast sim
     localparam CRC_WIDTH      = 32; // scaled down from 32 for fast sim
 
     // One RS(208,192) codeword spans 13 periods * 32 symbol_ticks = 416
@@ -84,6 +84,18 @@ module tb_DVB_tx_top;
     end
 
     wire symbol_tick = (symbol_cnt == 2'd0);
+
+
+
+    reg [16:0] sample_counter;
+
+    always @(posedge clk_sample) begin
+        if (!rst)
+            sample_counter <= 17'd0;
+        else
+            sample_counter <= sample_counter + 17'b1;
+    end
+
 
     initial clk_sample = 0;
     always #5 clk_sample = ~clk_sample;

@@ -39,7 +39,7 @@ begin
 
     else 
     begin
-        valid_out <= valid_in;
+        valid_out <=  valid_in;
 
         if (valid_in) 
         begin

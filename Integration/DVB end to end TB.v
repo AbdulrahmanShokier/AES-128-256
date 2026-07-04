@@ -33,8 +33,36 @@ module DVB_end_to_end_top_tb;
     //------------------------------------------------------------
     // Instantiate DUT
     //------------------------------------------------------------
-    DVB_end_to_end_top dut
-    (
+     //------------------------------------------------------------
+    // Instantiate DUT
+    //------------------------------------------------------------
+    DVB_end_to_end_top #(
+        .BLOCK_LENGTH(BLOCK_LENGTH),
+
+        // Reed-Solomon parameters
+        .RS_M(8),
+        .RS_K(192),
+        .RS_N(208),
+        .RS_T(8),
+
+        // Frame parameters
+        .PREAMBLE_WIDTH(255),
+        .CONTROL_WIDTH(CONTROL_WIDTH),
+
+        .PREAMBLE_COUNTER_WIDTH(8),
+        .CONTROL_COUNTER_WIDTH(8),
+        .aes_word_counter_width(9),
+        .crc_counter_width(5),
+
+        .aes_word_count(1),
+        .crc_width(32),
+
+        .dummy_width(40),
+        .dummy_counter_width(6),
+
+        // Receiver
+        .DATA_WIDTH(16)
+    ) dut (
         .clk(clk),
         .rst(rst),
 
@@ -52,7 +80,6 @@ module DVB_end_to_end_top_tb;
         .period_count_o(period_count_o),
         .rs_current_state_o(rs_current_state_o)
     );
-
     //------------------------------------------------------------
     // Clock Generation (100 MHz)
     //------------------------------------------------------------
@@ -92,7 +119,7 @@ module DVB_end_to_end_top_tb;
         //--------------------------------------------------------
         // Wait long enough for the complete TX/RX chain
         //--------------------------------------------------------
-        repeat (100000) @(posedge clk);
+        repeat (15000) @(posedge clk);
 
         $display("----------------------------------------");
         $display("Simulation Finished");

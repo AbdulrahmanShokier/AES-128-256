@@ -99,12 +99,12 @@ module AES_dec #(parameter BLOCK_LENGTH = 128)
     end
 
 
-FSM   fsm_control (.clk(clk), .rst(rst), .fsm_en(fsm_en), 
+FSM   fsm_control (.clk(clk), .rst(rst), .symbol_tick(symbol_tick), .fsm_en(fsm_en), 
                    .key_gene_en(key_en), .Round_Count(round_counter));
 
 
 
-key_generator_dec  key_round (.key(KEY), .Round_Count(round_counter), 
+key_generator_dec  key_round (.key(KEY),.symbol_tick(symbol_tick), .Round_Count(round_counter), 
                          .clk(clk), .rst(rst), .en(key_en), 
                          .current_key(current_key));
 

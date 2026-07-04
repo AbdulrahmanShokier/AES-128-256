@@ -26,14 +26,14 @@ module Top_decoder (
     output       out_valid,
     output [7:0] Cx,
     output       decode_fail,
-    output       decode_failed,
+//    output       decode_failed,
     output       decoder_ready,
-    output       frame_done,
+    output       frame_done
 
     // Debug-only signals for waveform verification:
-    output       decoder_step_tick_dbg,
-    output [1:0] decoder_4clk_phase_dbg,
-    output [15:0] decoder_step_count_dbg
+//    output       decoder_step_tick_dbg,
+//    output [1:0] decoder_4clk_phase_dbg,
+//    output [15:0] decoder_step_count_dbg
 );
 
 localparam TOP_N = 208;

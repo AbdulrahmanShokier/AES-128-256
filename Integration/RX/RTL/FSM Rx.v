@@ -5,7 +5,7 @@ module Rx_ctrl_fsm #(
     parameter OUT_LEN     = 192,
     parameter TICK_CNT_W  = 9,     // covers 0..415
     parameter NUM_WORDS   = 12,
-    parameter NUM_BATCHES = 4,     // total 208-byte batches in one full frame
+    parameter NUM_BATCHES = 1,     // total 208-byte batches in one full frame
     parameter BATCH_CNT_W = 8
 )
 (
