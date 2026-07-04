@@ -1,0 +1,142 @@
+`timescale 1ns / 1ps
+
+module tb_transceiver;
+
+    // The delay parameter for the demodulator valid signal
+    parameter RX_DELAY = 35; 
+
+    reg clk;
+    reg rst;
+    reg tx_valid_in;
+    reg [3:0] tx_data_in;
+
+    wire signed [15:0] I_channel;
+    wire signed [15:0] Q_channel;
+
+    wire [3:0]  rx_symbol;
+    wire [15:0] rx_angle;
+    wire        rx_valid_out;
+
+    // Shift register to delay tx_valid_in
+    reg [RX_DELAY-1:0] valid_shift_reg;
+    wire rx_valid_in;
+
+    // Array to store the 16 binary symbols
+    reg [3:0] symbol_mem [0:15];
+    integer i;
+    
+    integer excel_file; 
+
+    // Clock generation (50 MHz)
+    always #10 clk = ~clk;
+
+    // Delay logic for RX valid signal
+    always @(posedge clk) begin
+        if (!rst) begin
+            valid_shift_reg <= 0;
+        end else begin
+            // Shift left and insert tx_valid_in at the beginning
+            valid_shift_reg <= {valid_shift_reg[RX_DELAY-2:0], tx_valid_in};
+        end
+    end
+
+    // Tap the final bit for the delayed rx_valid_in
+    assign rx_valid_in = valid_shift_reg[RX_DELAY-1];
+
+    // Transmitter Instantiation
+    top_16psk_baseband #(
+        .DATA_WIDTH(16),
+        .FRAC_WIDTH(14),
+        .NO_BITS(4),
+        .UPS_FACTOR(4),
+        .COUNTER_WIDTH(2),
+        .NUM_TAPS(65),
+        .COEFF_WIDTH(16)
+    ) TX_modulator (
+        .clk_sample(clk),
+        .rst(rst),
+        .valid_in(tx_valid_in),
+        .data_in(tx_data_in),
+        .I_out(I_channel),
+        .Q_out(Q_channel)
+    );
+
+    // Receiver Instantiation
+    rx_system_top RX_demodulator (
+        .clk(clk),
+        .rst(rst),
+        .valid_in(rx_valid_in), // <-- Uses the new delayed signal here
+        .I_in(I_channel),
+        .Q_in(Q_channel),
+        .symbol(rx_symbol),
+        .angle_wave(rx_angle),
+        .valid_out(rx_valid_out)
+    );
+
+    // Test Stimulus
+    initial begin
+        // Open the CSV file for writing
+        excel_file = $fopen("simulation_results.csv", "w");
+        
+        // Write the Excel column headers
+        $fwrite(excel_file, "Time,Symbol,Mapped_I,Mapped_Q,First_Filter_I,First_Filter_Q,Matched_Filter_I,Matched_Filter_Q\n");
+
+        clk = 0;
+        rst = 0; 
+        tx_valid_in = 0;
+        tx_data_in = 0;
+
+        $readmemb("symbols.txt", symbol_mem);
+
+        #100;
+        rst = 1; 
+
+        #40;
+
+        // Feed symbols into the pipeline only when ready is high
+        for (i = 0; i < 16; i = i + 1) begin
+            
+            // Wait until the module asserts 'ready'
+            wait (TX_modulator.ready == 1'b1);
+            
+            // On the next clock cycle, provide the data
+            @(posedge clk);
+            tx_data_in  = symbol_mem[i];
+            tx_valid_in = 1'b1;
+
+            // Clear valid on the following cycle
+            @(posedge clk);
+            tx_valid_in = 1'b0;
+        end
+
+        // Wait for pipeline processing to finish
+        #2000;
+        
+        $fclose(excel_file);
+        $finish;
+    end
+
+    // Log data to the Excel file every clock cycle
+    always @(posedge clk) begin
+        // Only log data when reset is inactive
+        if (rst) begin
+            $fwrite(excel_file, "%0t,%d,%d,%d,%d,%d,%d,%d\n",
+                $time,
+                tx_data_in,
+                TX_modulator.I_mapped,     
+                TX_modulator.Q_mapped,     
+                I_channel,                 
+                Q_channel,                 
+                RX_demodulator.I_filtered, 
+                RX_demodulator.Q_filtered  
+            );
+        end
+    end
+
+    // Monitor Output
+    initial begin
+        $monitor("Time=%0t | TX Symbol=%b | RX Symbol=%b | Valid Out=%b", 
+                 $time, tx_data_in, rx_symbol, rx_valid_out);
+    end
+
+endmodule

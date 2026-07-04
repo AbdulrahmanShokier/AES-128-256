@@ -63,6 +63,7 @@ begin
             4'b0010 : begin I_out <= sin22;             Q_out <= NEG_cos22;     end
             4'b0011 : begin I_out <= SQRT2_INV;         Q_out <= NEG_SQRT2_INV; end
             4'b0001 : begin I_out <= cos22;             Q_out <= NEG_sin22;     end
+            default : begin I_out <= 16'b0; Q_out <= 16'b0; end
             endcase
     end
     
