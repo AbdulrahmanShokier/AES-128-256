@@ -107,7 +107,7 @@ module DVB_end_to_end_top_tb;
 
         rst = 1;          // Release reset
 
-        repeat (5) @(posedge clk);
+        repeat (4) @(posedge clk);
 
         //--------------------------------------------------------
         // Start one frame

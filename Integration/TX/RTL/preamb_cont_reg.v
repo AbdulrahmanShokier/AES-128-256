@@ -45,7 +45,7 @@ module preamb_cont_reg #(
             if (preamble_en)
                 bpsk_bit_pre_ctrl_reg <= PREAMBLE_PATTERN[preamble_width-1-preamble_counter];
             else if (control_en)
-                bpsk_bit_pre_ctrl_reg <= CONTROL_PATTERN[control_width-1-control_counter];
+                bpsk_bit_pre_ctrl_reg <= CONTROL_PATTERN[control_counter];
             else
                 bpsk_bit_pre_ctrl_reg <= 1'b0;
         end
