@@ -1,7 +1,7 @@
 module DVB_all_tx_fsm #(
     parameter preamble_width           = 255,
     parameter control_width            = 256,
-    parameter aes_word_count           = 350,
+    parameter aes_word_count           = 1,
     parameter crc_width                = 32,
     parameter dummy_width              = 40,   // BPSK filter priming/flush length
     parameter BLOCK_LENGTH             = 128,  // AES block size

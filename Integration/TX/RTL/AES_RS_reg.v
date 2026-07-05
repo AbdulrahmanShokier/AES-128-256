@@ -17,7 +17,7 @@ reg [REG_WIDTH-1:0]   data_reg;
 reg [COUNT_WIDTH-1:0] counter;
 
 always @(posedge clk) begin
-    if (symbol_tick && !rst) begin
+    if (!rst) begin
         data_reg <= {REG_WIDTH{1'b0}};
         counter  <= {COUNT_WIDTH{1'b0}};
     end

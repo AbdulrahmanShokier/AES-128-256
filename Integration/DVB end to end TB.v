@@ -119,7 +119,7 @@ module DVB_end_to_end_top_tb;
         //--------------------------------------------------------
         // Wait long enough for the complete TX/RX chain
         //--------------------------------------------------------
-        repeat (15000) @(posedge clk);
+        repeat (10000) @(posedge clk);
 
         $display("----------------------------------------");
         $display("Simulation Finished");
