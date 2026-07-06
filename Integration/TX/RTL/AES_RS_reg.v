@@ -34,7 +34,7 @@ always @(posedge clk) begin
 end
 
 always @(posedge clk) begin
-    if (symbol_tick && !rst)
+    if (!rst)
         data_out <= {OUT_WIDTH{1'b0}};
     else if (symbol_tick) begin
         if (load)

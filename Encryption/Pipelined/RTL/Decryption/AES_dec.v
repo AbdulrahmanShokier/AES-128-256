@@ -7,6 +7,7 @@ module AES_dec #(parameter BLOCK_LENGTH = 128)
     input                         enable,     
     input                         fsm_en,
     input                         symbol_tick,
+//    input                         Control_complete,
 
     output     [BLOCK_LENGTH-1:0] OUT,
     output                        valid_out   //valid output data
@@ -28,18 +29,24 @@ module AES_dec #(parameter BLOCK_LENGTH = 128)
     reg [10:0] en_pipe; // Pipeline to track data valid through rounds
 
 
+    reg enable_latched;
+    wire enable_to_shift = enable_latched | enable;  // catches back-to-back enable+tick too
 
     always @(posedge clk) begin
         if (!rst) begin
-            en_pipe <= 11'b0;
-        end 
-        else if(symbol_tick)
-        begin
-             // Shift enable left: LSB is input (Round 0), MSB is output (Round 10)
-            en_pipe <= {en_pipe[9:0], enable};
+            enable_latched <= 1'b0;
+            en_pipe        <= 11'b0;
+        end
+        else begin
+            if (symbol_tick) begin
+                en_pipe        <= {en_pipe[9:0], enable_to_shift};
+                enable_latched <= 1'b0;          // consumed, clear for next capture
+            end
+            else if (enable) begin
+                enable_latched <= 1'b1;          // hold until next symbol_tick
+            end
         end
     end
-
 
 
 // ── Individual FF registers ──
@@ -110,7 +117,7 @@ key_generator_dec  key_round (.key(KEY),.symbol_tick(symbol_tick), .Round_Count(
 
 
 
-round_10_dec       round10(.clk(clk), .rst(rst), .enable(enable),      .symbol_tick(symbol_tick), .IN(IN),      .KEY(k10), .OUT(r10_out));
+round_10_dec       round10(.clk(clk), .rst(rst), .enable(enable_to_shift), .symbol_tick(symbol_tick), .IN(IN),      .KEY(k10), .OUT(r10_out));
 rounds_9_to_2_dec  round9 (.clk(clk), .rst(rst), .enable(en_pipe[0]),  .symbol_tick(symbol_tick), .IN(r10_out), .KEY(k9),  .OUT(r9_out));
 rounds_9_to_2_dec  round8 (.clk(clk), .rst(rst), .enable(en_pipe[1]),  .symbol_tick(symbol_tick), .IN(r9_out),  .KEY(k8),  .OUT(r8_out));
 rounds_9_to_2_dec  round7 (.clk(clk), .rst(rst), .enable(en_pipe[2]),  .symbol_tick(symbol_tick), .IN(r8_out),  .KEY(k7),  .OUT(r7_out));

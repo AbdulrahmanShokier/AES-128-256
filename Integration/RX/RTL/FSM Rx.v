@@ -1,7 +1,7 @@
 module Rx_ctrl_fsm #(
     parameter FEED_BYTES  = 208,
     parameter FEED_CNT_W  = 8,
-    parameter LATENCY     = 224,   // 2 + 222 (symbol_ticks)
+    parameter LATENCY     = 221,   // 2 + 222 (symbol_ticks)
     parameter OUT_LEN     = 192,
     parameter TICK_CNT_W  = 9,     // covers 0..415
     parameter NUM_WORDS   = 12,
@@ -20,7 +20,7 @@ module Rx_ctrl_fsm #(
     output       enable_A,
     output       enable_B,
     output reg   load,
-    output reg   aes_valid,
+    output       aes_valid,
     output       nibble_batch_done_o,
     output       sel                // 0 = decoderA is outputting, 1 = decoderB is outputting
 );
@@ -44,12 +44,30 @@ wire last_batch  = (batch_cnt == NUM_BATCHES - 1);
 
 assign nibble_batch_done_o = feed_done;
 
+
+
+
+reg [8:0] valid_pipe; // Pipeline to delay the valid signal to match the input to the decoder
+
+always @(posedge clk_sample) begin
+    if (!rst) begin
+        valid_pipe <= 9'b0;
+    end
+    else  begin
+
+        valid_pipe <= {valid_pipe[7:0], valid};
+    end
+end
+
+
+
+
 // ---------------- state register ----------------
 always @(posedge clk_sample) begin
     if (!rst)
         state <= IDLE;
     else case (state)
-        IDLE : if (valid)     state <= DEC_A;
+        IDLE : if (valid_pipe[8])     state <= DEC_A;
         DEC_A: if (feed_done) state <= last_batch ? DRAIN : DEC_B;
         DEC_B: if (feed_done) state <= last_batch ? DRAIN : DEC_A;
         DRAIN: if (drain_done) state <= IDLE;
@@ -127,18 +145,15 @@ end
 
 // ---------------- word index within the 12-word output burst ----------------
 always @(posedge clk_sample) begin
-    if (!rst || state == IDLE)
+    if (!rst || state == IDLE || word_idx == 4'd12)
         word_idx <= 4'd0;
     else if (word_tick)
         word_idx <= word_idx + 1'b1;
 end
 
-// ---------------- aes_valid: one pulse per completed word, gated by latched fail ----------------
-always @(posedge clk_sample) begin
-    if (!rst)
-        aes_valid <= 1'b0;
-    else
-        aes_valid <= word_tick && (word_idx < NUM_WORDS) && !fail_latched;
-end
+
+assign aes_valid = word_tick && (word_idx < NUM_WORDS) && !fail_latched;
+// ---------------- aes_valid: one pulse per completed word ----------------
+//assign aes_valid = word_tick && (word_idx < NUM_WORDS);
 
 endmodule

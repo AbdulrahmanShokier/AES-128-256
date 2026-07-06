@@ -62,18 +62,18 @@ module Rx_full_chain_top #(
         .data_in     (symbol),
         .symbol_tick (demod_valid_out),   
         .byte_tick   (byte_tick),
-        .data_out    (demod_byte_out),
-        .sel         (),
-        .decoderA_en (),
-        .decoderB_en (),
-        .batch_done  ()
+        .data_out    (demod_byte_out)
+//        .sel         (),
+//        .decoderA_en (),
+//        .decoderB_en (),
+//        .batch_done  ()
     );
 
     // ---------------- Rx_ctrl_fsm ----------------
     wire enable_A, enable_B, load, aes_valid_pulse, nibble_batch_done;
     wire word_tick;
     wire decode_fail_A, decode_fail_B;
-    wire fsm_en_to_aes; 
+//    wire fsm_en_to_aes; 
 
 wire sel_from_fsm;
 
@@ -140,7 +140,7 @@ wire sel_from_fsm;
         .data_in_decoderA  (CxA),
         .data_in_decoderB  (CxB),
         .sel               (sel_from_fsm),                 // TODO #7
-        .symbol_tick       (outA_tick | outB_tick),   
+        .symbol_tick       (demod_valid_out),   
         .load              (load),
         .word_tick         (word_tick),
         .data_out          (aes_word)
@@ -148,16 +148,37 @@ wire sel_from_fsm;
 
     // ---------------- AES_dec ----------------
     // TODO #8: key comes from Control_register — exact bit slice not yet confirmed
-    wire [127:0] aes_key = Control_register[127:0]; // placeholder slice
+    reg [127:0] aes_key;  // placeholder slice
+
+    always @(posedge clk) 
+    begin
+        if (!rst) 
+            aes_key <= 4'b0;
+            
+        else if(Control_complete) 
+            aes_key <= Control_register[127:0];
+    end
+
+    reg [3:0] fsm_en_delayed;
+    always @(posedge clk) 
+    begin
+        if (!rst) 
+            fsm_en_delayed <= 4'b0;
+            
+        else 
+            fsm_en_delayed <= {fsm_en_delayed[2:0], Control_complete};
+    end
+
+    wire fsm_en_stretched = |fsm_en_delayed;
 
     AES_dec #(.BLOCK_LENGTH(128)) u_aes_dec (
         .clk         (clk),
         .rst         (rst),
-        .symbol_tick (outA_tick | outB_tick),      // NEW: must connect to whichever tick drives the round pipeline / key generator
+        .symbol_tick (demod_valid_out),
         .IN          (aes_word),
         .KEY         (aes_key),         
         .enable      (aes_valid_pulse),
-        .fsm_en      (payload_valid),    
+        .fsm_en      (fsm_en_stretched),
         .OUT         (aes_dec_out),
         .valid_out   (aes_dec_valid)
     );
