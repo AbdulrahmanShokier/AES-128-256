@@ -47,7 +47,7 @@ wire symbol_tick_int = run && (symbol_cnt == 2'd3);
 assign symbol_tick = symbol_tick_int;
 assign byte_tick   = symbol_tick_int && byte_cnt;
 
-always @(posedge clk_sample) begin
+always @(posedge clk_sample or negedge reset_n) begin
     if (!reset_n) begin
         symbol_cnt <= 2'd0;
         byte_cnt   <= 1'b0;

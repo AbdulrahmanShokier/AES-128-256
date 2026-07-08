@@ -41,6 +41,14 @@ localparam TOP_N = 208;
 wire decode_fail_internal;
 wire frame_done_internal;
 
+// Internal aliases for debug assignments below.
+// These debug outputs are currently commented out from the module port list,
+// so declaring them here avoids XST creating implicit 1-bit nets.
+wire       decode_failed;
+wire       decoder_step_tick_dbg;
+wire [1:0] decoder_4clk_phase_dbg;
+wire [15:0] decoder_step_count_dbg;
+
 reg        processing_busy;
 reg [8:0]  top_rx_count;
 

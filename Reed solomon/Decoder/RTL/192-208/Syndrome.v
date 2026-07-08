@@ -65,7 +65,7 @@ function [7:0] gf_alpha_pow;
     end
 endfunction
 
-always @(posedge clk) begin
+always @(posedge clk or negedge reset) begin
     if (!reset) begin
         symbol_counter  <= 9'd0;
         syndromes_ready <= 1'b0;

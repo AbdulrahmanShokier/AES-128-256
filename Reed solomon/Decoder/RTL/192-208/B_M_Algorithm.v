@@ -6,6 +6,12 @@
 // Outputs: Lambda polynomial packed as lambda[8*i +: 8], i=0..8.
 // Maximum correction capability T=8.
 // reset is active-low.
+//
+// XST FIX APPLIED:
+// - No direct negative-risk syndrome indexing is used.
+// - No direct out-of-range dynamic write to C[] is used.
+// - All for-loops have synthesis-friendly constant bounds.
+// - REPLACED 254-iteration inverse loop with square-and-multiply to prevent XST memory crash.
 // -----------------------------------------------------------------------------
 module B_M_Algorithm (
     input              clk,
@@ -59,28 +65,79 @@ function [7:0] gf_mult;
     end
 endfunction
 
-function [7:0] gf_pow_elem;
+// --- XST FIX: EXPONENTIATION BY SQUARING ---
+// Mathematically computes a^254 in 13 steps instead of 254 loop iterations.
+function [7:0] gf_inverse;
     input [7:0] a;
-    input integer power;
-    reg [7:0] result;
-    integer k;
+    reg [7:0] a2, a4, a8, a16, a32, a64, a128;
+    reg [7:0] p1, p2, p3, p4, p5;
     begin
-        result = 8'h01;
-        for (k = 0; k < power; k = k + 1)
-            result = gf_mult(result, a);
-        gf_pow_elem = result;
+        if (a == 8'h00) begin
+            gf_inverse = 8'h00;
+        end else begin
+            a2   = gf_mult(a, a);
+            a4   = gf_mult(a2, a2);
+            a8   = gf_mult(a4, a4);
+            a16  = gf_mult(a8, a8);
+            a32  = gf_mult(a16, a16);
+            a64  = gf_mult(a32, a32);
+            a128 = gf_mult(a64, a64);
+
+            p1 = gf_mult(a128, a64);
+            p2 = gf_mult(p1, a32);
+            p3 = gf_mult(p2, a16);
+            p4 = gf_mult(p3, a8);
+            p5 = gf_mult(p4, a4);
+            gf_inverse = gf_mult(p5, a2);
+        end
+    end
+endfunction
+// -------------------------------------------
+
+function [7:0] get_S_safe;
+    input integer idx;
+    begin
+        case (idx)
+            0:  get_S_safe = S_arr[0];
+            1:  get_S_safe = S_arr[1];
+            2:  get_S_safe = S_arr[2];
+            3:  get_S_safe = S_arr[3];
+            4:  get_S_safe = S_arr[4];
+            5:  get_S_safe = S_arr[5];
+            6:  get_S_safe = S_arr[6];
+            7:  get_S_safe = S_arr[7];
+            8:  get_S_safe = S_arr[8];
+            9:  get_S_safe = S_arr[9];
+            10: get_S_safe = S_arr[10];
+            11: get_S_safe = S_arr[11];
+            12: get_S_safe = S_arr[12];
+            13: get_S_safe = S_arr[13];
+            14: get_S_safe = S_arr[14];
+            15: get_S_safe = S_arr[15];
+            default: get_S_safe = 8'h00;
+        endcase
     end
 endfunction
 
-function [7:0] gf_inverse;
-    input [7:0] a;
+task update_C_safe;
+    input integer idx;
+    input [7:0] value_to_xor;
     begin
-        if (a == 8'h00)
-            gf_inverse = 8'h00;
-        else
-            gf_inverse = gf_pow_elem(a, 254);
+        case (idx)
+            0: C[0] = C[0] ^ value_to_xor;
+            1: C[1] = C[1] ^ value_to_xor;
+            2: C[2] = C[2] ^ value_to_xor;
+            3: C[3] = C[3] ^ value_to_xor;
+            4: C[4] = C[4] ^ value_to_xor;
+            5: C[5] = C[5] ^ value_to_xor;
+            6: C[6] = C[6] ^ value_to_xor;
+            7: C[7] = C[7] ^ value_to_xor;
+            8: C[8] = C[8] ^ value_to_xor;
+            default: begin
+            end
+        endcase
     end
-endfunction
+endtask
 
 always @(posedge clk) begin
     if (!reset) begin
@@ -93,65 +150,65 @@ always @(posedge clk) begin
             done <= 1'b0;
 
             if (start) begin
-            uncorrectable <= 1'b0;
-            for (i = 0; i < NSYM; i = i + 1)
-                S_arr[i] = syndromes[8*i +: 8];
+                uncorrectable <= 1'b0;
 
-            for (i = 0; i <= T; i = i + 1) begin
-                C[i]     = 8'h00;
-                B[i]     = 8'h00;
-                Tpoly[i] = 8'h00;
-            end
+                for (i = 0; i < NSYM; i = i + 1)
+                    S_arr[i] = syndromes[8*i +: 8];
 
-            C[0] = 8'h01;
-            B[0] = 8'h01;
-            L_int = 0;
-            m     = 1;
-            b     = 8'h01;
-
-            for (n = 0; n < NSYM; n = n + 1) begin
-                d = S_arr[n];
-
-                for (i = 1; i <= T; i = i + 1) begin
-                    if (i <= L_int)
-                        d = d ^ gf_mult(C[i], S_arr[n-i]);
+                for (i = 0; i <= T; i = i + 1) begin
+                    C[i]     = 8'h00;
+                    B[i]     = 8'h00;
+                    Tpoly[i] = 8'h00;
                 end
 
-                if (d != 8'h00) begin
-                    for (i = 0; i <= T; i = i + 1)
-                        Tpoly[i] = C[i];
+                C[0] = 8'h01;
+                B[0] = 8'h01;
+                L_int = 0;
+                m     = 1;
+                b     = 8'h01;
 
-                    coef = gf_mult(d, gf_inverse(b));
+                for (n = 0; n < NSYM; n = n + 1) begin
+                    d = get_S_safe(n);
 
-                    for (i = 0; i <= T; i = i + 1) begin
-                        if ((i + m) <= T)
-                            C[i+m] = C[i+m] ^ gf_mult(coef, B[i]);
+                    for (i = 1; i <= T; i = i + 1) begin
+                        if ((i <= L_int) && (i <= n))
+                            d = d ^ gf_mult(C[i], get_S_safe(n - i));
                     end
 
-                    if ((2 * L_int) <= n) begin
-                        L_int = n + 1 - L_int;
+                    if (d != 8'h00) begin
                         for (i = 0; i <= T; i = i + 1)
-                            B[i] = Tpoly[i];
-                        b = d;
-                        m = 1;
+                            Tpoly[i] = C[i];
+
+                        coef = gf_mult(d, gf_inverse(b));
+
+                        for (i = 0; i <= T; i = i + 1) begin
+                            update_C_safe(i + m, gf_mult(coef, B[i]));
+                        end
+
+                        if ((2 * L_int) <= n) begin
+                            L_int = n + 1 - L_int;
+                            for (i = 0; i <= T; i = i + 1)
+                                B[i] = Tpoly[i];
+                            b = d;
+                            m = 1;
+                        end else begin
+                            m = m + 1;
+                        end
                     end else begin
                         m = m + 1;
                     end
-                end else begin
-                    m = m + 1;
                 end
-            end
 
-            for (i = 0; i <= T; i = i + 1)
-                lambda[8*i +: 8] <= C[i];
+                for (i = 0; i <= T; i = i + 1)
+                    lambda[8*i +: 8] <= C[i];
 
-            if (L_int > T) begin
-                L             <= 6'd8;
-                uncorrectable <= 1'b1;
-            end else begin
-                L             <= L_int[5:0];
-                uncorrectable <= 1'b0;
-            end
+                if (L_int > T) begin
+                    L             <= 6'd8;
+                    uncorrectable <= 1'b1;
+                end else begin
+                    L             <= L_int[5:0];
+                    uncorrectable <= 1'b0;
+                end
 
                 done <= 1'b1;
             end
