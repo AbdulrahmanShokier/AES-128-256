@@ -16,7 +16,7 @@ module DVB_end_to_end_top #(
     parameter aes_word_counter_width = 9,
     parameter crc_counter_width      = 5,
 
-    parameter aes_word_count         = 350,
+    parameter aes_word_count         = 1,
     parameter crc_width              = 32,
 
     parameter dummy_width            = 40,

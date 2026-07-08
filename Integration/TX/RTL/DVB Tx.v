@@ -19,7 +19,7 @@ module DVB_tx_top #(
     // Data / Crc phase lengths (in symbol_ticks worth of "aes words" /
     // crc steps) - exposed here so testbenches can scale these down for
     // fast simulation instead of always paying the full 350/32 length.
-    parameter aes_word_count           = 350,
+    parameter aes_word_count           = 1,
     parameter crc_width                = 32,
 
     // Dummy phase (BPSK filter priming/flush) length, in symbol_ticks

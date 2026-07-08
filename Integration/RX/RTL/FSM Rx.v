@@ -39,7 +39,7 @@ reg                   drain_src_is_A;
 reg [BATCH_CNT_W-1:0] batch_cnt;      // counts completed batches, 0..NUM_BATCHES-1
 
 wire feed_done   = symbol_tick && (nibble_cnt == NIBBLE_TOTAL - 1);
-wire drain_done  = symbol_tick && (tick_cnt == LATENCY + OUT_LEN - 1);
+wire drain_done  = symbol_tick && (tick_cnt == LATENCY + OUT_LEN );
 wire last_batch  = (batch_cnt == NUM_BATCHES - 1);
 
 assign nibble_batch_done_o = feed_done;

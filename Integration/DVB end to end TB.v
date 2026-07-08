@@ -8,7 +8,7 @@ module DVB_end_to_end_top_tb;
     localparam BLOCK_LENGTH   = 128;
     localparam CONTROL_WIDTH  = 256;
     localparam CLOCKS_PER_NEW_BLOCK = 128; // 32 symbol_ticks * 4 clk/tick
-    localparam NUM_BLOCKS     = 12;        // only insert 12 AES blocks total
+    localparam NUM_BLOCKS     = 51;        // only insert 12 AES blocks total
 
     // New: delay (in clocks, counted from reset release) before
     // block insertion/streaming is allowed to begin
@@ -99,7 +99,7 @@ module DVB_end_to_end_top_tb;
         .aes_word_counter_width(9),
         .crc_counter_width(5),
 
-        .aes_word_count(1),
+        .aes_word_count(4),
         .crc_width(32),
 
         .dummy_width(40),
@@ -240,7 +240,7 @@ module DVB_end_to_end_top_tb;
         // NUM_BLOCKS to load, AND drain fully through the TX/RX
         // chain.
         //--------------------------------------------------------
-        repeat (6000) @(posedge clk);
+        repeat (12000) @(posedge clk);
 
         $display("----------------------------------------");
         $display("Simulation Finished");

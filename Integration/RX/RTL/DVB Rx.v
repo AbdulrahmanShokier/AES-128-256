@@ -77,7 +77,7 @@ module Rx_full_chain_top #(
 
 wire sel_from_fsm;
 
-    Rx_ctrl_fsm #(.NUM_BATCHES(1) /* TODO: set real value */) u_rx_ctrl_fsm (
+    Rx_ctrl_fsm #(.NUM_BATCHES(4) /* TODO: set real value */) u_rx_ctrl_fsm (
         .clk_sample           (clk),
         .rst                  (rst),
         .symbol_tick          (demod_valid_out),  
