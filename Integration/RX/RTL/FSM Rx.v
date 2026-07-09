@@ -1,7 +1,7 @@
 module Rx_ctrl_fsm #(
     parameter FEED_BYTES  = 208,
     parameter FEED_CNT_W  = 8,
-    parameter LATENCY     = 221,   // 2 + 222 (symbol_ticks)
+    parameter LATENCY     = 221,   // 222 (symbol_ticks)
     parameter OUT_LEN     = 192,
     parameter TICK_CNT_W  = 9,     // covers 0..415
     parameter NUM_WORDS   = 12,
