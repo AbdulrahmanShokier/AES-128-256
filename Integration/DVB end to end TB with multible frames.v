@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module DVB_end_to_end_top_tb;
+module DVB_end_to_end_top_with_multiple_frames_tb;
 
     //------------------------------------------------------------
     // Parameters
@@ -8,11 +8,34 @@ module DVB_end_to_end_top_tb;
     localparam BLOCK_LENGTH   = 128;
     localparam CONTROL_WIDTH  = 256;
     localparam CLOCKS_PER_NEW_BLOCK = 128; // 32 symbol_ticks * 4 clk/tick
-    localparam NUM_BLOCKS     = 51;        // only insert 12 AES blocks total
+    localparam NUM_BLOCKS     = 51;        // blocks streamed per frame
 
-    // New: delay (in clocks, counted from reset release) before
-    // block insertion/streaming is allowed to begin
+    // New: how many sof-delimited frames to send back-to-back.
+    // Each frame repeats the same NUM_BLOCKS-block pattern.
+    localparam NUM_FRAMES     = 3;
+
+    // Time (in clocks) the DUT spends transmitting the preamble
+    // and control register before it's ready to accept data. This
+    // is fixed protocol overhead (preamble/control width, clocked
+    // out at the symbol_tick rate), so it applies identically after
+    // every frame's sof, not just the first.
     localparam INSERTION_START_DELAY = 2162;
+
+    // Reset pulse issued before every frame (including the first):
+    // hold rst low RESET_HOLD_CLOCKS, release, then settle
+    // RESET_SETTLE_CLOCKS before pulsing sof. Needed because the
+    // DUT's aes_dec_valid stops rising on a second sof unless
+    // there's a real reset in between.
+    localparam RESET_HOLD_CLOCKS   = 10;
+    localparam RESET_SETTLE_CLOCKS = 4;
+
+    // Clocks to wait after a frame's last block finishes loading,
+    // before that frame's reset (or, for the final frame, before
+    // ending the sim). Gives the RX chain time to actually finish
+    // decoding/decrypting this frame's data before it gets wiped
+    // by the next reset. Applied after EVERY frame, not just the
+    // last.
+    localparam RX_DRAIN_CLOCKS = 3000;
 
     //------------------------------------------------------------
     // DUT Inputs
@@ -39,14 +62,8 @@ module DVB_end_to_end_top_tb;
     //------------------------------------------------------------
     // Bookkeeping for streamed inputs
     //------------------------------------------------------------
-    integer clk_counter;
-    integer block_index;
-
-    // New: free-running counter (since reset release) used to
-    // gate when insertion is allowed to start, plus a latched
-    // "go" flag once the delay has elapsed
-    reg [31:0] global_clk_counter;
-    reg        insertion_active;
+    integer block_index;   // index within current frame (0..NUM_BLOCKS-1)
+    integer frame_index;   // which frame (0..NUM_FRAMES-1) is currently active
 
     reg [16:0] sample_counter;
 
@@ -55,7 +72,7 @@ module DVB_end_to_end_top_tb;
     // visible to the stimulus block's final summary $display too)
     //------------------------------------------------------------
     reg     aes_dec_valid_d;
-    integer golden_ptr;
+    integer golden_ptr;      // cumulative index across ALL frames
     integer match_count;
     integer mismatch_count;
     reg     warmup_discarded;
@@ -67,24 +84,8 @@ module DVB_end_to_end_top_tb;
             sample_counter <= sample_counter + 17'b1;
     end
 
-    //------------------------------------------------------------
-    // Global clock counter + insertion-start gate
-    //------------------------------------------------------------
-    always @(posedge clk) begin
-        if (!rst) begin
-            global_clk_counter <= 32'd0;
-            insertion_active   <= 1'b0;
-        end
-        else begin
-            global_clk_counter <= global_clk_counter + 32'd1;
-
-            if (global_clk_counter == INSERTION_START_DELAY)
-                insertion_active <= 1'b1;
-        end
-    end
-
-    // Precomputed distinct blocks, so you can see exactly what's
-    // driven each time (visible in the waveform as plaintext_in changes)
+    // Precomputed distinct blocks for one frame's worth of data.
+    // The same NUM_BLOCKS-block pattern is reused for every frame.
     reg [BLOCK_LENGTH-1:0] block_array [0:NUM_BLOCKS-1];
     integer i;
 
@@ -145,72 +146,13 @@ module DVB_end_to_end_top_tb;
     end
 
     //------------------------------------------------------------
-    // Precompute 12 distinct blocks up front (avoids any function-
-    // call / race issues that caused the same value to repeat)
+    // Precompute NUM_BLOCKS distinct blocks up front (avoids any
+    // function-call / race issues that caused the same value to
+    // repeat). This one pattern is replayed for every frame.
     //------------------------------------------------------------
     initial begin
         for (i = 0; i < NUM_BLOCKS; i = i + 1) begin
             block_array[i] = 128'h00112233445566778899AABBCCDDEEFF + (i * 128'h1);
-        end
-    end
-
-    // Edge-detect for insertion_active, so we can catch the exact
-    // cycle the gate opens and avoid re-sending block 0 (it was
-    // already sitting on plaintext_in, and effectively consumed,
-    // for the whole hold period).
-    reg insertion_active_d;
-
-    always @(posedge clk) begin
-        if (!rst)
-            insertion_active_d <= 1'b0;
-        else
-            insertion_active_d <= insertion_active;
-    end
-
-    wire insertion_just_started = insertion_active && !insertion_active_d;
-
-    //------------------------------------------------------------
-    // Load counter: new plaintext block every CLOCKS_PER_NEW_BLOCK
-    // clocks, but only once insertion_active is asserted (i.e.
-    // after INSERTION_START_DELAY clocks from reset release).
-    // Stops once NUM_BLOCKS have been loaded.
-    //------------------------------------------------------------
-    always @(posedge clk) begin
-        if (!rst) begin
-            clk_counter  <= 0;
-            block_index  <= 0;
-            plaintext_in <= block_array[0];
-        end
-        else if (!insertion_active) begin
-            // Hold steady on the first block until the insertion
-            // window opens; nothing streams yet.
-            clk_counter  <= 0;
-            block_index  <= 0;
-            plaintext_in <= block_array[0];
-        end
-        else if (insertion_just_started) begin
-            // Block 0 was already held (and effectively consumed)
-            // during the hold period, so jump straight to block 1
-            // instead of replaying block 0 for a full period.
-            clk_counter  <= 0;
-            block_index  <= 1;
-            plaintext_in <= block_array[1];
-        end
-        else begin
-            if (block_index < NUM_BLOCKS) begin
-                clk_counter <= clk_counter + 1;
-
-                if (clk_counter == CLOCKS_PER_NEW_BLOCK - 1) begin
-                    clk_counter <= 0;
-
-                    if (block_index + 1 < NUM_BLOCKS) begin
-                        plaintext_in <= block_array[block_index + 1];
-                    end
-
-                    block_index <= block_index + 1;
-                end
-            end
-            // once block_index == NUM_BLOCKS, everything just holds steady
         end
     end
 
@@ -219,43 +161,60 @@ module DVB_end_to_end_top_tb;
     //------------------------------------------------------------
     initial begin
 
-        // Initialize
-        rst = 0;          // Active-low reset asserted
+        rst = 0;           // Active-low reset asserted
         sof = 0;
-
         aes_key = 128'h000102030405060708090A0B0C0D0E0F;
+        plaintext_in = block_array[0];
 
-        //--------------------------------------------------------
-        // Hold reset
-        //--------------------------------------------------------
-        repeat (10) @(posedge clk);
+        for (frame_index = 0; frame_index < NUM_FRAMES; frame_index = frame_index + 1) begin
 
-        rst = 1;          // Release reset
+            //----------------------------------------------------
+            // Reset before every frame's sof (including the
+            // first). Without this, aes_dec_valid stops rising
+            // after the second sof and never recovers for the
+            // rest of the run.
+            //----------------------------------------------------
+            rst = 0;
+            repeat (RESET_HOLD_CLOCKS) @(posedge clk);
+            rst = 1;
+            repeat (RESET_SETTLE_CLOCKS) @(posedge clk);
 
-        repeat (4) @(posedge clk);
+            //----------------------------------------------------
+            // sof pulse marks the start of this frame
+            //----------------------------------------------------
+            plaintext_in = block_array[0];
+            sof = 1;
+            @(posedge clk);
+            sof = 0;
 
-        //--------------------------------------------------------
-        // Start streaming: sof once, new plaintext block loads
-        // automatically every CLOCKS_PER_NEW_BLOCK clocks via the
-        // always block above, but only after INSERTION_START_DELAY
-        // clocks have elapsed since reset release, stopping after
-        // NUM_BLOCKS blocks.
-        //--------------------------------------------------------
-        sof = 1;
-        @(posedge clk);
-        sof = 0;
+            //----------------------------------------------------
+            // Wait out the preamble + control transmission time
+            // before this frame's data is accepted.
+            //----------------------------------------------------
+            repeat (INSERTION_START_DELAY) @(posedge clk);
 
-        //--------------------------------------------------------
-        // Wait long enough for the insertion delay to elapse, all
-        // NUM_BLOCKS to load, AND drain fully through the TX/RX
-        // chain.
-        //--------------------------------------------------------
-        repeat (12000) @(posedge clk);
+            //----------------------------------------------------
+            // Stream this frame's NUM_BLOCKS blocks, one new
+            // block every CLOCKS_PER_NEW_BLOCK clocks.
+            //----------------------------------------------------
+            for (block_index = 0; block_index < NUM_BLOCKS; block_index = block_index + 1) begin
+                plaintext_in = block_array[block_index];
+                repeat (CLOCKS_PER_NEW_BLOCK) @(posedge clk);
+            end
+
+            //----------------------------------------------------
+            // Let this frame fully drain through the RX chain
+            // before the next frame's reset hits (or, on the last
+            // iteration, before we stop and tally).
+            //----------------------------------------------------
+            repeat (RX_DRAIN_CLOCKS) @(posedge clk);
+        end
 
         $display("----------------------------------------");
         $display("Simulation Finished");
         $display("----------------------------------------");
-        $display("Blocks sent      : %0d", block_index);
+        $display("Frames sent       : %0d", NUM_FRAMES);
+        $display("Blocks sent       : %0d", NUM_FRAMES * NUM_BLOCKS);
         $display("Blocks matched    : %0d", match_count);
         $display("Blocks mismatched : %0d", mismatch_count);
         if (mismatch_count == 0 && match_count > 0)
@@ -281,17 +240,36 @@ module DVB_end_to_end_top_tb;
     // "lock" point does a non-matching word count as a genuine
     // FAIL.
     //
+    // golden_ptr is now cumulative across ALL frames. Since every
+    // frame replays the same NUM_BLOCKS-block pattern, the
+    // expected block is simply block_array[golden_ptr % NUM_BLOCKS]
+    // - this lets matching flow seamlessly across frame
+    // boundaries with no special-casing needed.
+    //
     // aes_dec_valid also stays high for several clocks per word
     // (an output "window"), so we only act on its rising edge to
     // avoid printing/counting the same word 4 times.
     //------------------------------------------------------------
+    // match_count / mismatch_count / golden_ptr are initialized
+    // ONCE here, not on every reset - they must persist across the
+    // reset pulse issued before each new frame so results
+    // accumulate over the whole run instead of restarting.
+    initial begin
+        golden_ptr     = 0;
+        match_count    = 0;
+        mismatch_count = 0;
+    end
+
     always @(posedge clk) begin
         if (!rst) begin
+            // These DO reset every frame: aes_dec_valid_d avoids a
+            // stale edge right after reset, and warmup_discarded
+            // re-arms so this frame's own pre-lock artifacts (the
+            // RX pipeline's AES_decrypt(0,key) output while it
+            // re-locks) get discarded again, same as the very
+            // first frame.
             aes_dec_valid_d  <= 1'b0;
-            golden_ptr        = 0;
-            match_count       = 0;
-            mismatch_count    = 0;
-            warmup_discarded  = 1'b0;
+            warmup_discarded <= 1'b0;
         end
         else begin
             aes_dec_valid_d <= aes_dec_valid;
@@ -303,13 +281,15 @@ module DVB_end_to_end_top_tb;
     always @(posedge clk) begin
         if (rst && valid_rise) begin : check_block
             integer k;
+            integer idx;
             reg     found;
             found = 1'b0;
             // Small look-ahead window: some blocks (e.g. at RS
             // group boundaries) may legitimately not appear at
             // the output, so resync forward if needed.
-            for (k = golden_ptr; k < golden_ptr + 4 && k < NUM_BLOCKS; k = k + 1) begin
-                if (!found && aes_dec_out == block_array[k]) begin
+            for (k = golden_ptr; k < golden_ptr + 4; k = k + 1) begin
+                idx = k % NUM_BLOCKS;
+                if (!found && aes_dec_out == block_array[idx]) begin
                     found = 1'b1;
                     if (k != golden_ptr)
                         $display("           (note: %0d expected block(s) not observed at output - RS group boundary)",
@@ -321,8 +301,8 @@ module DVB_end_to_end_top_tb;
             if (found) begin
                 warmup_discarded = 1'b1; // pipeline has locked onto real data
                 match_count = match_count + 1;
-                $display("[%0t ns] Block %0d  PASS : AES Decrypted Data = %032h",
-                          $time, golden_ptr - 1, aes_dec_out);
+                $display("[%0t ns] Frame %0d Block %0d  PASS : AES Decrypted Data = %032h",
+                          $time, (golden_ptr - 1) / NUM_BLOCKS, (golden_ptr - 1) % NUM_BLOCKS, aes_dec_out);
             end
             else if (!warmup_discarded) begin
                 // Pre-lock reset-state artifact - expected, not a bug.
@@ -333,8 +313,9 @@ module DVB_end_to_end_top_tb;
                 // We've already locked onto real data once, so a
                 // non-matching word here is a genuine failure.
                 mismatch_count = mismatch_count + 1;
-                $display("[%0t ns] Block %0d  FAIL : got %032h , expected %032h",
-                          $time, golden_ptr, aes_dec_out, block_array[golden_ptr]);
+                $display("[%0t ns] Frame %0d Block %0d  FAIL : got %032h , expected %032h",
+                          $time, golden_ptr / NUM_BLOCKS, golden_ptr % NUM_BLOCKS,
+                          aes_dec_out, block_array[golden_ptr % NUM_BLOCKS]);
             end
         end
     end
