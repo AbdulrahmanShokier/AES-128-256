@@ -1,0 +1,134 @@
+module top_16psk_baseband #(
+    parameter DATA_WIDTH      = 16,
+    parameter FRAC_WIDTH      = 14,
+    parameter NO_BITS         = 4,
+    parameter UPS_FACTOR      = 4,
+    parameter COUNTER_WIDTH   = 2,
+    parameter NUM_TAPS        = 65,
+    parameter COEFF_WIDTH     = 16
+)(
+    input  wire                          clk_sample,
+    input  wire                          rst,
+    input  wire                          valid_in,
+    input  wire        [NO_BITS-1:0]     data_in,
+
+    output wire signed [DATA_WIDTH-1:0]  I_out,
+    output wire signed [DATA_WIDTH-1:0]  Q_out,
+    output wire                          ready   // <-- ADDED HERE
+);
+
+// ════════════════════════════════════════════════════════════
+// Symbol Counter — runs at sample rate
+// Divides clk_sample by UPS_FACTOR to get symbol boundaries
+// Accessible from TB via dut.symbol_cnt
+// ════════════════════════════════════════════════════════════
+reg [1:0] symbol_cnt;
+
+always @(posedge clk_sample)
+begin
+    if (!rst)
+        symbol_cnt <= 2'd0;
+    else
+        symbol_cnt <= symbol_cnt + 2'b1;
+end
+
+wire symbol_tick = (symbol_cnt == 2'd0);
+
+// ─── Ready Signal Logic ──────────────────────────────────────
+assign ready = (symbol_cnt == 2'd3); // <-- ADDED HERE
+
+// ─── Wires: Mapper → Upsampler ───────────────────────────────
+wire signed [DATA_WIDTH-1:0] I_mapped, Q_mapped;
+wire                          mapper_valid_out;
+
+// ─── Wires: Upsampler → FIR ──────────────────────────────────
+wire signed [DATA_WIDTH-1:0] I_up, Q_up;
+
+// ─── Wires: FIR → Output ─────────────────────────────────────
+wire signed [DATA_WIDTH-1:0] I_filtered, Q_filtered;
+
+// ════════════════════════════════════════════════════════════
+// Stage 1: 8PSK Symbol Mapper
+// clk_symbol replaced by symbol_tick — no separate clock needed
+// ════════════════════════════════════════════════════════════
+psk16_mapper #(
+    .DATA_WIDTH (DATA_WIDTH),
+    .no_bits    (NO_BITS),
+    .FRAC_WIDTH (FRAC_WIDTH)
+) u_mapper (
+    .clk_symbol (clk_sample),       // single clock domain
+    .rst        (rst),
+    .valid_in   (valid_in & symbol_tick),  // only accept on tick
+    .data_in    (data_in),
+    .I_out      (I_mapped),
+    .Q_out      (Q_mapped),
+    .valid_out  (mapper_valid_out)
+);
+
+// ════════════════════════════════════════════════════════════
+// Stage 2a: Upsampler — I branch
+// ════════════════════════════════════════════════════════════
+psk16_upsampler #(
+    .DATA_WIDTH      (DATA_WIDTH),
+    .Counter_WIDTH   (COUNTER_WIDTH),
+    .upsample_factor (UPS_FACTOR)
+) u_upsamp_I (
+    .clk_sample (clk_sample),
+    .rst        (rst),
+    .valid_in   (mapper_valid_out),
+    .data_in    (I_mapped),
+    .data_out   (I_up)
+);
+
+// ════════════════════════════════════════════════════════════
+// Stage 2b: Upsampler — Q branch
+// ════════════════════════════════════════════════════════════
+psk16_upsampler #(
+    .DATA_WIDTH      (DATA_WIDTH),
+    .Counter_WIDTH   (COUNTER_WIDTH),
+    .upsample_factor (UPS_FACTOR)
+) u_upsamp_Q (
+    .clk_sample (clk_sample),
+    .rst        (rst),
+    .valid_in   (mapper_valid_out),
+    .data_in    (Q_mapped),
+    .data_out   (Q_up)
+);
+
+// ════════════════════════════════════════════════════════════
+// Stage 3a: RRC FIR Filter — I branch
+// ════════════════════════════════════════════════════════════
+psk16_fir_filter #(
+    .DATA_WIDTH  (DATA_WIDTH),
+    .FRAC_WIDTH  (FRAC_WIDTH),
+    .COEFF_WIDTH (COEFF_WIDTH),
+    .NUM_TAPS    (NUM_TAPS)
+) u_fir_I (
+    .clk_sample (clk_sample),
+    .rst        (rst),
+    .data_in    (I_up),
+    .data_out   (I_filtered)
+);
+
+// ════════════════════════════════════════════════════════════
+// Stage 3b: RRC FIR Filter — Q branch
+// ════════════════════════════════════════════════════════════
+psk16_fir_filter #(
+    .DATA_WIDTH  (DATA_WIDTH),
+    .FRAC_WIDTH  (FRAC_WIDTH),
+    .COEFF_WIDTH (COEFF_WIDTH),
+    .NUM_TAPS    (NUM_TAPS)
+) u_fir_Q (
+    .clk_sample (clk_sample),
+    .rst        (rst),
+    .data_in    (Q_up),
+    .data_out   (Q_filtered)
+);
+
+// ════════════════════════════════════════════════════════════
+// Output: s[n] = I[n] + jQ[n]
+// ════════════════════════════════════════════════════════════
+assign I_out = I_filtered;
+assign Q_out = Q_filtered;
+
+endmodule

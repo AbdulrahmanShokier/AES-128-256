@@ -1,0 +1,81 @@
+module encoder_top
+#(
+    parameter m = 8,
+    parameter k = 192,
+    parameter n = 208,
+    parameter t = 8
+)
+(
+    input              clk,
+    input              rst,
+    input              symbol_tick,
+    input      [m-1:0] data_in,
+    input              data_valid,
+    input              start_encode,
+    input              start_parity,    
+    
+    output     [m-1:0] data_out,
+    output             data_out_valid,
+    output             encoding_done,
+    output             ready_for_data,
+    output     [2:0]   current_state
+);
+
+//========================= Internal Wires =======================================
+// FSM to Datapath
+wire        lfsr_clear;
+wire        lfsr_enable;
+wire        output_data_select;
+wire        counter_clear;
+wire        counter_enable;
+
+// Datapath to FSM
+wire [7:0]  counter;
+
+
+
+//========================= FSM Instantiation ====================================
+encoder_fsm #(
+    .k(k),
+    .t(t)
+) fsm_inst (
+    .clk                    (clk),
+    .rst                    (rst),
+    .symbol_tick            (symbol_tick),
+    .start_encode           (start_encode),
+    .data_valid             (data_valid),
+    .counter                (counter),
+    .start_parity           (start_parity),
+    
+    .current_state          (current_state),
+    .lfsr_clear             (lfsr_clear),
+    .lfsr_enable            (lfsr_enable),
+    .output_data_select     (output_data_select),
+    .data_out_valid         (data_out_valid),
+    .encoding_done          (encoding_done),
+    .ready_for_data         (ready_for_data),
+    .counter_clear          (counter_clear),
+    .counter_enable         (counter_enable)
+);
+
+//========================= Datapath Instantiation ===============================
+encoder_core #(
+    .m(m),
+    .k(k),
+    .t(t)
+) datapath_inst (
+    .clk                    (clk),
+    .rst                    (rst),
+    .symbol_tick            (symbol_tick),
+    .data_in                (data_in),
+    .lfsr_clear             (lfsr_clear),
+    .lfsr_enable            (lfsr_enable),
+    .output_data_select     (output_data_select),
+    .counter_clear          (counter_clear),
+    .counter_enable         (counter_enable),
+    
+    .counter                (counter),
+    .data_out               (data_out)
+    );
+
+endmodule

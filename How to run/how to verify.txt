@@ -1,0 +1,36 @@
+ModelSim TX/RX Verification Procedure
+======================================
+
+1. Create a new project in ModelSim and import the files from the "All System" folder.
+
+2. Move the wave_tx_rx.do file into the project directory first, so ModelSim can locate it.
+
+3. Run the "DVB_end_to_end_top_tb" testbench to start the simulation.
+
+4. In the transcript window, run the command:
+   do wave_tx_rx.do
+
+5. In the Wave panel, check the signals in this order:
+   - sof            : indicates the start of frame.
+   - preamble_en    : flag enabling the BPSK modulator to transmit the saved preamble sequence.
+   - control_en     : flag enabling the BPSK modulator to transmit the control field (which contains the AES key).
+
+6. Once data_en goes high, the AES module begins accepting data input alongside a valid signal.
+   For each pulse of valid, note the corresponding input -- this is the data being fed into the TX chain.
+
+7. On the RX side, the control_complete flag indicates that the preamble was detected correctly
+   and the control field was fully received; the next symbols will be the modulated data.
+
+8. Finally, watch the valid_out flag alongside the AES output. Each time it goes high, compare
+   the decrypted data against the original data that was inserted at the TX side.
+
+Note: The wave_tx_rx.do file must be placed in the project directory BEFORE running the
+"do" command in step 4, or ModelSim will not be able to find it.
+
+Note: The first multiple times valid_out at Rx goes high, the decrypted output will be a 128-bit all-zeros
+sequence. This is expected and not an error -- it simply means the RS decoder has not
+started feeding out real data yet at that point.
+
+Note: There is a valid_in signal that does not go high after every 12th block. This is
+expected and not an error -- during that period the RS encoder/decoder is not accepting
+data, so the FSM controlling the AES module does not assert the valid flag.
