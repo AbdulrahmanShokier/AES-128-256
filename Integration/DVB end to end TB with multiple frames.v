@@ -325,7 +325,7 @@ module DVB_end_to_end_top_with_multiple_frames_tb;
     //------------------------------------------------------------
     initial begin
         $dumpfile("DVB_end_to_end.vcd");
-        $dumpvars(0, DVB_end_to_end_top_tb);
+        $dumpvars(0, DVB_end_to_end_top_with_multiple_frames_tb);
     end
 
 endmodule
